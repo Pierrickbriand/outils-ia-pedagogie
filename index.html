@@ -88,10 +88,6 @@ font-size:1.1rem;
 color:#fff;
 flex-shrink:0;
 }
-.tool-card:nth-child(1) .tool-number{background:var(--blue);}
-.tool-card:nth-child(2) .tool-number{background:var(--purple);}
-.tool-card:nth-child(3) .tool-number{background:var(--green);}
-.tool-card:nth-child(4) .tool-number{background:var(--amber);}
 .tool-info h2{
 margin:0 0 6px;
 font-size:1.15rem;
@@ -108,11 +104,9 @@ padding:2px 9px;
 border-radius:12px;
 font-weight:600;
 margin-bottom:8px;
+margin-right:6px;
 }
-.tool-card:nth-child(1) .tool-tag{background:var(--blue-light); color:var(--blue);}
-.tool-card:nth-child(2) .tool-tag{background:var(--purple-light); color:var(--purple);}
-.tool-card:nth-child(3) .tool-tag{background:var(--green-light); color:var(--green);}
-.tool-card:nth-child(4) .tool-tag{background:var(--amber-light); color:var(--amber);}
+.tool-tag.rh{background:#e6f4f4;color:#12707a;}
 .tool-link{
 text-decoration:none;
 font-size:0.9rem;
@@ -122,11 +116,23 @@ border-radius:9px;
 white-space:nowrap;
 color:#fff;
 }
-.tool-card:nth-child(1) .tool-link{background:var(--blue);}
-.tool-card:nth-child(2) .tool-link{background:var(--purple);}
-.tool-card:nth-child(3) .tool-link{background:var(--green);}
-.tool-card:nth-child(4) .tool-link{background:var(--amber);}
+.t-blue .tool-number,.t-blue .tool-link{background:var(--blue);}
+.t-purple .tool-number,.t-purple .tool-link{background:var(--purple);}
+.t-green .tool-number,.t-green .tool-link{background:var(--green);}
+.t-amber .tool-number,.t-amber .tool-link{background:var(--amber);}
+.t-blue .tool-tag:not(.rh){background:var(--blue-light);color:var(--blue);}
+.t-purple .tool-tag:not(.rh){background:var(--purple-light);color:var(--purple);}
+.t-green .tool-tag:not(.rh){background:var(--green-light);color:var(--green);}
+.t-amber .tool-tag:not(.rh){background:var(--amber-light);color:var(--amber);}
 .tool-link:hover{opacity:0.88;}
+.filters{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin:18px 0 0;}
+.filters button{font:inherit;font-size:0.85rem;font-weight:600;padding:7px 16px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer;}
+.filters button.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+.section{margin:0;}
+.section h2.section-title{font-size:1.05rem;margin:14px 0 2px;letter-spacing:-0.005em;}
+.section p.section-sub{margin:0 0 12px;color:var(--muted);font-size:0.88rem;}
+.section .list{display:grid;gap:14px;}
+.section.hidden{display:none;}
 footer{
 text-align:center;
 color:var(--muted);
@@ -139,50 +145,103 @@ padding:10px 20px 40px;
 <header>
 <div class="badge">Formation IA</div>
 <h1>Outils pédagogiques IA</h1>
-<p>Quatre exercices pratiques, dans l'ordre suggéré du parcours&nbsp;: rédiger, vérifier, personnaliser, gouverner.</p>
+<p>Des exercices pratiques pour apprendre à utiliser l'IA avec méthode et esprit critique, classés en outils généraux, utilisables par toutes les filières, et en outils adaptés aux ressources humaines.</p>
+<div class="filters" id="filters" role="group" aria-label="Filtrer les outils">
+<button type="button" data-f="tous" class="on">Tous les outils</button>
+<button type="button" data-f="general">Outils généraux</button>
+<button type="button" data-f="rh">Ressources humaines</button>
+</div>
 </header>
 <div class="wrap">
-<div class="tool-card">
+<section class="section" id="sec-general">
+<h2 class="section-title">Outils généraux</h2>
+<p class="section-sub">Quatre exercices pour toutes les filières, dans l'ordre suggéré du parcours&nbsp;: rédiger, vérifier, personnaliser, gouverner.</p>
+<div class="list">
+<div class="tool-card t-blue">
 <div class="tool-number">1</div>
 <div class="tool-info">
-<div class="tool-tag">Rédaction</div>
+<div><span class="tool-tag">Rédaction</span></div>
 <h2>Entraîneur de prompt</h2>
 <p>Rédigez un prompt texte, image ou vidéo, obtenez un score sur 20 et des conseils ciblés jusqu'à un résultat prêt à l'emploi.</p>
 </div>
 <a class="tool-link" href="https://pierrickbriand.github.io/entraineur-de-prompt/" target="_blank" rel="noopener">Ouvrir l'outil</a>
 </div>
-
-<div class="tool-card">
+<div class="tool-card t-purple">
 <div class="tool-number">2</div>
 <div class="tool-info">
-<div class="tool-tag">Esprit critique</div>
+<div><span class="tool-tag">Esprit critique</span></div>
 <h2>Détecteur de biais et d'hallucinations</h2>
-<p>Repérez, diagnostiquez et corrigez les erreurs d'une IA générative dans des cas professionnels réalistes.</p>
+<p>Repérez, diagnostiquez et corrigez les erreurs d'une IA générative dans des cas professionnels réalistes de toutes filières.</p>
 </div>
 <a class="tool-link" href="https://pierrickbriand.github.io/detecteur-biais-hallucinations/" target="_blank" rel="noopener">Ouvrir l'outil</a>
 </div>
-
-<div class="tool-card">
+<div class="tool-card t-green">
 <div class="tool-number">3</div>
 <div class="tool-info">
-<div class="tool-tag">Personnalisation</div>
+<div><span class="tool-tag">Personnalisation</span></div>
 <h2>Calibrateur de préférences Claude</h2>
 <p>Rédigez vos préférences personnelles pour Claude, obtenez une note et des corrections avant de les enregistrer.</p>
 </div>
 <a class="tool-link" href="https://pierrickbriand.github.io/Calibrateur-de-preferences-Claude/" target="_blank" rel="noopener">Ouvrir l'outil</a>
 </div>
-
-<div class="tool-card">
+<div class="tool-card t-amber">
 <div class="tool-number">4</div>
 <div class="tool-info">
-<div class="tool-tag">Gouvernance</div>
+<div><span class="tool-tag">Gouvernance</span></div>
 <h2>Simulateur de gouvernance des processus IA</h2>
 <p>Construisez le flux d'un processus métier, service par service, et identifiez les règles AI Act et RGPD qui s'y appliquent.</p>
 </div>
 <a class="tool-link" href="https://pierrickbriand.github.io/simulateur-gouvernance-ia/" target="_blank" rel="noopener">Ouvrir l'outil</a>
 </div>
-
+</div>
+</section>
+<section class="section" id="sec-rh">
+<h2 class="section-title">Outils adaptés aux ressources humaines</h2>
+<p class="section-sub">Des situations propres à la fonction RH&nbsp;: recrutement, entretiens, veille sociale et juridique, supervision des décisions automatisées.</p>
+<div class="list">
+<div class="tool-card t-purple">
+<div class="tool-number">5</div>
+<div class="tool-info">
+<div><span class="tool-tag">Esprit critique</span><span class="tool-tag rh">Ressources humaines</span></div>
+<h2>Détecteur de biais et d'hallucinations&nbsp;: cas RH</h2>
+<p>Dix cas de la fonction RH (offre d'emploi, entretien annuel, présélection de CV, note de veille, chatbot RH…) : repérez les biais discriminatoires et les faits inventés.</p>
+</div>
+<a class="tool-link" href="https://pierrickbriand.github.io/detecteur-biais-hallucinations/?filiere=rh" target="_blank" rel="noopener">Ouvrir l'outil</a>
+</div>
+<div class="tool-card t-purple">
+<div class="tool-number">6</div>
+<div class="tool-info">
+<div><span class="tool-tag">Veille et esprit critique</span><span class="tool-tag rh">Ressources humaines</span></div>
+<h2>Auditeur de note de veille</h2>
+<p>Qualifiez les sources d'une note de veille produite par une IA, classez ses affirmations (tendance lourde, signal faible, effet de mode) et décidez de ce qu'il faut corriger avant diffusion.</p>
+</div>
+<a class="tool-link" href="https://pierrickbriand.github.io/outils-ia-pedagogie/auditeur-note-veille/" target="_blank" rel="noopener">Ouvrir l'outil</a>
+</div>
+<div class="tool-card t-amber">
+<div class="tool-number">7</div>
+<div class="tool-info">
+<div><span class="tool-tag">Gouvernance</span><span class="tool-tag rh">Ressources humaines</span></div>
+<h2>Simulateur de supervision humaine</h2>
+<p>Validez ou corrigez douze décisions d'une IA de présélection, sous la pression du temps, puis mesurez si votre intervention est réellement significative.</p>
+</div>
+<a class="tool-link" href="https://pierrickbriand.github.io/outils-ia-pedagogie/simulateur-supervision-humaine/" target="_blank" rel="noopener">Ouvrir l'outil</a>
+</div>
+</div>
+</section>
 </div>
 <footer>Outils pédagogiques IA · Pierrick BRIAND · Formateur IA</footer>
+<script>
+(function(){
+var btns=document.querySelectorAll('#filters button');
+function appliquer(f){
+btns.forEach(function(b){b.classList.toggle('on',b.getAttribute('data-f')===f);});
+document.getElementById('sec-general').classList.toggle('hidden',f==='rh');
+document.getElementById('sec-rh').classList.toggle('hidden',f==='general');
+}
+btns.forEach(function(b){b.addEventListener('click',function(){appliquer(b.getAttribute('data-f'));});});
+var q=new URLSearchParams(window.location.search).get('public');
+if(q==='rh'||q==='general'){appliquer(q);}
+})();
+</script>
 </body>
 </html>

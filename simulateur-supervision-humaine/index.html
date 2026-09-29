@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulateur de supervision humaine</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#ffffff; --ink:#1f2430; --muted:#666f7d; --line:#e3e6eb;
+    --blue:#3457d5; --blue-light:#eaeefc;
+    --green:#1f8a52; --green-light:#e7f6ee;
+    --amber:#b5651d; --amber-light:#faeade;
+    --red:#c23b3b; --red-light:#fbe9e9;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.5;
+  }
+  header{ padding:32px 24px 14px; text-align:center; max-width:920px; margin:0 auto; }
+  header h1{ font-size:1.65rem; margin:0 0 8px; letter-spacing:-0.01em; }
+  header p{ color:var(--muted); margin:0; font-size:0.98rem; }
+  .badge{
+    display:inline-block; font-size:0.72rem; padding:3px 9px; border-radius:20px;
+    background:var(--amber-light); color:var(--amber); font-weight:600; margin-bottom:10px;
+  }
+  .topnav{ max-width:920px; margin:0 auto; padding:14px 20px 0; font-size:0.85rem; }
+  .topnav a{ color:var(--muted); text-decoration:none; }
+  .topnav a:hover{ color:var(--blue); text-decoration:underline; }
+  .wrap{ max-width:920px; margin:0 auto; padding:20px 20px 60px; }
+
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:22px; margin-bottom:16px; }
+  .card h2{ margin:0 0 8px; font-size:1.1rem; }
+  .muted{ color:var(--muted); font-size:0.88rem; }
+  .info-box{ background:#f4f5f7; border-radius:10px; padding:12px 14px; font-size:0.88rem; color:var(--muted); margin:12px 0; }
+  .info-box b{ color:var(--ink); }
+
+  .mode-list{ display:flex; flex-direction:column; gap:8px; margin:14px 0; }
+  .mode-item{
+    display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border:1px solid var(--line);
+    border-radius:10px; cursor:pointer; font-size:0.92rem;
+  }
+  .mode-item:hover{ border-color:var(--amber); }
+  .mode-item.picked{ border-color:var(--amber); background:var(--amber-light); }
+  .mode-item input{ margin-top:3px; }
+
+  button{
+    font-family:inherit; cursor:pointer; border:none; border-radius:9px; font-size:0.9rem;
+    padding:10px 16px; transition:transform .05s ease;
+  }
+  button:active{ transform:scale(0.98); }
+  button:disabled{ opacity:0.45; cursor:not-allowed; }
+  .btn-primary{ background:var(--amber); color:#fff; font-weight:600; }
+  .btn-primary:hover:not(:disabled){ background:#9c5518; }
+  .btn-ghost{ background:transparent; color:var(--muted); border:1px solid var(--line); }
+  .btn-ghost:hover{ background:#f0f1f3; }
+  .btn-danger{ background:transparent; color:var(--red); border:1px solid #f1c3c3; font-weight:600; }
+  .btn-danger:hover{ background:var(--red-light); }
+  .actions-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+  .link-btn{ background:none; border:none; color:var(--blue); font-size:0.85rem; padding:0; text-decoration:underline; cursor:pointer; font-family:inherit; }
+
+  .topbar{
+    position:sticky; top:0; z-index:5; display:flex; justify-content:space-between; align-items:center; gap:12px;
+    background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 16px; margin-bottom:14px; flex-wrap:wrap;
+  }
+  .timer{ font-weight:700; font-size:1.15rem; font-variant-numeric:tabular-nums; }
+  .timer.urgent{ color:var(--red); }
+
+  .row{
+    display:grid; grid-template-columns:1.4fr auto auto auto; gap:12px; align-items:center;
+    padding:12px 14px; background:var(--card); border:1px solid var(--line); border-radius:12px; margin-bottom:8px;
+  }
+  @media (max-width:720px){ .row{ grid-template-columns:1fr; } }
+  .row.done{ background:#fbfbfc; }
+  .row-name{ font-weight:600; }
+  .row-sub{ color:var(--muted); font-size:0.8rem; }
+  .dec{ font-size:0.78rem; font-weight:700; padding:3px 10px; border-radius:12px; white-space:nowrap; }
+  .dec.retenu{ background:var(--green-light); color:var(--green); }
+  .dec.ecarte{ background:var(--red-light); color:var(--red); }
+  .state{ font-size:0.8rem; color:var(--muted); white-space:nowrap; }
+  .state.valide{ color:var(--green); font-weight:600; }
+  .state.corrige{ color:var(--amber); font-weight:600; }
+  .row-actions{ display:flex; gap:8px; }
+
+  .dossier h2{ margin:0 0 4px; }
+  .dossier ul{ margin:10px 0 14px; padding-left:20px; }
+  .dossier li{ margin-bottom:4px; }
+  .ia-box{ background:var(--blue-light); border:1px solid #c9d4f6; border-radius:10px; padding:12px 14px; font-size:0.9rem; margin-bottom:12px; }
+  .ia-box b{ color:#243a8a; }
+
+  .verdict{ border-radius:12px; padding:16px 18px; margin-bottom:16px; }
+  .verdict h3{ margin:0 0 6px; font-size:1.05rem; }
+  .verdict p{ margin:0; font-size:0.92rem; }
+  .verdict.forme{ background:var(--red-light); border:1px solid #f1c3c3; color:#7a2323; }
+  .verdict.partielle{ background:var(--amber-light); border:1px solid #efd3b3; color:#7a4310; }
+  .verdict.effective{ background:var(--green-light); border:1px solid #bfe4cd; color:#175c38; }
+
+  .tiles{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:12px 0 4px; }
+  @media (max-width:720px){ .tiles{ grid-template-columns:repeat(2,1fr); } }
+  .tile{ background:#f4f5f7; border-radius:10px; padding:12px; text-align:center; }
+  .tile b{ display:block; font-size:1.3rem; }
+  .tile span{ font-size:0.75rem; color:var(--muted); }
+
+  table{ width:100%; border-collapse:collapse; font-size:0.85rem; }
+  th, td{ text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th{ font-size:0.75rem; color:var(--muted); text-transform:none; }
+  .ok-mark{ color:var(--green); font-weight:700; }
+  .ko-mark{ color:var(--red); font-weight:700; }
+  .flaw-note{ background:var(--red-light); border-radius:8px; padding:8px 10px; margin-top:6px; font-size:0.82rem; color:#7a2323; }
+  .flaw-note b{ display:block; }
+
+  .opt-list{ display:flex; flex-direction:column; gap:8px; margin:12px 0; }
+  .opt-item{ display:flex; align-items:flex-start; gap:10px; padding:11px 14px; border:1px solid var(--line); border-radius:10px; cursor:pointer; font-size:0.92rem; }
+  .opt-item:hover{ border-color:var(--amber); }
+  .opt-item.picked{ border-color:var(--amber); background:var(--amber-light); }
+  .opt-item input{ margin-top:3px; }
+  .feedback-box{ margin:-2px 0 6px; border-radius:10px; padding:10px 14px; font-size:0.84rem; }
+  .feedback-box.ok{ background:var(--green-light); border:1px solid #bfe4cd; color:#175c38; }
+  .feedback-box.ko{ background:var(--red-light); border:1px solid #f1c3c3; color:#7a2323; }
+  .feedback-box.info{ background:var(--blue-light); border:1px solid #c9d4f6; color:#243a8a; }
+  .feedback-box b{ display:block; margin-bottom:2px; }
+  .score-pill{ display:inline-block; font-weight:700; font-size:0.85rem; padding:4px 12px; border-radius:20px; background:var(--amber-light); color:var(--amber); margin-bottom:8px; }
+  footer{ text-align:center; color:var(--muted); font-size:0.8rem; padding:10px 20px 40px; max-width:760px; margin:0 auto; }
+</style>
+</head>
+<body>
+
+<div class="topnav"><a href="../">&larr; Tous les outils pédagogiques</a></div>
+
+<header>
+  <div class="badge">Gouvernance · Ressources humaines</div>
+  <h1>Simulateur de supervision humaine</h1>
+  <p id="headerText">Vous êtes recruteur. Un assistant IA propose des décisions sur douze candidatures : à vous de les valider ou de les corriger, comme le ferait une véritable supervision humaine.</p>
+</header>
+
+<div class="wrap" id="app"></div>
+
+<footer id="footerText">
+  Outil pédagogique, fonctionnement hors connexion : aucune donnée n'est enregistrée ni transmise. Les candidatures sont fictives.
+  L'article 22 du RGPD s'applique aujourd'hui ; les obligations de supervision humaine de l'AI Act pour les systèmes à haut risque s'appliquent à partir du 2 décembre 2027 (règlement (UE) 2026/1744).
+  Les seuils utilisés sont pédagogiques et ne constituent pas un avis juridique.
+</footer>
+
+<script>
+const NB = " ";
+function fr(s){ return s.replace(/ ([:;?!»%€])/g, NB + '$1').replace(/« /g, '«' + NB); }
+function frDeep(x){
+  if (typeof x === 'string') return fr(x);
+  if (Array.isArray(x)) return x.map(frDeep);
+  if (x && typeof x === 'object'){ const o = {}; Object.keys(x).forEach(k => { o[k] = frDeep(x[k]); }); return o; }
+  return x;
+}
+function $(id){ return document.getElementById(id); }
+
+// ---------------------------------------------------------------
+// Données
+// ---------------------------------------------------------------
+const POSTE = frDeep({
+  titre: "Gestionnaire de paie (CDI)",
+  entreprise: "PME industrielle de 300 salariés",
+  criteres: "au moins 3 ans d'expérience en paie, maîtrise d'un logiciel de paie et de la DSN, connaissance des conventions collectives, rigueur"
+});
+
+const DOSSIERS = frDeep([
+  { id: 'd1', nom: "Camille R.", ia: { decision: 'retenu', score: 88, motif: "Expérience et compétences conformes aux critères du poste." },
+    resume: ["6 ans de gestion de la paie dans une PME industrielle (250 bulletins par mois)", "DSN, déclarations sociales, conventions collectives de la métallurgie", "BTS comptabilité et gestion, 2014"], flaw: null },
+  { id: 'd3', nom: "Nadia K.", ia: { decision: 'ecarte', score: 41, motif: "Interruption d'activité supérieure à 18 mois : score réduit de 30 points." },
+    resume: ["5 ans de paie en cabinet d'expertise comptable (dossiers de 10 à 250 salariés)", "Congé parental de 2 ans (2023-2025), formation de remise à niveau suivie à son retour", "Maîtrise de plusieurs logiciels de paie et de la DSN"],
+    flaw: { titre: "Pénalisation d'une interruption de carrière", texte: "Pénaliser les interruptions d'activité touche surtout les femmes (congé parental, maternité) : c'est une discrimination indirecte fondée sur la situation de famille ou le sexe (article L. 1132-1 du Code du travail). Ce motif n'apparaissait pas dans la liste." } },
+  { id: 'd8', nom: "Emma V.", ia: { decision: 'retenu', score: 79, motif: "Expérience et compétences conformes aux critères du poste." },
+    resume: ["5 ans de paie dans la distribution", "DSN, gestion des absences, logiciel de paie", "Licence professionnelle RH"], flaw: null },
+  { id: 'd4', nom: "Thomas B.", ia: { decision: 'ecarte', score: 38, motif: "Distance domicile-site élevée (42 km) : risque d'absentéisme et de départ." },
+    resume: ["4 ans de gestion de la paie (180 salariés)", "DSN, soldes de tout compte, bulletins complexes", "Habite à 42 km du site"],
+    flaw: { titre: "Lieu de résidence utilisé comme critère", texte: "Le lieu de résidence est un critère de discrimination interdit (article L. 1132-1 du Code du travail), et l'absentéisme supposé ne repose sur aucune donnée. C'est une variable de substitution qui reconstitue indirectement l'origine sociale ou géographique." } },
+  { id: 'd9', nom: "Hugo T.", ia: { decision: 'ecarte', score: 52, motif: "Expérience inférieure au minimum requis (3 ans)." },
+    resume: ["2 ans de paie en alternance puis en CDD", "Logiciel de paie, DSN", "BTS en cours de validation"], flaw: null },
+  { id: 'd6', nom: "Karim D.", ia: { decision: 'ecarte', score: 35, motif: "Intitulé « gestionnaire de paie » absent du CV : correspondance de mots-clés insuffisante." },
+    resume: ["4 ans en tant que responsable de la paie et des déclarations sociales (300 salariés)", "DSN, gestion des absences et des congés, logiciel de paie", "Formation continue en droit social"],
+    flaw: { titre: "Rejet par mot-clé exact", texte: "Le filtre rejette un profil très adapté parce qu'il écrit « responsable de la paie » au lieu de « gestionnaire de paie ». Une IA à base de règles est rigide : sans relecture humaine, un bon candidat disparaît pour un synonyme." } },
+  { id: 'd2', nom: "Julien M.", ia: { decision: 'retenu', score: 91, motif: "Expérience et compétences conformes aux critères du poste." },
+    resume: ["7 ans en paie, dont 3 ans à la tête d'un pôle de 2 personnes", "Deux logiciels de paie, DSN mensuelle", "Licence professionnelle métiers de la paie"], flaw: null },
+  { id: 'd7', nom: "Lucas P.", ia: { decision: 'retenu', score: 93, motif: "Densité maximale de mots-clés : paie ×14, DSN ×9, conventions ×7." },
+    resume: ["Stage de 2 mois en cabinet comptable (2026)", "Fin du CV : liste de mots-clés (paie, DSN, conventions collectives, charges sociales) répétés en texte blanc sur fond blanc", "Master en cours (finance d'entreprise)"],
+    flaw: { titre: "Bourrage de mots-clés récompensé", texte: "L'IA récompense la répétition de mots-clés et ne voit pas l'absence d'expérience réelle. La supervision doit aussi vérifier les décisions favorables, pas seulement les rejets." } },
+  { id: 'd10', nom: "Inès G.", ia: { decision: 'ecarte', score: 40, motif: "Aucune expérience en paie." },
+    resume: ["8 ans en comptabilité générale, aucune expérience en paie", "Souhaite se reconvertir vers la paie", "Diplôme de comptabilité et de gestion"], flaw: null },
+  { id: 'd5', nom: "Sophie L.", ia: { decision: 'ecarte', score: 44, motif: "Diplôme ancien et profil senior : capacité d'adaptation aux nouveaux outils jugée incertaine." },
+    resume: ["14 ans d'expérience en paie, dont 6 ans de responsabilité de service", "Certification paie obtenue en 2025", "DUT gestion, 1998"],
+    flaw: { titre: "Biais d'âge", texte: "L'ancienneté du diplôme sert de variable de substitution à l'âge, un critère interdit (article L. 1132-1 du Code du travail). La candidate a passé une certification récente : le motif de l'IA est contredit par le dossier." } },
+  { id: 'd11', nom: "Antoine S.", ia: { decision: 'retenu', score: 85, motif: "Expérience et compétences conformes aux critères du poste." },
+    resume: ["8 ans de paie, dont 5 ans en multi-établissements", "Deux logiciels de paie, DSN, audits sociaux", "Master gestion des ressources humaines"], flaw: null },
+  { id: 'd12', nom: "Manon C.", ia: { decision: 'ecarte', score: 43, motif: "Similarité avec les profils déjà recrutés dans l'entreprise : 31 %." },
+    resume: ["6 ans de paie en PME de services (150 salariés)", "DSN, bulletins, conventions collectives, logiciel de paie", "Licence professionnelle métiers de la paie, 2019"],
+    flaw: { titre: "Clonage social", texte: "Le modèle est calé sur l'historique des recrutements et pénalise les profils différents de ceux du passé. Le critère de similarité n'a aucun rapport avec la capacité à tenir le poste : c'est l'effet de « clonage social »." } }
+]);
+
+const MESURES = frDeep([
+  { id: 'm1', ok: true, label: "Former les personnes chargées de la relecture aux biais de l'IA et à ses limites",
+    why: "Une supervision efficace suppose des personnes capables de comprendre et d'interpréter les résultats de la machine." },
+  { id: 'm2', ok: true, label: "Leur donner l'autorité et le temps de contredire la recommandation de l'IA",
+    why: "C'est le cœur de la supervision humaine (article 14 de l'AI Act) : sans pouvoir de contredire, la relecture est fictive." },
+  { id: 'm3', ok: true, label: "Conserver les journaux d'activité du système pendant au moins six mois",
+    why: "Une obligation des entreprises qui utilisent un système à haut risque (article 26), applicable à partir du 2 décembre 2027 après le report du Digital Omnibus." },
+  { id: 'm4', ok: true, label: "Mesurer le taux de décisions de l'IA corrigées par les recruteurs",
+    why: "Un taux de correction proche de zéro est un signal d'alerte : il révèle une validation de pure forme." },
+  { id: 'm5', ok: true, label: "Exiger de l'éditeur que les critères pris en compte soient visibles pour chaque décision",
+    why: "Sans critères lisibles, le recruteur ne peut ni contester la machine, ni justifier sa décision devant un juge (charge de la preuve, article L. 1134-1)." },
+  { id: 'w1', ok: false, label: "Fixer un objectif de deux cents dossiers traités par heure",
+    why: "Une cadence pareille rend toute relecture impossible : c'est le scénario type d'une intervention humaine fictive." },
+  { id: 'w2', ok: false, label: "Faire valider par un supérieur toute décision qui contredit l'IA",
+    why: "Cela décourage la contradiction et renforce le biais d'automatisation : la personne relit pour confirmer, pas pour contester." },
+  { id: 'w3', ok: false, label: "Informer les candidats seulement lorsqu'ils contestent un refus",
+    why: "Le candidat doit être informé avant la mise en œuvre des méthodes d'aide au recrutement (article L. 1221-8 du Code du travail)." }
+]);
+const MESURES_ORDER = [5, 0, 3, 6, 1, 4, 7, 2];
+
+const LIMITE_MS = 150000; // 2 min 30
+const MODES = {
+  pression: "Sous pression (2 min 30)",
+  libre: "Sans limite de temps"
+};
+
+// ---------------------------------------------------------------
+// État
+// ---------------------------------------------------------------
+let RUN = null;
+let LAST = null; // résultats de la dernière partie
+
+function storageKey(){ return 'supervision_essais'; }
+function loadRuns(){ try{ const r = localStorage.getItem(storageKey()); return r ? JSON.parse(r) : []; }catch(e){ return []; } }
+function saveRuns(a){ try{ localStorage.setItem(storageKey(), JSON.stringify(a.slice(-10))); }catch(e){} }
+
+function newRun(mode){
+  const d = {};
+  DOSSIERS.forEach(x => { d[x.id] = { action: null, opened: false, ms: 0 }; });
+  return { mode: mode, limit: mode === 'pression' ? LIMITE_MS : null, t0: Date.now(), d: d, openId: null, openT: null, timer: null, ended: false };
+}
+function dossier(id){ return DOSSIERS.find(x => x.id === id); }
+function fmt(ms){
+  const s = Math.max(0, Math.round(ms / 1000));
+  return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+}
+
+// ---------------------------------------------------------------
+// Écran d'accueil
+// ---------------------------------------------------------------
+let modeChoisi = 'pression';
+
+function showIntro(){
+  if (RUN && RUN.timer){ clearInterval(RUN.timer); }
+  RUN = null;
+  let h = '<div class="card"><h2>Votre mission</h2>';
+  h += '<p class="muted" style="margin:0 0 8px;">Poste à pourvoir : <b style="color:var(--ink)">' + POSTE.titre + '</b> · ' + POSTE.entreprise + '.<br>Critères : ' + POSTE.criteres + '.</p>';
+  h += '<p style="font-size:0.94rem;margin:10px 0;">Un assistant IA a analysé douze candidatures et propose pour chacune une décision : <b>retenu</b> ou <b>écarté</b>. Vous devez valider ou corriger chaque décision. Certaines décisions de l\'IA sont fausses ; combien, et lesquelles, vous ne le savez pas.</p>';
+  h += '<div class="info-box"><b>Comment jouer&nbsp;?</b> Depuis la liste, vous pouvez valider une décision d\'un clic ou ouvrir le dossier avant de trancher. Dans le dossier, vous voyez le détail des motifs de l\'IA et vous pouvez corriger sa décision. Le temps passé sur chaque dossier est mesuré.</div>';
+  h += '<div class="mode-list">';
+  Object.keys(MODES).forEach(k => {
+    const picked = modeChoisi === k;
+    h += '<label class="mode-item' + (picked ? ' picked' : '') + '"><input type="radio" name="mode" ' + (picked ? 'checked ' : '') + 'onchange="choisirMode(\'' + k + '\')">';
+    h += '<span><b>' + MODES[k] + '</b><br><span class="muted">' + (k === 'pression'
+      ? "La direction demande de traiter les douze dossiers en 2 minutes 30 : les dossiers restants seront tranchés automatiquement par l'IA."
+      : "Prenez le temps qu'il vous faut. Idéal pour un deuxième essai et pour comparer.") + '</span></span></label>';
+  });
+  h += '</div>';
+  h += '<div class="actions-row"><button class="btn-primary" onclick="startRun()">Commencer la simulation</button></div></div>';
+  h += runsTable();
+  $('app').innerHTML = h;
+}
+function choisirMode(k){ modeChoisi = k; showIntro(); }
+
+// ---------------------------------------------------------------
+// Simulation
+// ---------------------------------------------------------------
+function startRun(){
+  RUN = newRun(modeChoisi);
+  RUN.timer = setInterval(tick, 250);
+  renderRun();
+}
+
+function tick(){
+  if (!RUN || RUN.ended) return;
+  const el = $('timer');
+  const elapsed = Date.now() - RUN.t0;
+  if (RUN.limit){
+    const rest = RUN.limit - elapsed;
+    if (el){ el.textContent = fmt(rest); el.className = 'timer' + (rest < 30000 ? ' urgent' : ''); }
+    if (rest <= 0) endRun();
+  } else if (el){
+    el.textContent = fmt(elapsed);
+  }
+}
+
+function flushOpen(){
+  if (RUN.openId){
+    RUN.d[RUN.openId].ms += Date.now() - RUN.openT;
+    RUN.openId = null; RUN.openT = null;
+  }
+}
+
+function traitesCount(){
+  return DOSSIERS.filter(d => RUN.d[d.id].action).length;
+}
+
+function renderRun(){
+  if (!RUN) return;
+  let h = '<div class="topbar"><div><b>' + POSTE.titre + '</b><br><span class="muted">' + traitesCount() + ' dossier(s) traité(s) sur ' + DOSSIERS.length + '</span></div>';
+  h += '<div style="text-align:right;"><span class="muted">' + (RUN.limit ? 'Temps restant' : 'Temps écoulé') + '</span><br><span id="timer" class="timer">' + fmt(RUN.limit ? RUN.limit - (Date.now() - RUN.t0) : Date.now() - RUN.t0) + '</span></div></div>';
+  h += RUN.openId ? dossierHtml(dossier(RUN.openId)) : listHtml();
+  $('app').innerHTML = h;
+}
+
+function decLabel(d){
+  return '<span class="dec ' + d.ia.decision + '">' + (d.ia.decision === 'retenu' ? 'Retenu' : 'Écarté') + ' par l\'IA · ' + d.ia.score + '/100</span>';
+}
+
+function listHtml(){
+  let h = '';
+  DOSSIERS.forEach(d => {
+    const s = RUN.d[d.id];
+    const st = s.action === 'valide' ? '<span class="state valide">Validé</span>' : (s.action === 'corrige' ? '<span class="state corrige">Corrigé</span>' : '<span class="state">À traiter</span>');
+    h += '<div class="row' + (s.action ? ' done' : '') + '">';
+    h += '<div><div class="row-name">' + d.nom + '</div><div class="row-sub">Candidature · ' + POSTE.titre + '</div></div>';
+    h += decLabel(d) + st;
+    h += '<div class="row-actions"><button class="btn-ghost" onclick="openDossier(\'' + d.id + '\')">Ouvrir</button>';
+    h += '<button class="btn-primary" onclick="quickValidate(\'' + d.id + '\')">Valider</button></div></div>';
+  });
+  h += '<div class="actions-row"><button class="btn-ghost" onclick="finishNow()">Terminer maintenant</button></div>';
+  return h;
+}
+
+function quickValidate(id){
+  RUN.d[id].action = 'valide';
+  renderRun();
+  checkAllDone();
+}
+
+function openDossier(id){
+  flushOpen();
+  RUN.openId = id; RUN.openT = Date.now(); RUN.d[id].opened = true;
+  renderRun();
+  window.scrollTo({ top: 0 });
+}
+
+function closeDossier(){
+  flushOpen(); renderRun();
+}
+
+function decide(id, action){
+  flushOpen();
+  RUN.d[id].action = action;
+  renderRun();
+  checkAllDone();
+}
+
+function dossierHtml(d){
+  const inverse = d.ia.decision === 'retenu' ? 'Écarté' : 'Retenu';
+  let h = '<div class="card dossier"><button class="link-btn" onclick="closeDossier()" style="margin-bottom:12px;">&larr; Retour à la liste</button>';
+  h += '<h2>' + d.nom + '</h2><div class="muted">Candidature · ' + POSTE.titre + '</div>';
+  h += '<ul>' + d.resume.map(r => '<li>' + r + '</li>').join('') + '</ul>';
+  h += '<div class="ia-box"><b>Décision de l\'IA&nbsp;:</b> ' + (d.ia.decision === 'retenu' ? 'retenu' : 'écarté') + ' (' + d.ia.score + '/100)<br><b>Motif fourni&nbsp;:</b> ' + d.ia.motif + '</div>';
+  h += '<div class="actions-row"><button class="btn-primary" onclick="decide(\'' + d.id + '\',\'valide\')">Valider la décision de l\'IA</button>';
+  h += '<button class="btn-danger" onclick="decide(\'' + d.id + '\',\'corrige\')">Corriger : passer à «&nbsp;' + inverse + '&nbsp;»</button></div></div>';
+  return h;
+}
+
+function checkAllDone(){
+  if (traitesCount() === DOSSIERS.length && RUN && !RUN.openId){
+    setTimeout(endRun, 300);
+  }
+}
+
+function finishNow(){
+  const restants = DOSSIERS.length - traitesCount();
+  if (restants > 0 && !confirm(restants + " dossier(s) non traité(s) : la décision de l'IA s'appliquera automatiquement. Terminer maintenant ?")) return;
+  endRun();
+}
+
+// ---------------------------------------------------------------
+// Résultats
+// ---------------------------------------------------------------
+function compute(run){
+  const nFlaw = DOSSIERS.filter(d => d.flaw).length;
+  const r = { mode: run.mode, total: DOSSIERS.length, traites: 0, ouverts: 0, sansOuvrir: 0, auto: 0, detect: 0, missed: 0, sur: 0, ms: 0, nFlaw: nFlaw };
+  DOSSIERS.forEach(d => {
+    const s = run.d[d.id];
+    if (s.opened){ r.ouverts++; r.ms += s.ms; }
+    if (!s.action){ r.auto++; if (d.flaw) r.missed++; return; }
+    r.traites++;
+    if (!s.opened && s.action === 'valide') r.sansOuvrir++;
+    if (d.flaw){ if (s.action === 'corrige') r.detect++; else r.missed++; }
+    else if (s.action === 'corrige') r.sur++;
+  });
+  r.avgSec = r.ouverts ? Math.round(r.ms / r.ouverts / 1000) : 0;
+  r.passif = r.sansOuvrir + r.auto;
+  if (r.passif >= Math.ceil(r.total / 2)) r.verdict = 'forme';
+  else if (r.detect >= 4 && r.sur <= 1) r.verdict = 'effective';
+  else r.verdict = 'partielle';
+  return r;
+}
+
+const VERDICTS = {
+  forme: "Intervention humaine de pure forme",
+  partielle: "Supervision partielle",
+  effective: "Supervision effective"
+};
+
+function verdictText(r){
+  if (r.verdict === 'forme'){
+    return r.passif + " décisions sur " + r.total + " ont été entérinées ou laissées passer sans examen. En pratique, ces décisions sont prises par la machine seule : l'article 22 du RGPD interdit en principe les décisions fondées exclusivement sur un traitement automatisé, et une validation de pure forme n'est pas une intervention humaine significative.";
+  }
+  if (r.verdict === 'effective'){
+    return "Vous avez examiné les dossiers, repéré " + r.detect + " erreurs de l'IA sur " + r.nFlaw + " et corrigé peu de décisions à tort. C'est ce que l'on attend d'une intervention humaine significative.";
+  }
+  return "Vous avez examiné une partie des dossiers, mais " + r.missed + " erreur(s) de l'IA sur " + r.nFlaw + " sont passées. Une supervision réelle suppose du temps, de la méthode et des critères visibles.";
+}
+
+function endRun(){
+  if (!RUN || RUN.ended) return;
+  RUN.ended = true;
+  flushOpen();
+  if (RUN.timer){ clearInterval(RUN.timer); RUN.timer = null; }
+  const r = compute(RUN);
+  const runs = loadRuns();
+  const rec = { mode: r.mode, date: new Date().toISOString(), traites: r.traites, ouverts: r.ouverts, sansOuvrir: r.sansOuvrir, auto: r.auto,
+                detect: r.detect, nFlaw: r.nFlaw, missed: r.missed, sur: r.sur, avgSec: r.avgSec, verdict: r.verdict, quiz: null };
+  runs.push(rec); saveRuns(runs);
+  LAST = { r: r, run: RUN, quizAns: [], quizDone: false };
+  renderResult();
+  window.scrollTo({ top: 0 });
+}
+
+function renderResult(){
+  const r = LAST.r, run = LAST.run;
+  let h = '<div class="verdict ' + r.verdict + '"><h3>' + fr(VERDICTS[r.verdict]) + '</h3><p>' + fr(verdictText(r)) + '</p></div>';
+
+  h += '<div class="card"><h2>Votre supervision en chiffres</h2><div class="tiles">';
+  h += tile(r.traites + '/' + r.total, 'dossiers traités');
+  h += tile(r.ouverts, 'dossiers ouverts');
+  h += tile(r.sansOuvrir, 'validés sans ouverture');
+  h += tile(r.auto, 'tranchés automatiquement');
+  h += tile(r.detect + '/' + r.nFlaw, 'erreurs de l\'IA repérées');
+  h += tile(r.missed, 'erreurs non repérées');
+  h += tile(r.sur, 'corrections à tort');
+  h += tile(r.avgSec + ' s', 'par dossier ouvert');
+  h += '</div><p class="muted" style="margin:10px 0 0;">Les seuils du verdict sont pédagogiques, sans valeur juridique.</p></div>';
+
+  h += '<div class="card"><h2>Ce que contenaient les dossiers</h2><table><tr><th>Candidat</th><th>Décision de l\'IA</th><th>Votre action</th><th></th></tr>';
+  DOSSIERS.forEach(d => {
+    const s = run.d[d.id];
+    const act = s.action === 'valide' ? (s.opened ? 'Validé après ouverture' : 'Validé sans ouvrir') : (s.action === 'corrige' ? 'Corrigé' : 'Non traité (appliqué automatiquement)');
+    let mark, ok;
+    if (d.flaw){ ok = s.action === 'corrige'; } else { ok = s.action !== 'corrige'; }
+    mark = ok ? '<span class="ok-mark">✓</span>' : '<span class="ko-mark">✗</span>';
+    h += '<tr><td><b>' + d.nom + '</b></td><td>' + (d.ia.decision === 'retenu' ? 'Retenu' : 'Écarté') + ' (' + d.ia.score + '/100)</td><td>' + act + '</td><td>' + mark + '</td></tr>';
+    if (d.flaw){
+      h += '<tr><td colspan="4" style="border-bottom:1px solid var(--line);padding-top:0;"><div class="flaw-note"><b>Erreur de l\'IA&nbsp;: ' + d.flaw.titre + '</b>' + d.flaw.texte + '</div></td></tr>';
+    }
+  });
+  h += '</table></div>';
+
+  h += quizHtml();
+  $('app').innerHTML = h;
+}
+
+function tile(v, l){ return '<div class="tile"><b>' + v + '</b><span>' + fr(l) + '</span></div>'; }
+
+// ---------------------------------------------------------------
+// Plan de supervision (quiz)
+// ---------------------------------------------------------------
+function quizHtml(){
+  let h = '<div class="card"><h2>Rendre la supervision réelle</h2>';
+  h += '<p class="muted" style="margin:0 0 6px;">Vous devenez responsable RH. Cochez les cinq mesures qui rendent la supervision humaine réelle.</p><div class="opt-list">';
+  MESURES_ORDER.forEach(i => {
+    const m = MESURES[i];
+    const picked = LAST.quizAns.indexOf(m.id) !== -1;
+    h += '<label class="opt-item' + (picked ? ' picked' : '') + '"><input type="checkbox" ' + (picked ? 'checked ' : '') + (LAST.quizDone ? 'disabled ' : '') + 'onchange="toggleMesure(\'' + m.id + '\')"><span>' + m.label + '</span></label>';
+    if (LAST.quizDone){
+      const cls = m.ok ? (picked ? 'ok' : 'info') : (picked ? 'ko' : 'info');
+      const t = m.ok ? (picked ? 'Bon choix.' : 'À retenir aussi.') : (picked ? 'À éviter.' : 'Bien vu de ne pas le cocher.');
+      h += '<div class="feedback-box ' + cls + '"><b>' + t + '</b>' + m.why + '</div>';
+    }
+  });
+  h += '</div>';
+  if (!LAST.quizDone){
+    h += '<div class="actions-row"><button class="btn-primary" onclick="validerQuiz()" ' + (LAST.quizAns.length ? '' : 'disabled') + '>Valider mes mesures</button></div>';
+  } else {
+    const sc = quizScore();
+    h += '<div class="score-pill">Mesures : ' + sc + '/5</div>';
+    h += '<div class="actions-row"><button class="btn-primary" onclick="showIntro()">Rejouer la simulation</button><button class="btn-ghost" onclick="copierBilan()">Copier mon bilan</button></div>';
+  }
+  return h + '</div>';
+}
+function toggleMesure(id){
+  if (LAST.quizDone) return;
+  const i = LAST.quizAns.indexOf(id);
+  if (i === -1) LAST.quizAns.push(id); else LAST.quizAns.splice(i, 1);
+  renderResult();
+}
+function quizScore(){
+  const good = MESURES.filter(m => m.ok && LAST.quizAns.indexOf(m.id) !== -1).length;
+  const bad = MESURES.filter(m => !m.ok && LAST.quizAns.indexOf(m.id) !== -1).length;
+  return Math.max(0, good - bad);
+}
+function validerQuiz(){
+  LAST.quizDone = true;
+  const runs = loadRuns();
+  if (runs.length){ runs[runs.length - 1].quiz = quizScore(); saveRuns(runs); }
+  renderResult();
+}
+
+// ---------------------------------------------------------------
+// Historique et bilan
+// ---------------------------------------------------------------
+function runsTable(){
+  const runs = loadRuns();
+  if (!runs.length) return '';
+  let h = '<div class="card"><h2>Mes essais</h2><table><tr><th>N°</th><th>Mode</th><th>Ouverts</th><th>Erreurs repérées</th><th>Sans ouverture</th><th>Par dossier</th><th>Verdict</th></tr>';
+  runs.forEach((x, i) => {
+    h += '<tr><td>' + (i + 1) + '</td><td>' + MODES[x.mode] + '</td><td>' + x.ouverts + '/' + DOSSIERS.length + '</td><td>' + x.detect + '/' + x.nFlaw + '</td><td>' + x.sansOuvrir + '</td><td>' + x.avgSec + ' s</td><td>' + fr(VERDICTS[x.verdict]) + '</td></tr>';
+  });
+  h += '</table><div class="actions-row"><button class="btn-ghost" onclick="viderRuns()">Effacer mes essais</button></div></div>';
+  return h;
+}
+function viderRuns(){
+  if (confirm('Effacer tous vos essais ?')){ try{ localStorage.removeItem(storageKey()); }catch(e){} showIntro(); }
+}
+
+function copierBilan(){
+  const runs = loadRuns();
+  let t = "Bilan – Simulateur de supervision humaine\n";
+  runs.forEach((x, i) => {
+    t += "Essai " + (i + 1) + " (" + MODES[x.mode] + ") : " + x.ouverts + "/" + DOSSIERS.length + " dossiers ouverts, " + x.detect + "/" + x.nFlaw + " erreurs de l'IA repérées, " +
+         x.sansOuvrir + " validés sans ouverture, " + x.avgSec + " s par dossier ouvert, verdict : " + VERDICTS[x.verdict] + (x.quiz !== null ? ", mesures : " + x.quiz + "/5" : "") + "\n";
+  });
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(() => alert('Bilan copié dans le presse-papiers.'), () => alert(t));
+  } else { alert(t); }
+}
+
+// ---------------------------------------------------------------
+$('headerText').textContent = fr($('headerText').textContent);
+$('footerText').textContent = fr($('footerText').textContent);
+showIntro();
+function frStatic(){
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(t => { if (t.parentNode && !/^(SCRIPT|STYLE)$/.test(t.parentNode.nodeName)) t.nodeValue = fr(t.nodeValue); });
+}
+frStatic();
+</script>
+</body>
+</html>

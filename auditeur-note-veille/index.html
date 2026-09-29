@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auditeur de note de veille</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#ffffff; --ink:#1f2430; --muted:#666f7d; --line:#e3e6eb;
+    --blue:#3457d5; --blue-light:#eaeefc;
+    --green:#1f8a52; --green-light:#e7f6ee;
+    --amber:#b5751d; --amber-light:#fdf1de;
+    --red:#c23b3b; --red-light:#fbe9e9;
+    --purple:#7a3fc2; --purple-light:#f1e9fb;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.5;
+  }
+  header{ padding:32px 24px 14px; text-align:center; max-width:920px; margin:0 auto; }
+  header h1{ font-size:1.65rem; margin:0 0 8px; letter-spacing:-0.01em; }
+  header p{ color:var(--muted); margin:0; font-size:0.98rem; }
+  .badge{
+    display:inline-block; font-size:0.72rem; padding:3px 9px; border-radius:20px;
+    background:var(--purple-light); color:var(--purple); font-weight:600; margin-bottom:10px;
+  }
+  .topnav{ max-width:920px; margin:0 auto; padding:14px 20px 0; font-size:0.85rem; }
+  .topnav a{ color:var(--muted); text-decoration:none; }
+  .topnav a:hover{ color:var(--blue); text-decoration:underline; }
+
+  .wrap{ max-width:920px; margin:0 auto; padding:20px 20px 60px; }
+
+  .ref-box{
+    background:var(--purple-light); border:1px solid #ddc4f2; border-radius:12px;
+    padding:14px 18px; font-size:0.86rem; margin-bottom:22px;
+  }
+  .ref-box b{ color:var(--purple); }
+  .ref-box ul{ margin:8px 0 0; padding-left:18px; }
+  .ref-box li{ margin-bottom:3px; }
+
+  .case-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:640px){ .case-grid{grid-template-columns:1fr;} }
+  .case-card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px 18px; cursor:pointer; transition:border-color .1s ease;
+  }
+  .case-card:hover{ border-color:var(--purple); }
+  .case-card .tag{
+    display:inline-block; font-size:0.7rem; padding:2px 8px; border-radius:12px;
+    background:var(--purple-light); color:var(--purple); font-weight:600; margin-bottom:8px;
+  }
+  .case-card h3{ margin:0 0 6px; font-size:1rem; }
+  .case-card .status{ font-size:0.78rem; color:var(--muted); margin-top:8px; }
+  .case-card .status.done{ color:var(--green); font-weight:600; }
+
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:22px; }
+  .contexte-box{
+    background:#f4f5f7; border-radius:10px; padding:12px 14px; font-size:0.88rem;
+    color:var(--muted); margin-bottom:16px;
+  }
+  .contexte-box b{ color:var(--ink); }
+
+  details.note-box{
+    border:1px solid var(--line); border-radius:10px; background:#fbfbfc; margin-bottom:18px;
+  }
+  details.note-box summary{ cursor:pointer; padding:12px 16px; font-weight:600; font-size:0.92rem; }
+  .note-body{ padding:0 16px 14px; font-size:0.92rem; }
+  .note-body ol{ margin:6px 0 0; padding-left:0; list-style:none; }
+  .note-body li{ padding:6px 0; border-bottom:1px solid var(--line); }
+  .note-body li:last-child{ border-bottom:none; }
+  .cid{
+    display:inline-block; min-width:28px; text-align:center; font-size:0.72rem; font-weight:700;
+    padding:1px 6px; border-radius:8px; background:var(--purple-light); color:var(--purple); margin-right:6px;
+  }
+  .sid{ background:var(--blue-light); color:var(--blue); }
+  .srcref{ color:var(--muted); font-size:0.8rem; }
+
+  .steps-indicator{ display:flex; gap:8px; margin-bottom:18px; }
+  .step-dot{ flex:1; height:5px; border-radius:4px; background:var(--line); }
+  .step-dot.active{ background:var(--purple); }
+  .step-dot.done{ background:var(--green); }
+  .step-title{ font-size:1.05rem; font-weight:700; margin:0 0 6px; }
+  .step-help{ color:var(--muted); font-size:0.86rem; margin:0 0 14px; }
+
+  .item{ padding:14px 0; border-bottom:1px solid var(--line); }
+  .item:last-child{ border-bottom:none; }
+  .item-head{ font-size:0.94rem; margin-bottom:10px; }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{
+    padding:8px 13px; border-radius:20px; border:1px solid var(--line); background:#fff;
+    color:var(--ink); font-size:0.82rem; font-weight:600; cursor:pointer;
+  }
+  .chip:hover:not(:disabled){ border-color:var(--purple); }
+  .chip.picked{ background:var(--purple-light); border-color:var(--purple); color:var(--purple); }
+  .chip.ok{ background:var(--green-light); border-color:var(--green); color:#175c38; }
+  .chip.ko{ background:var(--red-light); border-color:var(--red); color:#7a2323; }
+  .chip:disabled{ cursor:default; opacity:0.75; }
+  .chip.ok:disabled,.chip.ko:disabled{ opacity:1; }
+
+  .opt-list{ display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+  .opt-item{
+    display:flex; align-items:flex-start; gap:10px; padding:11px 14px; border:1px solid var(--line);
+    border-radius:10px; cursor:pointer; font-size:0.92rem;
+  }
+  .opt-item:hover{ border-color:var(--purple); }
+  .opt-item.picked{ border-color:var(--purple); background:var(--purple-light); }
+  .opt-item input{ margin-top:3px; }
+
+  button{
+    font-family:inherit; cursor:pointer; border:none; border-radius:9px; font-size:0.92rem;
+    padding:11px 18px; transition:transform .05s ease;
+  }
+  button:active{ transform:scale(0.98); }
+  button:disabled{ opacity:0.45; cursor:not-allowed; }
+  .btn-primary{ background:var(--purple); color:#fff; font-weight:600; }
+  .btn-primary:hover:not(:disabled){ background:#6733a8; }
+  .btn-ghost{ background:transparent; color:var(--muted); border:1px solid var(--line); }
+  .btn-ghost:hover{ background:#f0f1f3; }
+  .actions-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+  .link-btn{
+    background:none; border:none; color:var(--blue); font-size:0.85rem; padding:0;
+    text-decoration:underline; cursor:pointer; font-family:inherit;
+  }
+
+  .feedback-box{ margin-top:10px; border-radius:10px; padding:11px 14px; font-size:0.86rem; }
+  .feedback-box.ok{ background:var(--green-light); border:1px solid #bfe4cd; color:#175c38; }
+  .feedback-box.ko{ background:var(--red-light); border:1px solid #f1c3c3; color:#7a2323; }
+  .feedback-box.info{ background:var(--blue-light); border:1px solid #c9d4f6; color:#243a8a; }
+  .feedback-box b{ display:block; margin-bottom:3px; }
+
+  .score-pill{
+    display:inline-block; font-weight:700; font-size:0.85rem; padding:4px 12px; border-radius:20px;
+    background:var(--purple-light); color:var(--purple); margin-bottom:12px;
+  }
+  textarea{
+    width:100%; min-height:130px; resize:vertical; border:1px solid var(--line); border-radius:10px;
+    padding:14px; font-size:0.96rem; font-family:inherit; color:var(--ink); background:#fbfbfc; margin-bottom:10px;
+  }
+  textarea:focus{ outline:none; border-color:var(--purple); background:#fff; }
+  .criterion{
+    display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:1px solid var(--line);
+    font-size:0.9rem; cursor:pointer;
+  }
+  .criterion:last-child{ border-bottom:none; }
+  .criterion input{ margin-top:3px; }
+  .prompt-box{
+    background:#f4f5f7; border:1px dashed #c8ccd4; border-radius:10px; padding:12px 14px;
+    font-size:0.88rem; margin:12px 0;
+  }
+  .case-summary{ background:var(--purple-light); border-radius:12px; padding:16px; margin-top:6px; }
+  .case-summary h3{ margin:0 0 8px; font-size:0.95rem; color:var(--purple); }
+  .breakdown{ font-size:0.88rem; margin:8px 0 12px; }
+  .breakdown div{ display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #e2d3f3; }
+  .breakdown div:last-child{ border-bottom:none; }
+
+  .bilan-section{ margin-top:26px; padding-top:20px; border-top:1px solid var(--line); }
+  .bilan-list{ display:flex; flex-direction:column; gap:6px; margin:12px 0 16px; }
+  .bilan-item{
+    display:flex; justify-content:space-between; align-items:center; font-size:0.85rem;
+    padding:8px 0; border-bottom:1px solid var(--line);
+  }
+  .bilan-item:last-child{ border-bottom:none; }
+  .bilan-score{ font-weight:700; color:var(--purple); }
+  footer{ text-align:center; color:var(--muted); font-size:0.8rem; padding:10px 20px 40px; max-width:760px; margin:0 auto; }
+</style>
+</head>
+<body>
+
+<div class="topnav"><a href="../">&larr; Tous les outils pédagogiques</a></div>
+
+<header>
+  <div class="badge">Veille et esprit critique · Ressources humaines</div>
+  <h1>Auditeur de note de veille</h1>
+  <p>Une IA vous remet une note de veille sur les ressources humaines. Vérifiez ses sources, classez ses affirmations et décidez de ce qu'il faut corriger avant de la diffuser.</p>
+</header>
+
+<div class="wrap">
+
+  <div class="ref-box" id="refBox">
+    <b>Repères pour classer les affirmations</b>
+    <ul>
+      <li><b>Fait établi et sourcé</b> : vérifiable dans une source primaire, datée et accessible.</li>
+      <li><b>Tendance lourde</b> : phénomène massif, mesurable, quasi certain à moyen terme.</li>
+      <li><b>Signal faible</b> : information fragmentaire ou émergente qui annonce une rupture possible.</li>
+      <li><b>Effet de mode ou promesse commerciale</b> : argument de vente, souvent porté par un éditeur.</li>
+      <li><b>Non étayée, périmée ou à vérifier</b> : source introuvable, information dépassée, chiffre sans origine.</li>
+    </ul>
+  </div>
+
+  <div id="caseGrid" class="case-grid"></div>
+  <div id="caseWorkspace" style="display:none;"></div>
+
+  <div class="bilan-section" id="bilanSection">
+    <h2 style="font-size:1.05rem;margin:0 0 6px;">Mon bilan</h2>
+    <p style="color:var(--muted);font-size:0.85rem;margin:0 0 4px;">Récapitulatif des notes auditées durant cette session.</p>
+    <div id="bilanList" class="bilan-list"></div>
+    <button class="btn-ghost" onclick="copierBilanGlobal()">Copier mon bilan</button>
+    <button class="btn-ghost" onclick="viderSession()">Réinitialiser la session</button>
+  </div>
+</div>
+
+<footer>
+  Outil pédagogique, fonctionnement hors connexion : aucune donnée n'est enregistrée ni transmise.
+  Les notes, organismes et chiffres sont fictifs et ne doivent pas être cités.
+  Les références juridiques sont simplifiées à des fins pédagogiques et ne constituent pas un avis juridique.
+</footer>
+
+<script>
+const NB = " ";
+
+// Typographie française : espaces insécables avant : ; ? ! » % et après «
+function fr(s){
+  return s.replace(/ ([:;?!»%€])/g, NB + '$1').replace(/« /g, '«' + NB);
+}
+function frDeep(x){
+  if (typeof x === 'string') return fr(x);
+  if (Array.isArray(x)) return x.map(frDeep);
+  if (x && typeof x === 'object'){
+    const o = {};
+    Object.keys(x).forEach(k => { o[k] = frDeep(x[k]); });
+    return o;
+  }
+  return x;
+}
+
+const SOURCE_TYPES = {
+  inst:  "Institutionnelle ou juridique",
+  acad:  "Académique ou prospective",
+  marche:"Commerciale ou de marché",
+  intro: "Introuvable ou invérifiable"
+};
+const CLAIM_TYPES = {
+  fait:    "Fait établi et sourcé",
+  lourde:  "Tendance lourde",
+  faible:  "Signal faible",
+  mode:    "Effet de mode ou promesse commerciale",
+  verifier:"Non étayée, périmée ou à vérifier"
+};
+
+const WRONG_ACTIONS = [
+  { id: 'w1', label: "Demander à l'IA si elle est sûre de ses sources et s'en tenir à sa réponse", ok: false,
+    why: "Une IA peut confirmer une source qu'elle a inventée : la vérification se fait dans la source primaire, pas auprès de l'IA." },
+  { id: 'w2', label: "Reformuler la note pour la rendre plus convaincante auprès de la direction", ok: false,
+    why: "Rendre une note plus convaincante ne la rend pas plus fiable : cela masque ses fragilités." },
+  { id: 'w3', label: "Compléter la note avec des chiffres récents proposés par l'IA", ok: false,
+    why: "Des chiffres proposés sans source sont autant de nouveaux risques d'invention." }
+];
+
+const CRITERES = [
+  "J'ai distingué ce qui est établi de ce qui reste à vérifier.",
+  "J'ai nommé au moins une affirmation à écarter, à requalifier ou à vérifier.",
+  "J'ai proposé une action concrète avant diffusion (source à retrouver, recoupement, correction)."
+];
+
+const PROMPT_PROLONGEMENT = "Relis la note de veille ci-dessus comme un relecteur hostile : liste les affirmations les plus fragiles, les sources que tu ne peux pas vérifier et ce qui manque pour la publier. N'invente aucune source.";
+
+// ---------------------------------------------------------------
+// Notes à auditer
+// ---------------------------------------------------------------
+const NOTES = frDeep([
+  {
+    id: 'n1', perimetre: "Veille technologique",
+    titre: "Automatisation des tâches administratives RH",
+    contexte: "Un chargé de mission RH a demandé à une IA une note de veille sur l'automatisation des tâches administratives dans les services RH, à destination du comité de direction.",
+    sources: [
+      { id: 'S1', ref: "Observatoire public de l'emploi et des compétences, rapport annuel 2025 (méthodologie et échantillon de 4 200 entreprises publiés en ligne)", type: 'inst',
+        explication: "Organisme public, données ouvertes, méthode et échantillon publiés : une source primaire de haut niveau de fiabilité." },
+      { id: 'S2', ref: "Livre blanc « L'IA au service de la paie », éditeur SIRHplus, 2025", type: 'marche',
+        explication: "Publié par un éditeur qui vend le produit : utile pour connaître l'offre, insuffisant comme preuve. Ses chiffres sont à recouper." },
+      { id: 'S3', ref: "Chaire universitaire « Travail et technologies » : article évalué par des pairs sur les usages de l'IA dans les relations de travail, 2024, données ouvertes", type: 'acad',
+        explication: "Revue à comité de lecture et données ouvertes : une source académique fiable. Elle rapporte des observations, pas des statistiques générales." },
+      { id: 'S4', ref: "« Selon une étude récente d'un grand cabinet international »", type: 'intro',
+        explication: "Ni nom, ni date, ni lien : impossible à vérifier, donc à ne jamais reprendre." }
+    ],
+    claims: [
+      { id: 'A1', src: 'S1', text: "Les tâches répétitives de paie et de tri de documents sont automatisées dans la majorité des entreprises de plus de 250 salariés.", type: 'lourde',
+        explication: "Phénomène massif, mesuré sur un large échantillon par une source ouverte : c'est une tendance lourde." },
+      { id: 'A2', src: 'S2', text: "Notre solution divise par trois le temps de traitement des bulletins de paie.", type: 'mode',
+        explication: "Promesse commerciale d'éditeur, sans méthode ni mesure indépendante : un argument de vente, pas un constat." },
+      { id: 'A3', src: 'S3', text: "Des candidats se font souffler leurs réponses par une IA en temps réel pendant les entretiens en visioconférence.", type: 'faible',
+        explication: "Observation fragmentaire, encore rare, mais qui annonce une rupture possible dans l'évaluation des candidats : un signal faible à suivre." },
+      { id: 'A4', src: 'S4', text: "D'ici 2028, 70 % des métiers RH auront disparu.", type: 'verifier',
+        explication: "Un chiffre spectaculaire adossé à une source introuvable : à écarter tant qu'aucune source primaire n'est retrouvée." },
+      { id: 'A5', src: 'S3', text: "Certains salariés refusent de s'adresser à l'assistant RH par crainte d'être profilés.", type: 'faible',
+        explication: "Témoignages isolés à ce stade, mais qui touchent à la confiance et à l'acceptabilité : un signal faible." }
+    ],
+    actions: [
+      { id: 'r1', label: "Retrouver l'étude d'origine du chiffre de 70 %, ou l'écarter", ok: true,
+        why: "Un chiffre sans source retrouvable n'a pas sa place dans une note destinée à un comité de direction." },
+      { id: 'r2', label: "Présenter la phrase de l'éditeur comme un argument commercial, pas comme un constat", ok: true,
+        why: "Le lecteur doit savoir qui parle et quel est son intérêt." },
+      { id: 'r3', label: "Recouper la tendance d'automatisation avec une deuxième source indépendante", ok: true,
+        why: "Une tendance qui fonde une décision se recoupe avec une seconde source indépendante." }
+    ],
+    modele: "Cette note repose sur une tendance solide (l'automatisation de la paie) et sur deux signaux faibles utiles à suivre. Je retire l'affirmation sur les 70 % de métiers, dont la source est introuvable, et je présente la phrase de l'éditeur comme un argument commercial. Avant diffusion, je recoupe la tendance avec une seconde source indépendante."
+  },
+  {
+    id: 'n2', perimetre: "Veille législative et réglementaire",
+    titre: "Recrutement, IA générative et cadre européen",
+    contexte: "Une responsable du recrutement a demandé à une IA une note de veille sur le cadre européen applicable aux outils de recrutement fondés sur l'IA.",
+    sources: [
+      { id: 'S1', ref: "Règlement (UE) 2024/1689 sur l'intelligence artificielle, texte publié au Journal officiel de l'Union européenne", type: 'inst',
+        explication: "Texte officiel : la source primaire de référence. Attention, il a été modifié depuis sa publication (voir l'affirmation A2)." },
+      { id: 'S2', ref: "Communiqué de presse d'une start-up de technologie RH, TalentPilot, diffusé lors d'un salon en 2026", type: 'marche',
+        explication: "Communication d'un fournisseur : utile pour connaître l'offre, jamais une preuve de conformité." },
+      { id: 'S3', ref: "Laboratoire universitaire de recherche : prépublication sur les biais des algorithmes de tri de CV, 2026, données et code fournis", type: 'acad',
+        explication: "Prépublication, pas encore évaluée par des pairs, mais transparente (données et code fournis) : à citer avec cette réserve." },
+      { id: 'S4', ref: "« Une source proche du dossier », citée dans une lettre d'information", type: 'intro',
+        explication: "Source anonyme, sans possibilité de vérification : une rumeur, pas une source." }
+    ],
+    claims: [
+      { id: 'A1', src: 'S1', text: "Depuis le 2 février 2025, les systèmes d'IA qui déduisent les émotions des candidats ou des salariés sont interdits, sauf raisons médicales ou de sécurité.", type: 'fait',
+        explication: "Règle en vigueur, vérifiable à l'article 5 du règlement : un fait établi et sourcé." },
+      { id: 'A2', src: 'S1', text: "Les obligations « haut risque » de l'AI Act applicables aux outils de recrutement s'appliquent depuis août 2026.", type: 'verifier',
+        explication: "Périmée : le règlement (UE) 2026/1744 (Digital Omnibus), entré en vigueur le 27 juillet 2026, reporte ces obligations au 2 décembre 2027. Une source primaire peut être dépassée : vérifiez toujours la date et les modifications (à contrôler sur EUR-Lex)." },
+      { id: 'A3', src: 'S2', text: "Notre plateforme est 100 % conforme à l'AI Act, sans aucune démarche de votre part.", type: 'mode',
+        explication: "Promesse commerciale absolue : l'entreprise qui utilise l'outil garde ses propres obligations (information, supervision humaine, analyse d'impact). Un argument de vente, pas un constat." },
+      { id: 'A4', src: 'S3', text: "Un algorithme entraîné sur l'historique de recrutement d'une entreprise tend à reproduire les profils majoritaires du passé.", type: 'lourde',
+        explication: "Mécanisme documenté et récurrent (effet de « clonage social ») : une tendance lourde, à citer avec la réserve d'une prépublication." },
+      { id: 'A5', src: 'S4', text: "Un grand groupe européen aurait renoncé à tout recrutement humain dès 2027.", type: 'verifier',
+        explication: "Une rumeur sans source vérifiable : à écarter." }
+    ],
+    actions: [
+      { id: 'r1', label: "Vérifier la date d'application et les modifications récentes du texte cité", ok: true,
+        why: "Un texte officiel peut être modifié : la date d'application de l'affirmation A2 est dépassée." },
+      { id: 'r2', label: "Présenter l'affirmation du fournisseur comme un argument commercial, pas comme un constat", ok: true,
+        why: "Une promesse de conformité totale est un argument de vente, pas une information juridique." },
+      { id: 'r3', label: "Retrouver la source de l'annonce sur le groupe européen, ou l'écarter", ok: true,
+        why: "Une rumeur non sourcée ne doit pas figurer dans une note de veille." }
+    ],
+    modele: "Le texte du règlement établit l'interdiction de l'analyse des émotions, et la prépublication confirme un mécanisme de biais connu. Je corrige la date des obligations « haut risque », reportées depuis, je requalifie la promesse du fournisseur en argument commercial et j'écarte la rumeur sans source. Je vérifie la date sur EUR-Lex avant de diffuser."
+  },
+  {
+    id: 'n3', perimetre: "Veille sociale, sociétale et RSE",
+    titre: "IA, sobriété numérique et climat social",
+    contexte: "Un directeur des ressources humaines a demandé à une IA une note de veille sur les effets sociaux et environnementaux de l'IA en entreprise, pour préparer son diagnostic RSE.",
+    sources: [
+      { id: 'S1', ref: "Organisation internationale : rapport sur l'avenir du travail et l'IA, 2025, méthodologie publiée", type: 'acad',
+        explication: "Rapport d'une organisation internationale avec méthodologie publiée : une source prospective de bon niveau." },
+      { id: 'S2', ref: "Baromètre annuel d'une association professionnelle de DRH, 2025 : enquête auprès de 900 adhérents, questionnaire en annexe", type: 'acad',
+        explication: "Baromètre professionnel avec questionnaire publié : une source prospective. Limite : un échantillon d'adhérents, non représentatif de toutes les entreprises." },
+      { id: 'S3', ref: "Argumentaire commercial d'un fournisseur d'hébergement informatique « vert »", type: 'marche',
+        explication: "Document commercial d'un fournisseur : un point de vue intéressé, à traiter comme tel." },
+      { id: 'S4', ref: "« Des chercheurs ont montré que… », sans titre, auteur ni date", type: 'intro',
+        explication: "Aucune référence exploitable : impossible de retrouver l'étude, donc de la vérifier." }
+    ],
+    claims: [
+      { id: 'A1', src: 'S1', text: "Une requête à un grand modèle de langage consomme nettement plus d'énergie qu'une recherche web classique.", type: 'lourde',
+        explication: "Constat convergent et durable : une tendance de fond pour la sobriété numérique. Tout chiffrage exact reste à sourcer." },
+      { id: 'A2', src: 'S3', text: "Notre hébergement de l'IA est neutre en carbone.", type: 'mode',
+        explication: "Allégation commerciale sans méthode de calcul : à requalifier ou à écarter." },
+      { id: 'A3', src: 'S2', text: "42 % des DRH interrogés déclarent avoir déjà formé leurs recruteurs à l'IA.", type: 'fait',
+        explication: "Chiffre daté, sourcé, avec méthode publiée : un fait établi, à interpréter avec prudence (échantillon d'adhérents, réponses déclaratives)." },
+      { id: 'A4', src: 'S4', text: "Des chercheurs ont montré que l'IA détruit plus d'emplois qu'elle n'en crée.", type: 'verifier',
+        explication: "Affirmation générale, non sourcée et très discutée : à écarter ou à documenter." },
+      { id: 'A5', src: 'S1', text: "Des représentants du personnel commencent à demander des clauses sur l'usage de l'IA dans les accords d'entreprise.", type: 'faible',
+        explication: "Pratique émergente, encore rare, qui pourrait devenir une norme du dialogue social : un signal faible." }
+    ],
+    actions: [
+      { id: 'r1', label: "Recouper le chiffre du baromètre avec sa méthodologie (échantillon, période, mode de recueil)", ok: true,
+        why: "Un chiffre d'enquête ne se lit qu'avec son échantillon et sa méthode." },
+      { id: 'r2', label: "Requalifier la promesse « neutre en carbone » comme une allégation commerciale, ou l'écarter", ok: true,
+        why: "Sans méthode de calcul, la promesse d'un fournisseur reste un argument de vente." },
+      { id: 'r3', label: "Retrouver la référence des « chercheurs », ou écarter l'affirmation", ok: true,
+        why: "Une affirmation sans référence ne peut pas être vérifiée : elle ne doit pas figurer dans le diagnostic." }
+    ],
+    modele: "La note repose sur un constat solide (la consommation d'énergie des modèles) et sur une enquête professionnelle datée, à lire avec les réserves de son échantillon. Je requalifie l'argument de l'hébergeur, j'écarte l'affirmation sur les emplois faute de source et je suis le signal sur les clauses d'accords d'entreprise. Je recoupe le baromètre avant de le présenter au comité de direction."
+  }
+]);
+
+// Actions présentées : 3 bonnes + 3 mauvaises, ordre fixe mais mélangé par note
+function actionsPourNote(n){
+  const w = frDeep(WRONG_ACTIONS);
+  const order = { n1: [0, 3, 1, 4, 2, 5], n2: [3, 0, 4, 1, 5, 2], n3: [0, 4, 3, 1, 2, 5] }[n.id];
+  const all = n.actions.concat(w);
+  return order.map(i => all[i]);
+}
+
+// ---------------------------------------------------------------
+// État et stockage
+// ---------------------------------------------------------------
+let S = null;
+
+function newState(noteId){
+  return {
+    noteId: noteId, step: 0,
+    srcAns: {}, srcDone: false,
+    claimAns: {}, claimDone: false,
+    actAns: [], actDone: false,
+    texte: '', modeleVu: false, crit: [false, false, false]
+  };
+}
+
+function storageKey(){ return 'auditeur_veille_session'; }
+function loadSession(){
+  try{ const raw = localStorage.getItem(storageKey()); return raw ? JSON.parse(raw) : {}; }
+  catch(e){ return {}; }
+}
+function saveSession(sess){
+  try{ localStorage.setItem(storageKey(), JSON.stringify(sess)); }catch(e){}
+}
+function getNote(id){ return NOTES.find(n => n.id === id); }
+function $(id){ return document.getElementById(id); }
+
+// ---------------------------------------------------------------
+// Liste des notes
+// ---------------------------------------------------------------
+function renderList(){
+  const sess = loadSession();
+  const grid = $('caseGrid');
+  grid.innerHTML = '';
+  NOTES.forEach(n => {
+    const done = sess[n.id];
+    const card = document.createElement('div');
+    card.className = 'case-card';
+    card.innerHTML =
+      '<div class="tag">' + n.perimetre + '</div>' +
+      '<h3>' + n.titre + '</h3>' +
+      '<div class="status' + (done ? ' done' : '') + '">' +
+      (done ? ('Terminé · ' + done.total + '/' + done.max) : 'À faire') + '</div>';
+    card.onclick = () => openNote(n.id);
+    grid.appendChild(card);
+  });
+  grid.style.display = 'grid';
+  $('refBox').style.display = 'block';
+  $('bilanSection').style.display = 'block';
+  $('caseWorkspace').style.display = 'none';
+  renderBilan();
+}
+
+function openNote(id){
+  S = newState(id);
+  $('caseGrid').style.display = 'none';
+  $('refBox').style.display = 'none';
+  $('bilanSection').style.display = 'none';
+  $('caseWorkspace').style.display = 'block';
+  renderWorkspace();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function backToList(){ S = null; renderList(); }
+
+// ---------------------------------------------------------------
+// Espace de travail
+// ---------------------------------------------------------------
+function stepsIndicator(){
+  let h = '<div class="steps-indicator">';
+  for (let i = 0; i < 4; i++){
+    h += '<div class="step-dot' + (i < S.step ? ' done' : (i === S.step ? ' active' : '')) + '"></div>';
+  }
+  return h + '</div>';
+}
+
+function noteBox(n, open){
+  let h = '<details class="note-box"' + (open ? ' open' : '') + '><summary>La note produite par l\'IA</summary><div class="note-body">';
+  h += '<div style="margin:6px 0;"><b>Affirmations</b></div><ol>';
+  n.claims.forEach(c => {
+    h += '<li><span class="cid">' + c.id + '</span>' + c.text + ' <span class="srcref">(source ' + c.src + ')</span></li>';
+  });
+  h += '</ol><div style="margin:12px 0 6px;"><b>Sources citées</b></div><ol>';
+  n.sources.forEach(s => {
+    h += '<li><span class="cid sid">' + s.id + '</span>' + s.ref + '</li>';
+  });
+  h += '</ol></div></details>';
+  return h;
+}
+
+function renderWorkspace(){
+  const n = getNote(S.noteId);
+  let h = '<div class="card">';
+  h += '<button class="link-btn" onclick="backToList()" style="margin-bottom:14px;">&larr; Retour aux notes</button>';
+  h += '<div class="contexte-box"><b>Contexte&nbsp;:</b> ' + n.contexte + '</div>';
+  h += stepsIndicator();
+  h += noteBox(n, S.step < 2);
+  if (S.step === 0) h += stepSources(n);
+  else if (S.step === 1) h += stepClaims(n);
+  else if (S.step === 2) h += stepActions(n);
+  else h += stepRetour(n);
+  h += '</div>';
+  $('caseWorkspace').innerHTML = h;
+  if (S.step === 3){
+    const ta = $('retour');
+    if (ta){ ta.value = S.texte; }
+  }
+}
+
+// ---- Étape 1 : sources -------------------------------------------------
+function chipsHtml(types, current, correct, done, fnName, itemId){
+  let h = '<div class="chips">';
+  Object.keys(types).forEach(k => {
+    let cls = 'chip';
+    if (done){
+      if (k === correct) cls += ' ok';
+      else if (k === current) cls += ' ko';
+    } else if (k === current){ cls += ' picked'; }
+    h += '<button class="' + cls + '" ' + (done ? 'disabled ' : '') +
+         'onclick="' + fnName + '(\'' + itemId + '\',\'' + k + '\')">' + types[k] + '</button>';
+  });
+  return h + '</div>';
+}
+
+function stepSources(n){
+  let h = '<div class="step-title">Étape 1 · Qualifier chaque source citée</div>';
+  h += '<p class="step-help">Quel est le niveau de fiabilité de chaque source&nbsp;? Qui parle, avec quelle méthode, et peut-on la retrouver&nbsp;?</p>';
+  n.sources.forEach(s => {
+    const cur = S.srcAns[s.id];
+    h += '<div class="item"><div class="item-head"><span class="cid sid">' + s.id + '</span>' + s.ref + '</div>';
+    h += chipsHtml(SOURCE_TYPES, cur, s.type, S.srcDone, 'pickSource', s.id);
+    if (S.srcDone){
+      const ok = cur === s.type;
+      h += '<div class="feedback-box ' + (ok ? 'ok' : 'ko') + '"><b>' + (ok ? 'Bonne réponse.' : 'Réponse attendue&nbsp;: ' + SOURCE_TYPES[s.type] + '.') + '</b>' + s.explication + '</div>';
+    }
+    h += '</div>';
+  });
+  if (S.srcDone){
+    h += '<div class="actions-row"><button class="btn-primary" onclick="nextStep()">Continuer</button></div>';
+  } else {
+    const all = n.sources.every(s => S.srcAns[s.id]);
+    h += '<div class="actions-row"><button class="btn-primary" onclick="validateSources()" ' + (all ? '' : 'disabled') + '>Valider mes réponses</button></div>';
+  }
+  return h;
+}
+function pickSource(id, k){ if (S.srcDone) return; S.srcAns[id] = k; renderWorkspace(); }
+function validateSources(){ S.srcDone = true; renderWorkspace(); }
+
+// ---- Étape 2 : affirmations -------------------------------------------
+function stepClaims(n){
+  let h = '<div class="step-title">Étape 2 · Classer chaque affirmation</div>';
+  h += '<p class="step-help">Une source fiable ne rend pas toute affirmation fiable&nbsp;: lisez ce qui est réellement dit, et sa date.</p>';
+  n.claims.forEach(c => {
+    const cur = S.claimAns[c.id];
+    h += '<div class="item"><div class="item-head"><span class="cid">' + c.id + '</span>' + c.text + ' <span class="srcref">(source ' + c.src + ')</span></div>';
+    h += chipsHtml(CLAIM_TYPES, cur, c.type, S.claimDone, 'pickClaim', c.id);
+    if (S.claimDone){
+      const ok = cur === c.type;
+      h += '<div class="feedback-box ' + (ok ? 'ok' : 'ko') + '"><b>' + (ok ? 'Bonne réponse.' : 'Réponse attendue&nbsp;: ' + CLAIM_TYPES[c.type] + '.') + '</b>' + c.explication + '</div>';
+    }
+    h += '</div>';
+  });
+  if (S.claimDone){
+    h += '<div class="actions-row"><button class="btn-primary" onclick="nextStep()">Continuer</button></div>';
+  } else {
+    const all = n.claims.every(c => S.claimAns[c.id]);
+    h += '<div class="actions-row"><button class="btn-primary" onclick="validateClaims()" ' + (all ? '' : 'disabled') + '>Valider mes réponses</button></div>';
+  }
+  return h;
+}
+function pickClaim(id, k){ if (S.claimDone) return; S.claimAns[id] = k; renderWorkspace(); }
+function validateClaims(){ S.claimDone = true; renderWorkspace(); }
+
+// ---- Étape 3 : actions prioritaires ------------------------------------
+function stepActions(n){
+  const list = actionsPourNote(n);
+  let h = '<div class="step-title">Étape 3 · Que faire avant de diffuser cette note&nbsp;?</div>';
+  h += '<p class="step-help">Cochez les trois actions les plus utiles.</p>';
+  h += '<div class="opt-list">';
+  list.forEach(a => {
+    const picked = S.actAns.indexOf(a.id) !== -1;
+    h += '<label class="opt-item' + (picked ? ' picked' : '') + '">';
+    h += '<input type="checkbox" ' + (picked ? 'checked ' : '') + (S.actDone ? 'disabled ' : '') + 'onchange="toggleAction(\'' + a.id + '\')">';
+    h += '<span>' + a.label + '</span></label>';
+    if (S.actDone){
+      const ok = a.ok;
+      const cls = ok ? (picked ? 'ok' : 'info') : (picked ? 'ko' : 'info');
+      const titre = ok ? (picked ? 'Bon choix.' : 'À retenir aussi.') : (picked ? 'À éviter.' : 'Bien vu de ne pas le cocher.');
+      h += '<div class="feedback-box ' + cls + '" style="margin-top:-2px;margin-bottom:6px;"><b>' + titre + '</b>' + a.why + '</div>';
+    }
+  });
+  h += '</div>';
+  if (S.actDone){
+    h += '<div class="actions-row"><button class="btn-primary" onclick="nextStep()">Continuer</button></div>';
+  } else {
+    h += '<div class="actions-row"><button class="btn-primary" onclick="validateActions()" ' + (S.actAns.length ? '' : 'disabled') + '>Valider</button></div>';
+  }
+  return h;
+}
+function toggleAction(id){
+  if (S.actDone) return;
+  const i = S.actAns.indexOf(id);
+  if (i === -1) S.actAns.push(id); else S.actAns.splice(i, 1);
+  renderWorkspace();
+}
+function validateActions(){ S.actDone = true; renderWorkspace(); }
+
+// ---- Étape 4 : retour rédigé -------------------------------------------
+function stepRetour(n){
+  let h = '<div class="step-title">Étape 4 · Rédigez votre retour au commanditaire</div>';
+  h += '<p class="step-help">En trois ou quatre phrases&nbsp;: ce qui est solide, ce que vous corrigez ou écartez, ce que vous vérifiez avant diffusion.</p>';
+  h += '<textarea id="retour" placeholder="Rédigez ici votre retour…" oninput="S.texte=this.value" ' + (S.modeleVu ? 'readonly' : '') + '></textarea>';
+  if (!S.modeleVu){
+    h += '<div class="actions-row"><button class="btn-primary" onclick="voirModele()">Comparer avec un modèle</button></div>';
+  } else {
+    h += '<div class="feedback-box info"><b>Exemple de retour</b>' + n.modele + '</div>';
+    h += '<p class="step-help" style="margin-top:14px;">Autoévaluation&nbsp;: cochez ce que votre retour contient réellement.</p>';
+    CRITERES.forEach((c, i) => {
+      h += '<label class="criterion"><input type="checkbox" ' + (S.crit[i] ? 'checked ' : '') + 'onchange="toggleCrit(' + i + ')"><span>' + fr(c) + '</span></label>';
+    });
+    h += '<div class="actions-row"><button class="btn-primary" onclick="finishNote()">Terminer l\'audit</button></div>';
+  }
+  return h;
+}
+function voirModele(){
+  const ta = $('retour'); if (ta) S.texte = ta.value;
+  S.modeleVu = true; renderWorkspace();
+}
+function toggleCrit(i){ S.crit[i] = !S.crit[i]; }
+
+function nextStep(){ S.step++; renderWorkspace(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+// ---------------------------------------------------------------
+// Score et bilan de la note
+// ---------------------------------------------------------------
+function computeScores(n){
+  const src = n.sources.filter(s => S.srcAns[s.id] === s.type).length;
+  const clm = n.claims.filter(c => S.claimAns[c.id] === c.type).length;
+  const list = actionsPourNote(n);
+  const good = list.filter(a => a.ok && S.actAns.indexOf(a.id) !== -1).length;
+  const bad = list.filter(a => !a.ok && S.actAns.indexOf(a.id) !== -1).length;
+  const act = Math.max(0, good - bad);
+  const auto = S.crit.filter(Boolean).length;
+  return { src, srcMax: n.sources.length, clm, clmMax: n.claims.length, act, actMax: 3, auto, autoMax: 3,
+           total: src + clm + act + auto, max: n.sources.length + n.claims.length + 6 };
+}
+
+function finishNote(){
+  const n = getNote(S.noteId);
+  const sc = computeScores(n);
+  const sess = loadSession();
+  sess[n.id] = { total: sc.total, max: sc.max, date: new Date().toISOString() };
+  saveSession(sess);
+
+  let h = '<div class="card">';
+  h += '<button class="link-btn" onclick="backToList()" style="margin-bottom:14px;">&larr; Retour aux notes</button>';
+  h += '<div class="case-summary"><h3>Audit terminé&nbsp;: ' + n.titre + '</h3>';
+  h += '<div class="score-pill">Score total&nbsp;: ' + sc.total + '/' + sc.max + '</div>';
+  h += '<div class="breakdown">';
+  h += '<div><span>Qualification des sources</span><b>' + sc.src + '/' + sc.srcMax + '</b></div>';
+  h += '<div><span>Classement des affirmations</span><b>' + sc.clm + '/' + sc.clmMax + '</b></div>';
+  h += '<div><span>Actions avant diffusion</span><b>' + sc.act + '/' + sc.actMax + '</b></div>';
+  h += '<div><span>Autoévaluation du retour rédigé</span><b>' + sc.auto + '/' + sc.autoMax + '</b></div>';
+  h += '</div>';
+  h += '<div class="actions-row">';
+  h += '<button class="btn-ghost" onclick="copierBilanNote(\'' + n.id + '\')">Copier le bilan de cette note</button>';
+  h += '<button class="btn-primary" onclick="backToList()">Auditer une autre note</button>';
+  h += '</div></div>';
+  h += '<div class="prompt-box"><b>Pour aller plus loin avec votre IA</b><br>Collez la note dans votre assistant, puis cette consigne&nbsp;:<br><br><i id="promptText">' + fr(PROMPT_PROLONGEMENT) + '</i>';
+  h += '<div class="actions-row"><button class="btn-ghost" onclick="copierPrompt()">Copier la consigne</button></div>';
+  h += '<p class="step-help" style="margin:10px 0 0;">Comparez ensuite sa critique avec la vôtre&nbsp;: a-t-elle repéré ce que vous avez repéré, et l\'inverse&nbsp;?</p></div>';
+  h += '</div>';
+  $('caseWorkspace').innerHTML = h;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function copierPrompt(){
+  copier(fr(PROMPT_PROLONGEMENT), 'Consigne copiée dans le presse-papiers.');
+}
+function copier(texte, msg){
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(texte).then(() => alert(msg), () => alert(texte));
+  } else { alert(texte); }
+}
+
+function copierBilanNote(id){
+  const n = getNote(id); const e = loadSession()[id]; if (!e) return;
+  copier("Bilan – Auditeur de note de veille\nNote : " + n.titre + " (" + n.perimetre + ")\nScore : " + e.total + "/" + e.max,
+         'Bilan copié dans le presse-papiers.');
+}
+
+// ---------------------------------------------------------------
+// Bilan global
+// ---------------------------------------------------------------
+function renderBilan(){
+  const sess = loadSession();
+  const ids = Object.keys(sess).filter(id => getNote(id));
+  const box = $('bilanList');
+  if (!ids.length){
+    box.innerHTML = '<div style="color:var(--muted);font-size:0.85rem;">Aucune note auditée pour l\'instant.</div>';
+    return;
+  }
+  box.innerHTML = ids.map(id => {
+    const n = getNote(id), e = sess[id];
+    return '<div class="bilan-item"><span>' + n.titre + '</span><span class="bilan-score">' + e.total + '/' + e.max + '</span></div>';
+  }).join('');
+}
+
+function copierBilanGlobal(){
+  const sess = loadSession();
+  const ids = Object.keys(sess).filter(id => getNote(id));
+  if (!ids.length){ alert("Aucune note auditée pour l'instant."); return; }
+  let t = "Bilan global – Auditeur de note de veille\n", tot = 0, mx = 0;
+  ids.forEach(id => {
+    const n = getNote(id), e = sess[id];
+    t += "- " + n.titre + " : " + e.total + "/" + e.max + "\n";
+    tot += e.total; mx += e.max;
+  });
+  t += "\nTotal : " + tot + "/" + mx;
+  copier(t, 'Bilan copié dans le presse-papiers.');
+}
+
+function viderSession(){
+  if (confirm('Réinitialiser toutes les notes auditées de cette session ?')){
+    try{ localStorage.removeItem(storageKey()); }catch(e){}
+    renderList();
+  }
+}
+
+// ---------------------------------------------------------------
+renderList();
+function frStatic(){
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(t => { if (t.parentNode && !/^(SCRIPT|STYLE)$/.test(t.parentNode.nodeName)) t.nodeValue = fr(t.nodeValue); });
+}
+frStatic();
+</script>
+</body>
+</html>

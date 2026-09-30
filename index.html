@@ -129,6 +129,20 @@ color:#fff;
 .t-amber .tool-tag:not(.rh){background:var(--amber-light);color:var(--amber);}
 .t-red .tool-tag:not(.rh){background:var(--red-light);color:var(--red);}
 .tool-link:hover{opacity:0.88;}
+.steps{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:8px;margin:14px 0 0;}
+.steps .steps-label{font-size:0.8rem;color:var(--muted);font-weight:600;margin-right:4px;}
+.steps button{font:inherit;font-size:0.82rem;font-weight:600;padding:6px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:7px;}
+.steps button .n{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--line);color:var(--ink);font-size:0.72rem;}
+.steps button.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+.steps button.on .n{background:#fff;color:var(--ink);}
+.steps button[data-s="rediger"] .n{background:var(--blue-light);color:var(--blue);}
+.steps button[data-s="verifier"] .n{background:var(--purple-light);color:var(--purple);}
+.steps button[data-s="personnaliser"] .n{background:var(--green-light);color:var(--green);}
+.steps button[data-s="proteger"] .n{background:var(--red-light);color:var(--red);}
+.steps button[data-s="gouverner"] .n{background:var(--amber-light);color:var(--amber);}
+.steps button.on .n{background:#fff;}
+.tool-card.hidden{display:none;}
+.empty-note{display:none;text-align:center;color:var(--muted);font-size:0.9rem;padding:18px;}
 .filters{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin:18px 0 0;}
 .filters button{font:inherit;font-size:0.85rem;font-weight:600;padding:7px 16px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer;}
 .filters button.on{background:var(--ink);color:#fff;border-color:var(--ink);}
@@ -155,13 +169,22 @@ padding:10px 20px 40px;
 <button type="button" data-f="general">Outils généraux</button>
 <button type="button" data-f="rh">Ressources humaines</button>
 </div>
+<div class="steps" id="steps" role="group" aria-label="Filtrer par étape du parcours">
+<span class="steps-label">Parcours&nbsp;:</span>
+<button type="button" data-s="tous" class="on">Toutes les étapes</button>
+<button type="button" data-s="rediger"><span class="n">1</span>Rédiger</button>
+<button type="button" data-s="verifier"><span class="n">2</span>Vérifier</button>
+<button type="button" data-s="personnaliser"><span class="n">3</span>Personnaliser</button>
+<button type="button" data-s="proteger"><span class="n">4</span>Protéger</button>
+<button type="button" data-s="gouverner"><span class="n">5</span>Gouverner</button>
+</div>
 </header>
 <div class="wrap">
 <section class="section" id="sec-general">
 <h2 class="section-title">Outils généraux</h2>
 <p class="section-sub">Cinq exercices pour toutes les filières, dans l'ordre suggéré du parcours&nbsp;: rédiger, vérifier, personnaliser, protéger, gouverner.</p>
 <div class="list">
-<div class="tool-card t-blue">
+<div class="tool-card t-blue" data-step="rediger">
 <div class="tool-number">1</div>
 <div class="tool-info">
 <div><span class="tool-tag">Rédaction</span></div>
@@ -170,7 +193,7 @@ padding:10px 20px 40px;
 </div>
 <a class="tool-link" href="https://pierrickbriand.github.io/entraineur-de-prompt/" target="_blank" rel="noopener">Ouvrir l'outil</a>
 </div>
-<div class="tool-card t-purple">
+<div class="tool-card t-purple" data-step="verifier">
 <div class="tool-number">2</div>
 <div class="tool-info">
 <div><span class="tool-tag">Esprit critique</span></div>
@@ -179,7 +202,7 @@ padding:10px 20px 40px;
 </div>
 <a class="tool-link" href="https://pierrickbriand.github.io/detecteur-biais-hallucinations/" target="_blank" rel="noopener">Ouvrir l'outil</a>
 </div>
-<div class="tool-card t-green">
+<div class="tool-card t-green" data-step="personnaliser">
 <div class="tool-number">3</div>
 <div class="tool-info">
 <div><span class="tool-tag">Personnalisation</span></div>
@@ -188,7 +211,7 @@ padding:10px 20px 40px;
 </div>
 <a class="tool-link" href="https://pierrickbriand.github.io/Calibrateur-de-preferences-Claude/" target="_blank" rel="noopener">Ouvrir l'outil</a>
 </div>
-<div class="tool-card t-red">
+<div class="tool-card t-red" data-step="proteger">
 <div class="tool-number">4</div>
 <div class="tool-info">
 <div><span class="tool-tag">Confidentialité</span></div>
@@ -197,7 +220,7 @@ padding:10px 20px 40px;
 </div>
 <a class="tool-link" href="https://pierrickbriand.github.io/outils-ia-pedagogie/simulateur-confidentialite/" target="_blank" rel="noopener">Ouvrir l'outil</a>
 </div>
-<div class="tool-card t-amber">
+<div class="tool-card t-amber" data-step="gouverner">
 <div class="tool-number">5</div>
 <div class="tool-info">
 <div><span class="tool-tag">Gouvernance</span></div>
@@ -212,7 +235,7 @@ padding:10px 20px 40px;
 <h2 class="section-title">Outils adaptés aux ressources humaines</h2>
 <p class="section-sub">Des situations propres à la fonction RH&nbsp;: recrutement, entretiens, veille sociale et juridique, supervision des décisions automatisées.</p>
 <div class="list">
-<div class="tool-card t-purple">
+<div class="tool-card t-purple" data-step="verifier">
 <div class="tool-number">6</div>
 <div class="tool-info">
 <div><span class="tool-tag">Esprit critique</span><span class="tool-tag rh">Ressources humaines</span></div>
@@ -221,7 +244,7 @@ padding:10px 20px 40px;
 </div>
 <a class="tool-link" href="https://pierrickbriand.github.io/detecteur-biais-hallucinations/?filiere=rh" target="_blank" rel="noopener">Ouvrir l'outil</a>
 </div>
-<div class="tool-card t-purple">
+<div class="tool-card t-purple" data-step="verifier">
 <div class="tool-number">7</div>
 <div class="tool-info">
 <div><span class="tool-tag">Veille et esprit critique</span><span class="tool-tag rh">Ressources humaines</span></div>
@@ -230,7 +253,7 @@ padding:10px 20px 40px;
 </div>
 <a class="tool-link" href="https://pierrickbriand.github.io/outils-ia-pedagogie/auditeur-note-veille/" target="_blank" rel="noopener">Ouvrir l'outil</a>
 </div>
-<div class="tool-card t-amber">
+<div class="tool-card t-amber" data-step="gouverner">
 <div class="tool-number">8</div>
 <div class="tool-info">
 <div><span class="tool-tag">Gouvernance</span><span class="tool-tag rh">Ressources humaines</span></div>
@@ -241,19 +264,37 @@ padding:10px 20px 40px;
 </div>
 </div>
 </section>
+<p class="empty-note" id="empty">Aucun outil pour cette combinaison de filtres.</p>
 </div>
 <footer>Outils pédagogiques IA · Pierrick BRIAND · Formateur IA</footer>
 <script>
 (function(){
+var etat={pub:'tous',step:'tous'};
 var btns=document.querySelectorAll('#filters button');
-function appliquer(f){
-btns.forEach(function(b){b.classList.toggle('on',b.getAttribute('data-f')===f);});
-document.getElementById('sec-general').classList.toggle('hidden',f==='rh');
-document.getElementById('sec-rh').classList.toggle('hidden',f==='general');
+var stepBtns=document.querySelectorAll('#steps button');
+var cards=document.querySelectorAll('.tool-card');
+function appliquer(){
+btns.forEach(function(b){b.classList.toggle('on',b.getAttribute('data-f')===etat.pub);});
+stepBtns.forEach(function(b){b.classList.toggle('on',b.getAttribute('data-s')===etat.step);});
+var secG=document.getElementById('sec-general'),secR=document.getElementById('sec-rh');
+secG.classList.toggle('hidden',etat.pub==='rh');
+secR.classList.toggle('hidden',etat.pub==='general');
+cards.forEach(function(c){
+c.classList.toggle('hidden',etat.step!=='tous'&&c.getAttribute('data-step')!==etat.step);
+});
+[secG,secR].forEach(function(sec){
+if(sec.classList.contains('hidden'))return;
+var visibles=sec.querySelectorAll('.tool-card:not(.hidden)').length;
+if(!visibles)sec.classList.add('hidden');
+});
+document.getElementById('empty').style.display=(secG.classList.contains('hidden')&&secR.classList.contains('hidden'))?'block':'none';
 }
-btns.forEach(function(b){b.addEventListener('click',function(){appliquer(b.getAttribute('data-f'));});});
-var q=new URLSearchParams(window.location.search).get('public');
-if(q==='rh'||q==='general'){appliquer(q);}
+btns.forEach(function(b){b.addEventListener('click',function(){etat.pub=b.getAttribute('data-f');appliquer();});});
+stepBtns.forEach(function(b){b.addEventListener('click',function(){etat.step=b.getAttribute('data-s');appliquer();});});
+var params=new URLSearchParams(window.location.search);
+var q=params.get('public'); if(q==='rh'||q==='general'){etat.pub=q;}
+var e=params.get('etape'); if(['rediger','verifier','personnaliser','proteger','gouverner'].indexOf(e)>=0){etat.step=e;}
+appliquer();
 })();
 </script>
 </body>

@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registre des allégations</title>
+<meta name="description" content="Outil pédagogique : tenir le registre « allégation, preuve, source, date, niveau de fiabilité » de ses contenus.">
+<style>
+
+:root{--fg:#1f2430;--fg2:#666f7d;--line:#e3e6eb;--soft:#f7f8fa;--accent:#7a3fc2;--accent-light:#f1e9fb;--danger:#c23b3b;--ok:#1f8a52;--warn:#9a5514}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:var(--fg);background:var(--soft)}
+.wrap{max-width:900px;margin:0 auto;padding:0 20px}
+header.top{padding:44px 0 16px;text-align:center}
+header.top .wrap{max-width:800px}
+.kicker{display:inline-block;font-size:.72rem;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--accent-light);color:var(--accent);margin:0 0 12px}
+h1{font-size:1.8rem;line-height:1.2;letter-spacing:-.01em;margin:0 0 10px}
+.lead{margin:0 auto;color:var(--fg2);max-width:720px}
+main{padding:12px 0 40px}
+section{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:0 0 18px}
+h2{font-size:1.2rem;margin:0 0 12px}
+h3{font-size:1rem;margin:16px 0 6px}
+.notice{border-left:4px solid var(--accent);background:var(--accent-light);border-radius:0 8px 8px 0;padding:10px 16px;margin:0 0 18px}
+.notice p{margin:6px 0}
+.warn{border:1px solid var(--warn);color:var(--warn);background:#fff;padding:10px 14px;border-radius:8px;margin:0 0 16px}
+.msg{min-height:1.5em;margin:0 0 12px;font-weight:600}
+.msg.ok{color:var(--ok)}
+.msg.err{color:var(--danger)}
+label{display:block;font-weight:600;margin:0 0 4px}
+.hint{font-weight:400;color:var(--fg2);font-size:.88rem}
+input,select,textarea{width:100%;font:inherit;padding:9px 10px;border:1px solid #8b93a1;border-radius:8px;background:#fff;color:var(--fg)}
+input:disabled{background:var(--soft);color:var(--fg2)}
+textarea{min-height:76px;resize:vertical}
+input[type=radio]{width:auto}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+fieldset{border:1px solid var(--line);border-radius:8px;margin:0 0 16px;padding:10px 14px}
+legend{font-weight:700;padding:0 6px}
+label.radio{display:inline-flex;gap:8px;align-items:center;font-weight:400;margin:2px 18px 2px 0}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(2,1fr);margin-top:14px}
+.full{grid-column:1/-1}
+@media(max-width:700px){.grid{grid-template-columns:1fr}h1{font-size:1.5rem}section{padding:18px 16px}}
+button{font:inherit;cursor:pointer;border-radius:9px;padding:9px 16px;border:1px solid #b9c0cc;background:#fff;color:var(--fg)}
+button:hover{border-color:var(--fg)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.primary:hover{opacity:.9}
+button.danger{border-color:var(--danger);color:var(--danger)}
+button.small{padding:4px 10px;font-size:.88rem}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.tablewrap{overflow-x:auto}
+.tablewrap.wide table{min-width:760px}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{text-align:left;vertical-align:top;padding:9px 8px;border-bottom:1px solid var(--line)}
+th{border-bottom:2px solid var(--fg)}
+.meta{color:var(--fg2);font-size:.82rem;margin:4px 0}
+.badge{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.75rem;font-weight:600;border:1px solid;margin:0 4px 4px 0}
+.b-ok{color:var(--ok);border-color:var(--ok)}
+.b-warn{color:var(--warn);border-color:var(--warn)}
+.b-off{color:var(--fg2);border-color:var(--fg2)}
+.b-acc{color:var(--accent);border-color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;padding:0;list-style:none}
+.chips li{border:1px solid var(--line);border-radius:9px;padding:6px 12px;font-size:.88rem;background:#fff}
+.chips strong{font-size:1.3rem;margin-right:6px}
+.filter{max-width:320px;margin-bottom:12px}
+.filters{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:14px}
+.filters div{min-width:220px}
+.result{white-space:pre-wrap;border:1px solid var(--line);border-radius:8px;padding:12px;margin:12px 0}
+mark{padding:0 2px}
+mark.forb{background:#fde7e5;color:#7a1611;border-bottom:2px solid var(--danger)}
+mark.cit{background:#e5edf9;color:#0b2d63;border-bottom:2px solid #3457d5}
+mark.num{background:#fff3d6;color:#5a3b00;border-bottom:2px solid #b7791f}
+mark.lab{background:#ececf0;color:#333;border-bottom:2px solid #666f7d}
+mark.forb::after{content:" [terme général]";font-size:.7rem}
+mark.cit::after{content:" [citation]";font-size:.7rem}
+mark.num::after{content:" [chiffre]";font-size:.7rem}
+mark.lab::after{content:" [label ou certification]";font-size:.7rem}
+body.cours mark.lab::after{content:" [B Corp]"}
+.items{padding-left:18px}
+.items li{margin:6px 0}
+details{margin-top:14px}
+summary{cursor:pointer;font-weight:600}
+.terms span{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;margin:4px 6px 4px 0;font-size:.88rem}
+.terms button{border:0;padding:0 2px;background:none;color:var(--danger);font-size:1rem;line-height:1}
+.inline{display:flex;gap:10px;align-items:flex-end;max-width:520px;margin-top:10px}
+.bar{background:var(--soft);height:10px;border-radius:5px;min-width:80px}
+.bar span{display:block;height:10px;border-radius:5px;background:var(--accent)}
+.three{display:grid;gap:18px;grid-template-columns:repeat(3,1fr)}
+@media(max-width:800px){.three{grid-template-columns:1fr}}
+.card{border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:0 0 12px}
+.card header{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline}
+.card p{margin:6px 0}
+pre{white-space:pre-wrap;word-wrap:break-word;font:inherit;font-size:.88rem;background:var(--soft);border-radius:8px;padding:10px 12px;margin:8px 0}
+.cols{display:grid;gap:16px;grid-template-columns:repeat(2,1fr)}
+@media(max-width:700px){.cols{grid-template-columns:1fr}}
+.count{font-weight:700;font-size:1rem;margin:0 6px}
+footer{text-align:center;color:var(--fg2);font-size:.8rem;padding:10px 20px 40px}
+
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+<p class="kicker" id="kicker"></p>
+<h1>Registre des allégations</h1>
+<p class="lead">Une allégation est une affirmation que votre contenu présente comme vraie. Pour chacune, notez la preuve, la source, la date et le niveau de fiabilité. Ce que vous ne pouvez pas prouver, vous le reformulez ou vous le supprimez.</p>
+</div></header>
+
+<main class="wrap">
+<div class="notice" role="note">
+<p id="noteCadre"></p>
+<p><strong>Aucune donnée personnelle.</strong> Ne saisissez ni nom, ni adresse e-mail, ni numéro de téléphone réels. Tout reste dans votre navigateur&nbsp;: rien n’est envoyé.</p>
+<p><strong>L’export fait foi.</strong> Le navigateur peut perdre vos données (nettoyage, autre appareil, navigation privée). Exportez en fin de séance et déposez l’export à l’endroit indiqué par l’enseignant.</p>
+</div>
+<p id="storageWarn" class="warn" hidden>Le stockage du navigateur n’est pas disponible ici&nbsp;: votre registre ne sera pas conservé. Exportez avant de fermer la page.</p>
+<div id="msg" class="msg" role="status" aria-live="polite"></div>
+
+<section aria-labelledby="h-form">
+<h2 id="h-form">1. Ajouter une allégation</h2>
+<form id="form" novalidate>
+<div class="grid">
+<div class="full"><label for="allegation">Allégation <span class="hint">– la phrase exacte, telle qu’elle figure dans votre contenu</span></label><textarea id="allegation"></textarea></div>
+<div><label for="contenu">Contenu concerné</label><select id="contenu"></select></div>
+<div><label for="role">Signé par (rôle)</label><select id="role"></select></div>
+<div class="full"><label for="preuve">Preuve <span class="hint">– ce qui établit l’allégation (chiffre, passage, document)</span></label><textarea id="preuve"></textarea></div>
+<div><label for="source">Source <span class="hint">– titre ou adresse de la page</span></label><input id="source" type="text" autocomplete="off"></div>
+<div><label for="dateSource">Date de la source <span class="hint">– publication ou consultation</span></label><input id="dateSource" type="date"></div>
+<div><label for="fiabilite">Niveau de fiabilité</label><select id="fiabilite"></select></div>
+<div><label for="statut">Statut</label><select id="statut"></select></div>
+<div class="full"><label for="note">Note <span class="hint">– formulation d’origine, raison d’un changement, justification d’un terme général</span></label><textarea id="note"></textarea></div>
+</div>
+<div class="actions">
+<button type="submit" class="primary" id="saveBtn">Ajouter au registre</button>
+<button type="button" id="cancelBtn" hidden>Annuler la modification</button>
+</div>
+<p class="hint">Contrôles à l’enregistrement&nbsp;: une allégation «&nbsp;retenue&nbsp;» ou «&nbsp;reformulée&nbsp;» exige une preuve, une source, une date et un niveau de fiabilité autre que «&nbsp;non établi&nbsp;». Un terme général («&nbsp;écoresponsable&nbsp;», «&nbsp;durable&nbsp;», «&nbsp;éthique&nbsp;»…) exige une justification écrite dans la note.</p>
+</form>
+</section>
+
+<section aria-labelledby="h-check">
+<h2 id="h-check">2. Repérer les points sensibles d’un texte</h2>
+<p>Collez l’un de vos contenus. L’outil souligne ce qui demande une preuve&nbsp;: termes généraux, citations, chiffres, <span id="labTxt"></span>. Il repère, il ne vérifie pas&nbsp;: c’est à vous de recouper.</p>
+<label for="checkText">Texte à examiner</label>
+<textarea id="checkText" rows="6"></textarea>
+<div class="actions"><button type="button" class="primary" id="checkBtn">Repérer</button></div>
+<div id="checkOut" hidden>
+<div id="checkResult" class="result"></div>
+<div id="checkItems"></div>
+</div>
+<details>
+<summary>Termes généraux surveillés</summary>
+<p class="hint">Liste de départ du cours, modifiable. Elle ne prétend pas être une liste juridique.</p>
+<div id="termsList" class="terms"></div>
+<div class="inline">
+<div style="flex:1"><label for="newTerm">Ajouter un terme</label><input id="newTerm" type="text" autocomplete="off"></div>
+<button type="button" id="addTermBtn">Ajouter</button>
+</div>
+</details>
+</section>
+
+<section aria-labelledby="h-reg">
+<h2 id="h-reg">3. Votre registre</h2>
+<ul class="chips" id="summary" aria-label="Récapitulatif"></ul>
+<div class="filter"><label for="filter">Afficher</label><select id="filter"></select></div>
+<div class="tablewrap wide" role="region" aria-label="Tableau du registre" tabindex="0">
+<table>
+<thead><tr><th scope="col">Allégation</th><th scope="col">Preuve</th><th scope="col">Source et date</th><th scope="col">Fiabilité</th><th scope="col">Statut</th><th scope="col">Actions</th></tr></thead>
+<tbody id="rows"></tbody>
+</table>
+</div>
+</section>
+
+<section aria-labelledby="h-exp">
+<h2 id="h-exp">4. Export et sauvegarde</h2>
+<p>Le texte est fait pour être déposé avec le dossier de groupe. La sauvegarde JSON sert à reprendre le travail sur un autre appareil ou à réunir les registres de plusieurs membres du groupe (l’import fusionne sans doublon).</p>
+<div class="actions">
+<button type="button" class="primary" id="copyBtn">Copier le texte</button>
+<button type="button" id="txtBtn">Télécharger en texte</button>
+<button type="button" id="csvBtn">Télécharger en CSV</button>
+<button type="button" id="jsonBtn">Sauvegarde JSON</button>
+<button type="button" id="importBtn">Importer une sauvegarde</button>
+<button type="button" class="danger" id="clearBtn">Vider le registre</button>
+</div>
+<input type="file" id="importFile" accept=".json,application/json" hidden>
+</section>
+</main>
+
+<footer><div class="wrap" id="foot"></div></footer>
+
+<script>
+(function(){
+'use strict';
+var COURS=false;try{COURS=new URLSearchParams(location.search).get('cours')==='enc-com3';}catch(e){}
+if(COURS)document.body.classList.add('cours');
+var NB='\u00a0';
+var KEY='com3ia.registre.v1';
+var ROLES=COURS?['Rédacteur en chef','Spécialiste des consignes','Responsable image et vidéo','Garant de la cohérence omnicanale','Contrôleur qualité et conformité']:['Coordination','Rédaction','Consignes et outils d’IA','Contrôle qualité et sources','Autre rôle'];
+var CONTENUS=COURS?['Lettre d’information','Publications de réseaux sociaux','Article de blog','Script de podcast','Scénario de vidéo courte','Support imprimé pour la boutique','Charte éditoriale','Autre']:['Article','Lettre d’information','Publication de réseau social','Script audio ou vidéo','Support imprimé','Page web','Charte éditoriale','Autre'];
+var FIAB=[['','Choisir…'],['officielle','Source officielle'],['tiers','Organisme tiers ou autorité publique'],['presse','Presse ou publication spécialisée (à recouper)'],['faible','Blog, avis ou revendeur (source faible, à recouper)'],['non_etabli','Non établi (aucune source retrouvée)']];
+var STATUTS=[['verifier','À vérifier'],['retenue','Retenue'],['reformulee','Reformulée'],['supprimee','Supprimée']];
+var DEFAULT_TERMS=['écoresponsable','éco-responsable','écologique','durable','éthique','respectueux de l’environnement'];
+var FIAB_KEYS=FIAB.map(function(x){return x[0];});
+var STAT_KEYS=STATUTS.map(function(x){return x[0];});
+
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function uid(){try{if(window.crypto&&crypto.randomUUID)return crypto.randomUUID();}catch(e){}return Date.now().toString(36)+Math.random().toString(36).slice(2,10);}
+function labelOf(list,key){for(var i=0;i<list.length;i++){if(list[i][0]===key)return list[i][1];}return '';}
+function fmtDate(d){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(d||'');return m?m[3]+'/'+m[2]+'/'+m[1]:'date absente';}
+function persoFound(t){return /[\w.+-]+@[\w-]+\.[\w.-]+/.test(t)||/(?:\+33|\b0)[\s.]?[1-9](?:[\s.-]?\d{2}){4}/.test(t);}
+function escapeRe(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+
+var storageOK=true;
+try{localStorage.setItem(KEY+'.t','1');localStorage.removeItem(KEY+'.t');}catch(e){storageOK=false;}
+if(!storageOK){$('storageWarn').hidden=false;}
+
+function cleanEntry(x){
+  if(!x||typeof x!=='object')return null;
+  var s=function(v,max){return typeof v==='string'?v.slice(0,max||4000):'';};
+  var e={
+    id:s(x.id,64)||uid(),
+    createdAt:s(x.createdAt,40)||new Date().toISOString(),
+    updatedAt:s(x.updatedAt,40)||s(x.createdAt,40)||new Date().toISOString(),
+    allegation:s(x.allegation),contenu:s(x.contenu,200),role:s(x.role,200),
+    preuve:s(x.preuve),source:s(x.source,500),
+    dateSource:/^\d{4}-\d{2}-\d{2}$/.test(x.dateSource)?x.dateSource:'',
+    fiabilite:FIAB_KEYS.indexOf(x.fiabilite)>-1?x.fiabilite:'',
+    statut:STAT_KEYS.indexOf(x.statut)>-1?x.statut:'verifier',
+    note:s(x.note)
+  };
+  return e.allegation.trim()?e:null;
+}
+function cleanEntries(a){var out=[];if(Array.isArray(a)){for(var i=0;i<a.length&&i<2000;i++){var e=cleanEntry(a[i]);if(e)out.push(e);}}return out;}
+function cleanTerms(a){var out=[];if(Array.isArray(a)){a.forEach(function(t){if(typeof t==='string'&&t.trim()&&t.length<80&&out.indexOf(t.trim())<0)out.push(t.trim());});}return out.slice(0,60);}
+
+var state={entries:[],extraTerms:[]};
+if(storageOK){try{var raw=localStorage.getItem(KEY);if(raw){var p=JSON.parse(raw);state.entries=cleanEntries(p.entries);state.extraTerms=cleanTerms(p.extraTerms);}}catch(e){}}
+var dirty=false,editingId=null,lastItems=[];
+
+function persist(){dirty=true;if(!storageOK)return;try{localStorage.setItem(KEY,JSON.stringify({version:1,entries:state.entries,extraTerms:state.extraTerms}));}catch(e){$('storageWarn').hidden=false;}}
+function say(t,kind){var m=$('msg');m.textContent=t;m.className='msg '+(kind||'');}
+
+function fillSelect(sel,list,pairs){
+  sel.innerHTML='';
+  list.forEach(function(it){var o=document.createElement('option');if(pairs){o.value=it[0];o.textContent=it[1];}else{o.value=it;o.textContent=it;}sel.appendChild(o);});
+}
+fillSelect($('contenu'),CONTENUS,false);
+fillSelect($('role'),['Choisir…'].concat(ROLES),false);
+$('role').options[0].value='';
+fillSelect($('fiabilite'),FIAB,true);
+fillSelect($('statut'),STATUTS,true);
+fillSelect($('filter'),[['all','Toutes les entrées']].concat(STATUTS).concat([['incomplete','Entrées incomplètes']]),true);
+
+/* Détection */
+function terms(){return DEFAULT_TERMS.concat(state.extraTerms);}
+function forbRegex(){
+  var parts=terms().map(function(t){return t.trim();}).filter(Boolean).map(function(t){return escapeRe(t).replace(/['’]/g,"['’]");});
+  if(!parts.length)return null;
+  return new RegExp('(?<![\\p{L}\\p{N}-])(?:'+parts.join('|')+')s?(?![\\p{L}\\p{N}])','giu');
+}
+var CIT_RE=/«[^»]{2,}»|“[^”]{2,}”|"[^"\n]{2,}"/g;
+var NUM_RE=/(?<!\d)(?:\d{1,3}(?:[\u00a0\u202f ]\d{3})+(?:,\d+)?|\d+(?:[.,]\d+)*)(?:\s?(?:%|€|(?:euros?|tonnes?|paires?|millions?|milliards?)(?![\p{L}])))?/gu;
+var LAB_RE=COURS?/B[\s\u00a0-]?Corp(?:oration)?/gi:/(?<![\p{L}])(?:labellis[ée]e?s?|labels?|certifi[ée]e?s?|certifications?|B[\s\u00a0-]?Corp(?:oration)?|[ÉE]colabels?)(?![\p{L}])/giu;
+
+function scan(text){
+  var out=[];
+  function add(re,type){if(!re)return;var it=text.matchAll(re),m;while(!(m=it.next()).done){out.push({type:type,start:m.value.index,end:m.value.index+m.value[0].length,text:m.value[0]});}}
+  add(forbRegex(),'forb');add(CIT_RE,'cit');add(NUM_RE,'num');add(LAB_RE,'lab');
+  return out;
+}
+function findForbidden(text){return scan(text).filter(function(x){return x.type==='forb';});}
+function highlight(text,items){
+  var s=items.slice().sort(function(a,b){return a.start-b.start||(b.end-b.start)-(a.end-a.start);});
+  var html='',pos=0;
+  s.forEach(function(it){if(it.start<pos)return;html+=esc(text.slice(pos,it.start))+'<mark class="'+it.type+'">'+esc(it.text)+'</mark>';pos=it.end;});
+  return html+esc(text.slice(pos));
+}
+var TYPE_INFO={
+  forb:['Termes généraux','Interdits sauf justification écrite : remplacez-les par un fait précis et prouvé.'],
+  cit:['Citations','Toute citation doit être retrouvée dans une source datée, sinon elle est supprimée.'],
+  num:['Chiffres','Chaque chiffre a sa source et sa date : ajoutez-le au registre.'],
+  lab:COURS?['Mention de B Corp','Formulez-la exactement comme la source officielle, sans l’élargir (règle 5).']:['Labels et certifications','Formulez la mention exactement comme la source qui la délivre, sans l’élargir&nbsp;: nom du label, périmètre, date.']
+};
+function runCheck(){
+  var text=$('checkText').value;
+  if(!text.trim()){say('Collez d’abord un texte à examiner.','err');return;}
+  if(persoFound(text)){say('Le texte semble contenir une adresse e-mail ou un numéro de téléphone. Retirez toute donnée personnelle réelle.','err');return;}
+  var items=scan(text);
+  $('checkResult').innerHTML=highlight(text,items);
+  lastItems=[];
+  var html='';
+  ['forb','cit','num','lab'].forEach(function(t){
+    var seen={},list=[];
+    items.filter(function(x){return x.type===t;}).forEach(function(x){var k=x.text.toLowerCase();if(seen[k]){seen[k].n++;}else{seen[k]={text:x.text,n:1,type:t};list.push(seen[k]);}});
+    if(!list.length)return;
+    html+='<h3>'+TYPE_INFO[t][0]+' ('+items.filter(function(x){return x.type===t;}).length+')</h3><p class="hint">'+TYPE_INFO[t][1]+'</p><ul class="items">';
+    list.forEach(function(x){var i=lastItems.push(x)-1;html+='<li><mark class="'+t+'">'+esc(x.text)+'</mark>'+(x.n>1?' ×'+x.n:'')+' <button type="button" class="small" data-i="'+i+'">Ajouter au registre</button></li>';});
+    html+='</ul>';
+  });
+  if(!html)html='<p>Rien à signaler selon les règles de repérage. Cela ne prouve pas que le texte soit exact&nbsp;: relisez-le et recoupez vos faits.</p>';
+  $('checkItems').innerHTML=html;
+  $('checkOut').hidden=false;
+  say('Repérage terminé.','ok');
+}
+$('checkBtn').addEventListener('click',runCheck);
+$('checkItems').addEventListener('click',function(ev){
+  var b=ev.target.closest('button[data-i]');if(!b)return;
+  var it=lastItems[+b.getAttribute('data-i')];if(!it)return;
+  resetForm();
+  $('allegation').value=it.text;
+  $('statut').value='verifier';
+  $('form').scrollIntoView({behavior:'smooth',block:'start'});
+  $('allegation').focus();
+  say('Élément copié dans le formulaire : complétez la preuve, la source et la date.','ok');
+});
+
+/* Termes */
+function renderTerms(){
+  var h='';
+  DEFAULT_TERMS.forEach(function(t){h+='<span>'+esc(t)+'</span>';});
+  state.extraTerms.forEach(function(t,i){h+='<span>'+esc(t)+' <button type="button" data-t="'+i+'" aria-label="Retirer le terme '+esc(t)+'">×</button></span>';});
+  $('termsList').innerHTML=h;
+}
+$('addTermBtn').addEventListener('click',function(){
+  var t=$('newTerm').value.trim();
+  if(!t)return;
+  if(t.length>80){say('Terme trop long.','err');return;}
+  if(terms().map(function(x){return x.toLowerCase();}).indexOf(t.toLowerCase())>-1){say('Ce terme est déjà surveillé.','err');return;}
+  state.extraTerms.push(t);$('newTerm').value='';persist();renderTerms();say('Terme ajouté.','ok');
+});
+$('termsList').addEventListener('click',function(ev){
+  var b=ev.target.closest('button[data-t]');if(!b)return;
+  state.extraTerms.splice(+b.getAttribute('data-t'),1);persist();renderTerms();
+});
+
+/* Formulaire */
+function readForm(){
+  return{allegation:$('allegation').value.trim(),contenu:$('contenu').value,role:$('role').value,preuve:$('preuve').value.trim(),source:$('source').value.trim(),dateSource:$('dateSource').value,fiabilite:$('fiabilite').value,statut:$('statut').value,note:$('note').value.trim()};
+}
+function resetForm(){
+  var role=$('role').value;
+  editingId=null;$('form').reset();$('role').value=role;$('saveBtn').textContent='Ajouter au registre';$('cancelBtn').hidden=true;
+}
+function isComplete(e){return !!(e.preuve.trim()&&e.source.trim()&&e.dateSource&&e.fiabilite&&e.fiabilite!=='non_etabli');}
+function validate(d){
+  if(!d.allegation)return 'Saisissez l’allégation.';
+  if(!d.role)return 'Choisissez le rôle qui signe cette entrée.';
+  if(persoFound([d.allegation,d.preuve,d.source,d.note].join(' ')))return 'Un champ semble contenir une adresse e-mail ou un numéro de téléphone. Aucune donnée personnelle réelle.';
+  if(d.statut==='retenue'||d.statut==='reformulee'){
+    if(d.fiabilite==='non_etabli')return 'Une allégation dont la source est « non établie » ne peut pas être retenue. Choisissez « À vérifier » ou « Supprimée ».';
+    if(!isComplete(d))return 'Une allégation « retenue » ou « reformulée » exige une preuve, une source, une date et un niveau de fiabilité. Complétez ces champs ou choisissez « À vérifier ».';
+    if(findForbidden(d.allegation).length&&!d.note)return 'Cette allégation contient un terme général. Ajoutez une justification écrite dans la note, ou reformulez avec un fait précis.';
+  }
+  return '';
+}
+$('form').addEventListener('submit',function(ev){
+  ev.preventDefault();
+  var d=readForm(),err=validate(d);
+  if(err){say(err,'err');return;}
+  var now=new Date().toISOString();
+  if(editingId){
+    var e=state.entries.filter(function(x){return x.id===editingId;})[0];
+    if(e){for(var k in d)e[k]=d[k];e.updatedAt=now;}
+    say('Entrée modifiée.','ok');
+  }else{
+    d.id=uid();d.createdAt=now;d.updatedAt=now;state.entries.push(d);
+    say('Entrée ajoutée.','ok');
+  }
+  persist();resetForm();render();
+});
+$('cancelBtn').addEventListener('click',function(){resetForm();say('Modification annulée.','');});
+
+/* Tableau */
+function sorted(){return state.entries.slice().sort(function(a,b){return a.createdAt<b.createdAt?-1:a.createdAt>b.createdAt?1:0;});}
+function needsCompletion(e){return e.statut!=='supprimee'&&!isComplete(e);}
+function renderSummary(){
+  var n=state.entries,c=function(s){return n.filter(function(e){return e.statut===s;}).length;};
+  var inc=n.filter(needsCompletion).length;
+  var items=[[n.length,'entrées'],[c('retenue'),'retenues'],[c('reformulee'),'reformulées'],[c('supprimee'),'supprimées'],[c('verifier'),'à vérifier'],[inc,'incomplètes']];
+  $('summary').innerHTML=items.map(function(i){return '<li><strong>'+i[0]+'</strong>'+i[1]+'</li>';}).join('');
+}
+function renderRows(){
+  var f=$('filter').value;
+  var list=sorted().filter(function(e){return f==='all'||(f==='incomplete'?needsCompletion(e):e.statut===f);});
+  if(!list.length){$('rows').innerHTML='<tr><td colspan="6">'+(state.entries.length?'Aucune entrée pour ce filtre.':'Aucune entrée pour le moment. Ajoutez votre première allégation ci-dessus.')+'</td></tr>';return;}
+  $('rows').innerHTML=list.map(function(e){
+    var cls={retenue:'b-ok',reformulee:'b-acc',supprimee:'b-off',verifier:'b-warn'}[e.statut];
+    return '<tr><td>'+esc(e.allegation)+'<div class="meta">'+esc(e.contenu)+' · '+esc(e.role)+'</div>'+(e.note?'<div class="meta">Note'+NB+': '+esc(e.note)+'</div>':'')+'</td>'
+    +'<td>'+esc(e.preuve)+'</td>'
+    +'<td>'+esc(e.source)+'<div class="meta">'+fmtDate(e.dateSource)+'</div></td>'
+    +'<td>'+esc(labelOf(FIAB,e.fiabilite)||'–')+'</td>'
+    +'<td><span class="badge '+cls+'">'+labelOf(STATUTS,e.statut)+'</span>'+(needsCompletion(e)?'<span class="badge b-warn">Incomplète</span>':'')+'</td>'
+    +'<td><button type="button" class="small" data-act="edit" data-id="'+esc(e.id)+'">Modifier</button> <button type="button" class="small danger" data-act="del" data-id="'+esc(e.id)+'">Supprimer</button></td></tr>';
+  }).join('');
+}
+function render(){renderSummary();renderRows();renderTerms();}
+$('filter').addEventListener('change',renderRows);
+$('rows').addEventListener('click',function(ev){
+  var b=ev.target.closest('button[data-act]');if(!b)return;
+  var id=b.getAttribute('data-id');
+  var e=state.entries.filter(function(x){return x.id===id;})[0];if(!e)return;
+  if(b.getAttribute('data-act')==='del'){
+    if(!window.confirm('Supprimer cette entrée du registre ? Pour garder la trace d’une allégation écartée, passez plutôt son statut à « Supprimée ».'))return;
+    state.entries=state.entries.filter(function(x){return x.id!==id;});persist();render();say('Entrée effacée du registre.','ok');
+  }else{
+    editingId=id;
+    ['allegation','contenu','role','preuve','source','dateSource','fiabilite','statut','note'].forEach(function(k){$(k).value=e[k];});
+    $('saveBtn').textContent='Enregistrer les modifications';$('cancelBtn').hidden=false;
+    $('form').scrollIntoView({behavior:'smooth',block:'start'});$('allegation').focus();
+  }
+});
+
+/* Export */
+function pad(n){return n<10?'0'+n:''+n;}
+function today(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function buildText(){
+  var L=[],d=new Date(),list=sorted(),n=list.length;
+  L.push(COURS?'REGISTRE DES ALLÉGATIONS – ENC COM3 – IA':'REGISTRE DES ALLÉGATIONS');
+  L.push('Exporté le '+d.toLocaleDateString('fr-FR')+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+' · '+n+' entrée'+(n>1?'s':''));
+  L.push(COURS?'Exercice pédagogique'+NB+': Veja est une marque réelle, sans lien avec ce travail. Ces contenus ne viennent pas de la marque et ne sont pas publiables.':'Exercice pédagogique'+NB+': ces contenus servent à s’entraîner et ne sont pas destinés à être publiés tels quels.');
+  L.push('');
+  list.forEach(function(e,i){
+    L.push((i+1)+'. Allégation'+NB+': '+e.allegation);
+    L.push('   Contenu'+NB+': '+e.contenu+' · Signé par'+NB+': '+e.role);
+    L.push('   Preuve'+NB+': '+(e.preuve||'–'));
+    L.push('   Source'+NB+': '+(e.source||'–')+' ('+fmtDate(e.dateSource)+')');
+    L.push('   Fiabilité'+NB+': '+(labelOf(FIAB,e.fiabilite)||'–'));
+    L.push('   Statut'+NB+': '+labelOf(STATUTS,e.statut)+(needsCompletion(e)?' (incomplète)':''));
+    if(e.note)L.push('   Note'+NB+': '+e.note);
+    L.push('');
+  });
+  return L.join('\n');
+}
+function csvCell(v){v=String(v==null?'':v);if(/^[=+\-@\t\r]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"';}
+function buildCsv(){
+  var head=['Allégation','Contenu','Signé par','Preuve','Source','Date de la source','Fiabilité','Statut','Note'];
+  var rows=sorted().map(function(e){return [e.allegation,e.contenu,e.role,e.preuve,e.source,e.dateSource,labelOf(FIAB,e.fiabilite),labelOf(STATUTS,e.statut),e.note].map(csvCell).join(';');});
+  return '\uFEFF'+head.map(csvCell).join(';')+'\r\n'+rows.join('\r\n');
+}
+function download(name,mime,content){
+  var a=document.createElement('a'),url=URL.createObjectURL(new Blob([content],{type:mime}));
+  a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  dirty=false;
+}
+function guardEmpty(){if(!state.entries.length){say('Le registre est vide : rien à exporter.','err');return true;}return false;}
+$('copyBtn').addEventListener('click',function(){
+  if(guardEmpty())return;
+  var t=buildText();
+  function fallback(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand('copy');}catch(e){}document.body.removeChild(ta);if(ok){dirty=false;say('Texte copié.','ok');}else say('La copie a échoué : utilisez « Télécharger en texte ».','err');}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){dirty=false;say('Texte copié.','ok');},fallback);}else fallback();
+});
+$('txtBtn').addEventListener('click',function(){if(guardEmpty())return;download('registre-allegations_'+today()+'.txt','text/plain;charset=utf-8',buildText());say('Fichier texte téléchargé.','ok');});
+$('csvBtn').addEventListener('click',function(){if(guardEmpty())return;download('registre-allegations_'+today()+'.csv','text/csv;charset=utf-8',buildCsv());say('Fichier CSV téléchargé.','ok');});
+$('jsonBtn').addEventListener('click',function(){
+  if(guardEmpty())return;
+  download('registre-allegations_'+today()+'.json','application/json',JSON.stringify({tool:'registre-allegations',version:1,exportedAt:new Date().toISOString(),entries:state.entries,extraTerms:state.extraTerms},null,2));
+  say('Sauvegarde téléchargée.','ok');
+});
+$('importBtn').addEventListener('click',function(){$('importFile').click();});
+function mergeImport(obj){
+  if(!obj||obj.tool!=='registre-allegations'||!Array.isArray(obj.entries))throw new Error('format');
+  var incoming=cleanEntries(obj.entries),added=0,updated=0;
+  incoming.forEach(function(e){
+    var cur=state.entries.filter(function(x){return x.id===e.id;})[0];
+    if(!cur){state.entries.push(e);added++;}
+    else if(e.updatedAt>cur.updatedAt){for(var k in e)cur[k]=e[k];updated++;}
+  });
+  cleanTerms(obj.extraTerms).forEach(function(t){if(state.extraTerms.indexOf(t)<0)state.extraTerms.push(t);});
+  return{added:added,updated:updated};
+}
+$('importFile').addEventListener('change',function(ev){
+  var f=ev.target.files[0];if(!f)return;
+  if(f.size>5*1024*1024){say('Fichier trop volumineux.','err');ev.target.value='';return;}
+  var r=new FileReader();
+  r.onload=function(){
+    try{var res=mergeImport(JSON.parse(r.result));persist();render();say(res.added+' entrée(s) ajoutée(s), '+res.updated+' mise(s) à jour.','ok');}
+    catch(e){say('Ce fichier n’est pas une sauvegarde valide du registre.','err');}
+    ev.target.value='';
+  };
+  r.readAsText(f);
+});
+$('clearBtn').addEventListener('click',function(){
+  if(!state.entries.length)return;
+  if(!window.confirm('Vider tout le registre ? Exportez d’abord si vous voulez en garder une trace.'))return;
+  state.entries=[];persist();resetForm();render();say('Registre vidé.','ok');
+});
+window.addEventListener('beforeunload',function(e){if(dirty&&state.entries.length){e.preventDefault();e.returnValue='';}});
+$('kicker').textContent=COURS?'ENC COM3 – IA · Outil du cours · Séances 1 à 4':'Outil pédagogique · Communication et rédaction de contenus';
+$('noteCadre').innerHTML=COURS?'<strong>Cadre.</strong> Veja est une marque réelle, utilisée comme cas d’étude sans lien avec elle. Vos contenus sont des exercices&nbsp;: ne les publiez pas et ne les présentez pas comme venant de la marque.':'<strong>Cadre.</strong> Cet outil sert à s’entraîner&nbsp;: vos contenus sont des exercices, à ne pas publier tels quels sans l’accord de votre enseignant.';
+$('labTxt').textContent=COURS?'mention de B Corp':'mention d’un label ou d’une certification';
+$('foot').innerHTML=(COURS?'Outil pédagogique · ENC COM3 – IA · Pierrick Briand':'Outils pédagogiques IA · Pierrick BRIAND · Formateur IA')+' · Version 1 du 30 septembre 2026 · Aucune donnée n’est envoyée hors de votre navigateur.';
+window.__registre={scan:scan,validate:validate,mergeImport:mergeImport,state:state,buildText:buildText,cours:COURS};
+render();
+})();
+</script>
+</body>
+</html>

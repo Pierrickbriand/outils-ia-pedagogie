@@ -109,6 +109,7 @@ margin-bottom:8px;
 margin-right:6px;
 }
 .tool-tag.rh{background:#e6f4f4;color:#12707a;}
+.tool-tag.com{background:#fbe8f1;color:#a3245c;}
 .tool-link{
 text-decoration:none;
 font-size:0.9rem;
@@ -123,11 +124,11 @@ color:#fff;
 .t-green .tool-number,.t-green .tool-link{background:var(--green);}
 .t-amber .tool-number,.t-amber .tool-link{background:var(--amber);}
 .t-red .tool-number,.t-red .tool-link{background:var(--red);}
-.t-blue .tool-tag:not(.rh){background:var(--blue-light);color:var(--blue);}
-.t-purple .tool-tag:not(.rh){background:var(--purple-light);color:var(--purple);}
-.t-green .tool-tag:not(.rh){background:var(--green-light);color:var(--green);}
-.t-amber .tool-tag:not(.rh){background:var(--amber-light);color:var(--amber);}
-.t-red .tool-tag:not(.rh){background:var(--red-light);color:var(--red);}
+.t-blue .tool-tag:not(.rh):not(.com){background:var(--blue-light);color:var(--blue);}
+.t-purple .tool-tag:not(.rh):not(.com){background:var(--purple-light);color:var(--purple);}
+.t-green .tool-tag:not(.rh):not(.com){background:var(--green-light);color:var(--green);}
+.t-amber .tool-tag:not(.rh):not(.com){background:var(--amber-light);color:var(--amber);}
+.t-red .tool-tag:not(.rh):not(.com){background:var(--red-light);color:var(--red);}
 .tool-link:hover{opacity:0.88;}
 .steps{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:8px;margin:14px 0 0;}
 .steps .steps-label{font-size:0.8rem;color:var(--muted);font-weight:600;margin-right:4px;}
@@ -163,11 +164,12 @@ padding:10px 20px 40px;
 <header>
 <div class="badge">Formation IA</div>
 <h1>Outils pédagogiques IA</h1>
-<p>Des exercices pratiques pour apprendre à utiliser l'IA avec méthode et esprit critique, classés en outils généraux, utilisables par toutes les filières, et en outils adaptés aux ressources humaines.</p>
+<p>Des exercices pratiques pour apprendre à utiliser l'IA avec méthode et esprit critique, classés en outils généraux, utilisables par toutes les filières, en outils adaptés aux ressources humaines et en outils pour la communication et la rédaction de contenus.</p>
 <div class="filters" id="filters" role="group" aria-label="Filtrer les outils">
 <button type="button" data-f="tous" class="on">Tous les outils</button>
 <button type="button" data-f="general">Outils généraux</button>
 <button type="button" data-f="rh">Ressources humaines</button>
+<button type="button" data-f="communication">Communication</button>
 </div>
 <div class="steps" id="steps" role="group" aria-label="Filtrer par étape du parcours">
 <span class="steps-label">Parcours&nbsp;:</span>
@@ -264,6 +266,30 @@ padding:10px 20px 40px;
 </div>
 </div>
 </section>
+<section class="section" id="sec-com">
+<h2 class="section-title">Outils pour la communication et la rédaction de contenus</h2>
+<p class="section-sub">Deux outils pour garder la trace d&rsquo;un travail de rédaction avec l&rsquo;IA&nbsp;: le journal des consignes et le registre des allégations. Conçus pour le cours ENC COM3 – IA, utilisables dans toute matière où l&rsquo;on produit des contenus.</p>
+<div class="list">
+<div class="tool-card t-blue" data-step="rediger">
+<div class="tool-number">9</div>
+<div class="tool-info">
+<div><span class="tool-tag">Rédaction</span><span class="tool-tag com">Communication</span></div>
+<h2>Journal de consignes</h2>
+<p>Tenez le journal de vos consignes, version après version, avec un compteur de requêtes, vos contrôles et vos choix de ne pas utiliser l&rsquo;IA. Exportez-le pour le déposer ou le réunir avec celui de votre groupe.</p>
+</div>
+<a class="tool-link" href="https://pierrickbriand.github.io/outils-ia-pedagogie/journal-consignes/" target="_blank" rel="noopener">Ouvrir l'outil</a>
+</div>
+<div class="tool-card t-purple" data-step="verifier">
+<div class="tool-number">10</div>
+<div class="tool-info">
+<div><span class="tool-tag">Esprit critique</span><span class="tool-tag com">Communication</span></div>
+<h2>Registre des allégations</h2>
+<p>Pour chaque affirmation d&rsquo;un contenu&nbsp;: la preuve, la source, la date et le niveau de fiabilité. L&rsquo;outil repère aussi, dans un texte collé, les termes généraux, les citations et les chiffres à justifier.</p>
+</div>
+<a class="tool-link" href="https://pierrickbriand.github.io/outils-ia-pedagogie/registre-allegations/" target="_blank" rel="noopener">Ouvrir l'outil</a>
+</div>
+</div>
+</section>
 <p class="empty-note" id="empty">Aucun outil pour cette combinaison de filtres.</p>
 </div>
 <footer>Outils pédagogiques IA · Pierrick BRIAND · Formateur IA</footer>
@@ -276,23 +302,24 @@ var cards=document.querySelectorAll('.tool-card');
 function appliquer(){
 btns.forEach(function(b){b.classList.toggle('on',b.getAttribute('data-f')===etat.pub);});
 stepBtns.forEach(function(b){b.classList.toggle('on',b.getAttribute('data-s')===etat.step);});
-var secG=document.getElementById('sec-general'),secR=document.getElementById('sec-rh');
-secG.classList.toggle('hidden',etat.pub==='rh');
-secR.classList.toggle('hidden',etat.pub==='general');
+var secG=document.getElementById('sec-general'),secR=document.getElementById('sec-rh'),secC=document.getElementById('sec-com');
+secG.classList.toggle('hidden',etat.pub==='rh'||etat.pub==='communication');
+secR.classList.toggle('hidden',etat.pub==='general'||etat.pub==='communication');
+secC.classList.toggle('hidden',etat.pub==='general'||etat.pub==='rh');
 cards.forEach(function(c){
 c.classList.toggle('hidden',etat.step!=='tous'&&c.getAttribute('data-step')!==etat.step);
 });
-[secG,secR].forEach(function(sec){
+[secG,secR,secC].forEach(function(sec){
 if(sec.classList.contains('hidden'))return;
 var visibles=sec.querySelectorAll('.tool-card:not(.hidden)').length;
 if(!visibles)sec.classList.add('hidden');
 });
-document.getElementById('empty').style.display=(secG.classList.contains('hidden')&&secR.classList.contains('hidden'))?'block':'none';
+document.getElementById('empty').style.display=(secG.classList.contains('hidden')&&secR.classList.contains('hidden')&&secC.classList.contains('hidden'))?'block':'none';
 }
 btns.forEach(function(b){b.addEventListener('click',function(){etat.pub=b.getAttribute('data-f');appliquer();});});
 stepBtns.forEach(function(b){b.addEventListener('click',function(){etat.step=b.getAttribute('data-s');appliquer();});});
 var params=new URLSearchParams(window.location.search);
-var q=params.get('public'); if(q==='rh'||q==='general'){etat.pub=q;}
+var q=params.get('public'); if(q==='rh'||q==='general'||q==='communication'){etat.pub=q;}
 var e=params.get('etape'); if(['rediger','verifier','personnaliser','proteger','gouverner'].indexOf(e)>=0){etat.step=e;}
 appliquer();
 })();

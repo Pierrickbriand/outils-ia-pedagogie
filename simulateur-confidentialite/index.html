@@ -36,12 +36,10 @@
   .muted{ color:var(--muted); font-size:0.88rem; }
   .info-box{ background:#f4f5f7; border-radius:10px; padding:12px 14px; font-size:0.88rem; color:var(--muted); margin:12px 0; }
   .info-box b{ color:var(--ink); }
+  .tool-box{ background:var(--blue-light); border:1px solid #c9d4f6; color:#243a8a; border-radius:10px; padding:10px 14px; font-size:0.87rem; margin:0 0 12px; }
 
   button, select{ font-family:inherit; }
-  button{
-    cursor:pointer; border:none; border-radius:9px; font-size:0.9rem;
-    padding:10px 16px; transition:transform .05s ease;
-  }
+  button{ cursor:pointer; border:none; border-radius:9px; font-size:0.9rem; padding:10px 16px; transition:transform .05s ease; }
   button:active{ transform:scale(0.98); }
   button:disabled{ opacity:0.45; cursor:not-allowed; }
   .btn-primary{ background:var(--red); color:#fff; font-weight:600; }
@@ -49,7 +47,7 @@
   .btn-ghost{ background:transparent; color:var(--muted); border:1px solid var(--line); }
   .btn-ghost:hover{ background:#f0f1f3; }
   .actions-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; align-items:center; }
-  select{ font-size:0.9rem; padding:9px 12px; border:1px solid var(--line); border-radius:9px; background:#fff; color:var(--ink); }
+  select{ font-size:0.9rem; padding:9px 12px; border:1px solid var(--line); border-radius:9px; background:#fff; color:var(--ink); max-width:100%; }
 
   .topbar{
     display:flex; justify-content:space-between; align-items:center; gap:12px;
@@ -57,29 +55,42 @@
   }
   .progress{ height:6px; background:var(--line); border-radius:6px; overflow:hidden; flex:1 1 160px; min-width:120px; }
   .progress i{ display:block; height:100%; background:var(--red); }
-  .tag{ display:inline-block; font-size:0.72rem; font-weight:600; padding:3px 10px; border-radius:12px; background:var(--red-light); color:var(--red); margin-bottom:8px; }
+  .tag{ display:inline-block; font-size:0.72rem; font-weight:600; padding:3px 10px; border-radius:12px; background:var(--red-light); color:var(--red); margin:0 6px 8px 0; }
+  .tag.niv{ background:#f0f1f3; color:var(--muted); }
 
   .ctx{ font-size:0.92rem; margin:0 0 12px; }
   .doc{
     background:#fbfbfc; border:1px dashed #c9ced6; border-radius:10px; padding:14px 16px;
-    font-size:0.9rem; white-space:pre-wrap; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-    line-height:1.55; margin:0 0 14px;
+    font-size:0.88rem; white-space:pre-wrap; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    line-height:1.55; margin:0 0 14px; overflow-wrap:anywhere;
   }
   .doc-label{ font-size:0.75rem; color:var(--muted); margin-bottom:4px; font-weight:600; }
   mark.sens{ background:#fbd9d9; color:#7a2323; border-radius:4px; padding:0 3px; }
 
   .opt-list{ display:flex; flex-direction:column; gap:8px; margin:12px 0; }
-  .opt-item{
+  .opt{
     display:flex; align-items:flex-start; gap:10px; padding:12px 14px; border:1px solid var(--line);
-    border-radius:10px; cursor:pointer; font-size:0.92rem; background:#fff; text-align:left; width:100%;
+    border-radius:10px; font-size:0.92rem; background:#fff; cursor:pointer;
   }
-  .opt-item:hover:not(:disabled){ border-color:var(--red); }
-  .opt-item.picked{ border-color:var(--red); background:var(--red-light); }
-  .opt-item.right{ border-color:var(--green); background:var(--green-light); }
-  .opt-item small{ display:block; color:var(--muted); font-size:0.8rem; }
+  .opt:hover{ border-color:var(--red); }
+  .opt input{ margin-top:4px; flex-shrink:0; }
+  .opt.locked{ cursor:default; }
+  .opt.locked:hover{ border-color:var(--line); }
+  .opt.v-ideal{ border-color:#8fd0aa; background:var(--green-light); }
+  .opt.v-ok{ border-color:#bfe4cd; background:#f3faf6; }
+  .opt.v-risque{ border-color:#efd3b3; background:var(--amber-light); }
+  .opt.v-non{ border-color:#f1c3c3; background:var(--red-light); }
+  .opt.chosen{ outline:2px solid var(--ink); outline-offset:1px; }
+  .verdict{ display:inline-block; font-size:0.72rem; font-weight:700; padding:2px 9px; border-radius:12px; margin:0 6px 4px 0; }
+  .verdict.ideal{ background:#cdebd9; color:#175c38; }
+  .verdict.ok{ background:#dff2e7; color:#175c38; }
+  .verdict.risque{ background:#f6dcc0; color:#7a4310; }
+  .verdict.non{ background:#f5cccc; color:#7a2323; }
+  .opt-e{ display:block; font-size:0.84rem; color:#3a4150; margin-top:3px; }
 
   .feedback-box{ border-radius:10px; padding:12px 14px; font-size:0.88rem; margin:10px 0; }
   .feedback-box.ok{ background:var(--green-light); border:1px solid #bfe4cd; color:#175c38; }
+  .feedback-box.mid{ background:var(--amber-light); border:1px solid #efd3b3; color:#7a4310; }
   .feedback-box.ko{ background:var(--red-light); border:1px solid #f1c3c3; color:#7a2323; }
   .feedback-box.info{ background:var(--blue-light); border:1px solid #c9d4f6; color:#243a8a; }
   .feedback-box b{ display:block; margin-bottom:2px; }
@@ -90,11 +101,11 @@
   .tile b{ display:block; font-size:1.4rem; }
   .tile span{ font-size:0.75rem; color:var(--muted); }
 
-  table{ width:100%; border-collapse:collapse; font-size:0.85rem; }
+  table{ width:100%; border-collapse:collapse; font-size:0.85rem; margin-top:10px; }
   th, td{ text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
   th{ font-size:0.75rem; color:var(--muted); }
-  .ok-mark{ color:var(--green); font-weight:700; }
-  .ko-mark{ color:var(--red); font-weight:700; }
+  .pct{ font-weight:700; white-space:nowrap; }
+  .pct.h{ color:var(--green); } .pct.m{ color:var(--amber); } .pct.l{ color:var(--red); }
   footer{ text-align:center; color:var(--muted); font-size:0.8rem; padding:10px 20px 40px; max-width:760px; margin:0 auto; }
 </style>
 </head>
@@ -105,13 +116,13 @@
 <header>
   <div class="badge">Confidentialité · Toutes filières</div>
   <h1>Simulateur de confidentialité des données</h1>
-  <p>Avant de coller un texte dans une IA, posez-vous la bonne question : peut-il partir tel quel, faut-il l'anonymiser d'abord, ou ne doit-il jamais quitter votre organisation ?</p>
+  <p>Avant de confier un texte à une IA, il faut regarder le contenu, l'outil utilisé et ce dont l'IA a réellement besoin. Ici, plusieurs réponses peuvent être valables, et la bonne dépend souvent du contexte.</p>
 </header>
 
 <div class="wrap" id="app"></div>
 
 <footer>
-  Outil pédagogique, fonctionnement hors connexion : aucune donnée n'est enregistrée ni transmise. Les cas sont fictifs, les personnes, entreprises et montants sont inventés.
+  Outil pédagogique, fonctionnement hors connexion : aucune donnée n'est enregistrée ni transmise. Les cas sont fictifs, les personnes, organisations et montants sont inventés.
   Les références juridiques sont simplifiées à des fins pédagogiques et ne constituent pas un avis juridique.
 </footer>
 
@@ -119,109 +130,386 @@
 (function(){
   var NB = ' ', NF = ' ';
 
-  /* Typographie : espaces insécables avant les signes doubles et dans les guillemets. */
   function fr(s){
     return s.replace(/ ([:;?!»%€])/g, NB + '$1').replace(/« /g, '«' + NB).replace(/(\d) (\d)/g, '$1' + NF + '$2');
   }
 
-  var CHOIX = {
-    coller: { label: 'Coller tel quel', aide: 'Le texte ne contient rien de sensible.' },
-    anonymiser: { label: 'Anonymiser d\'abord, puis coller', aide: 'Retirer ou remplacer ce qui identifie, garder ce dont l\'IA a besoin.' },
-    ne_pas: { label: 'Ne pas coller', aide: 'Même modifié, ce texte ne doit pas sortir de l\'organisation.' }
-  };
+  var VAL = { ideal: 2, ok: 1, risque: -1, non: -2 };
+  var VERDICT = { ideal: 'Recommandée', ok: 'Acceptable', risque: 'Risquée', non: 'À proscrire' };
+  var NIVEAU = { 1: 'Niveau 1 · Repérage', 2: 'Niveau 2 · Nuancé', 3: 'Niveau 3 · Délicat' };
 
-  var CONTEXTE = 'Vous utilisez un assistant IA grand public, sans contrat d\'entreprise ni engagement écrit d\'exclusion de l\'entraînement. Que faites-vous de ce texte ?';
+  var G = `assistant IA grand public : compte personnel, réglages par défaut, aucun contrat avec votre organisation.`;
+  var H = `assistant IA grand public, avec l'historique et l'utilisation des conversations pour l'entraînement désactivés.`;
+  var E = `assistant IA d'entreprise validé par la DSI : contrat signé, données exclues de l'entraînement, hébergement dans l'Union européenne.`;
 
-  /* Les passages entre [[ ]] sont révélés comme sensibles après la réponse. */
+  function o(v, t, e){ return { v: v, t: t, e: e }; }
+
   var CAS = [
-    {
-      id: 1, filiere: 'Ressources humaines', titre: 'Offre d\'emploi à reformuler',
-      contexte: 'Vous voulez rendre plus attractive une offre d\'emploi avant sa publication.',
-      texte: 'Chargé(e) de recrutement (CDI, Nantes)\nMissions : rédiger les annonces, présélectionner les candidatures, conduire les entretiens de premier niveau.\nProfil : 3 ans d\'expérience en recrutement, maîtrise d\'un outil de suivi des candidatures.\nRémunération : 34 000 à 38 000 € brut annuel.',
-      bonne: 'coller',
-      pourquoi: 'Ce texte est destiné à être publié : il ne contient aucune donnée personnelle, aucun secret. Le coller ne fait courir aucun risque. Toute la difficulté est de savoir reconnaître les cas où il n\'y a rien à protéger, pour ne pas s\'interdire l\'IA par excès de prudence.',
-      regle: 'Ce qui est public par nature peut être confié à l\'IA. Vérifiez seulement que rien d\'interne n\'a été glissé dans le texte (nom d\'un projet confidentiel, budget non publié).'
-    },
-    {
-      id: 2, filiere: 'Ressources humaines', titre: 'Compte rendu d\'entretien annuel',
-      contexte: 'Vous voulez une synthèse structurée du compte rendu d\'un entretien annuel.',
-      texte: 'Entretien annuel de [[Camille Martin]], [[matricule 4471]], assistante RH, [[service de Saint-Nazaire]].\nPoints forts : rigueur, autonomie sur la paie, bonne relation avec les managers.\nPoints d\'amélioration : délais de réponse aux candidats, prise de parole en réunion.\nObjectifs : réduire à cinq jours le délai de réponse aux candidats ; suivre une formation à l\'entretien de recrutement.\n[[Augmentation demandée : 150 € brut mensuel, refusée.]]',
-      anon: 'Entretien annuel d\'un(e) assistant(e) RH.\nPoints forts : rigueur, autonomie sur la paie, bonne relation avec les managers.\nPoints d\'amélioration : délais de réponse aux candidats, prise de parole en réunion.\nObjectifs : réduire à cinq jours le délai de réponse aux candidats ; suivre une formation à l\'entretien de recrutement.',
-      bonne: 'anonymiser',
-      pourquoi: 'Le compte rendu concerne une personne identifiable (nom, matricule, service) et mentionne sa rémunération. Pour obtenir la synthèse, l\'IA n\'a besoin ni de l\'identité ni de la demande salariale : ce sont les points forts, les axes d\'amélioration et les objectifs qui comptent. On retire l\'identité et la donnée de rémunération, on garde le contenu utile.',
-      regle: 'Minimisation des données : ne traiter que les données strictement nécessaires à la finalité (RGPD, article 5, paragraphe 1, point c).'
-    },
-    {
-      id: 3, filiere: 'Ressources humaines', titre: 'Absences et situations de santé',
-      contexte: 'Vous voulez un tableau de synthèse pour préparer un point avec la direction.',
-      texte: 'Suivi des absences, [[site de Nantes]] :\n[[Nadia Benali]] : arrêt maladie longue durée depuis mars ([[suites d\'une chimiothérapie]]).\n[[Julien Garnier]] : [[reconnaissance de la qualité de travailleur handicapé (RQTH)]], aménagement de poste en cours.\n[[Sophie Lemaire]] : 14 jours d\'absence, [[dépression signalée par le médecin du travail]].',
-      bonne: 'ne_pas',
-      pourquoi: 'Ce texte réunit des données de santé, qui relèvent des catégories particulières de données, avec des personnes identifiées. Même « anonymisé » à la main, un tableau de trois salariés d\'un même site reste facile à ré-identifier par leurs collègues. Ces données ne sortent pas de l\'organisation et n\'ont pas leur place dans un outil grand public.',
-      regle: 'Les données de santé sont interdites de traitement sauf exception encadrée (RGPD, article 9). Le risque de ré-identification subsiste quand le groupe est petit.'
-    },
-    {
-      id: 4, filiere: 'Marketing', titre: 'Extrait de la base clients',
-      contexte: 'Vous cherchez des tendances d\'achat dans un extrait de la base clients.',
-      texte: 'Nom ; e-mail ; ville ; dernier achat ; panier moyen\n[[Léa Fontaine]] ; [[lea.fontaine@exemple.fr]] ; Rennes ; 12/09/2026 ; 84 €\n[[Marc Duval]] ; [[m.duval@exemple.fr]] ; Angers ; 03/09/2026 ; 142 €\n[[Inès Roche]] ; [[ines.roche@exemple.fr]] ; Nantes ; 21/09/2026 ; 57 €',
-      anon: 'Client ; ville ; dernier achat ; panier moyen\nClient A ; Rennes ; septembre 2026 ; 84 €\nClient B ; Angers ; septembre 2026 ; 142 €\nClient C ; Nantes ; septembre 2026 ; 57 €',
-      bonne: 'anonymiser',
-      pourquoi: 'Pour repérer des tendances, l\'IA n\'a besoin ni des noms ni des adresses e-mail. On les remplace par des identifiants neutres et l\'on généralise la date. L\'analyse reste possible, les personnes ne sont plus identifiables. Attention : une extraction volumineuse reste une donnée à protéger, on ne la confie pas en bloc sans cadre.',
-      regle: 'Anonymiser, c\'est rendre la ré-identification impossible ; remplacer un nom par un code que vous conservez ne fait que pseudonymiser (RGPD, article 4, point 5, et considérant 26).'
-    },
-    {
-      id: 5, filiere: 'Finance', titre: 'Contrat de financement et rapprochement',
-      contexte: 'Vous voulez une aide pour résumer un contrat et préparer un tableau de suivi.',
-      texte: 'Contrat de financement de l\'acquisition de [[la société Océanis Marine]], confidentiel jusqu\'à l\'annonce officielle.\nMontant : [[12 800 000 €]]. Emprunteur : [[groupe Vastel]].\nVersement sur le compte [[IBAN FR76 3000 6000 0112 3456 7890 189]].\nCalendrier : signature prévue avant l\'annonce publique.',
-      bonne: 'ne_pas',
-      pourquoi: 'Le texte combine une opération non annoncée (information confidentielle, possiblement privilégiée), l\'identité des parties, un montant et un numéro de compte bancaire. Il n\'existe pas de version réduite qui garde un intérêt sans exposer l\'opération. La bonne réponse est de ne pas le coller, et de demander à l\'IA une trame de synthèse générique, à remplir hors ligne.',
-      regle: 'Secret des affaires (Code de commerce, articles L. 151-1 et suivants) et information privilégiée (règlement (UE) n° 596/2014, articles 7 et 14) : une opération non annoncée ne se confie pas à un outil externe.'
-    },
-    {
-      id: 6, filiere: 'Santé', titre: 'Compte rendu de consultation',
-      contexte: 'Vous voulez une reformulation d\'un compte rendu pour un courrier au médecin traitant.',
-      texte: 'Patient : [[M. Henri Vidal]], né le [[14/03/1958]], [[12 rue des Tilleuls, Saint-Nazaire]].\nMotif : [[douleurs thoraciques à l\'effort]]. Antécédents : [[diabète de type 2, hypertension]].\nExamens : [[ECG anormal]], test d\'effort à programmer.\nConclusion : orientation cardiologique.',
-      bonne: 'ne_pas',
-      pourquoi: 'Nom, date de naissance, adresse, symptômes, antécédents : tout identifie le patient et relève du secret médical. La réponse n\'est pas « anonymiser à la va-vite » : ce compte rendu ne sort pas d\'un environnement de santé agréé et contractualisé. Pour un courrier, on utilise un modèle rédigé sans donnée réelle, puis on le complète soi-même.',
-      regle: 'Secret professionnel (Code de la santé publique, article L. 1110-4) et données de santé (RGPD, article 9). Les données de santé se traitent dans un cadre spécifique, pas dans un outil grand public.'
-    },
-    {
-      id: 7, filiere: 'Juridique', titre: 'Clause contractuelle à reformuler',
-      contexte: 'Vous voulez une clause de confidentialité plus claire pour un contrat de prestation.',
-      texte: 'Entre [[la société Pelloux Conseil (SIRET 812 345 678 00019)]] et [[la société Batinord]], pour la mission [[de refonte du système de paie, montant 96 000 €]] :\n« Chacune des parties s\'engage à ne pas divulguer les informations confidentielles de l\'autre partie, sous réserve des obligations légales, pendant la durée du contrat et cinq ans après son terme. »',
-      anon: 'Entre [Prestataire] et [Client], pour la mission [objet de la mission] :\n« Chacune des parties s\'engage à ne pas divulguer les informations confidentielles de l\'autre partie, sous réserve des obligations légales, pendant la durée du contrat et cinq ans après son terme. »',
-      bonne: 'anonymiser',
-      pourquoi: 'Seule la clause a besoin d\'être reformulée. Les noms des parties, l\'identifiant d\'entreprise, l\'objet et le montant de la mission sont confidentiels et inutiles pour le travail demandé. On les remplace par des rôles génériques (« Prestataire », « Client ») et l\'on conserve la clause.',
-      regle: 'Confier à un outil externe le contenu d\'un contrat peut méconnaître son obligation de confidentialité. Retirer ce qui identifie les parties et l\'opération suffit ici.'
-    },
-    {
-      id: 8, filiere: 'Éducation', titre: 'Copies d\'étudiants à corriger',
-      contexte: 'Vous voulez une aide pour repérer les erreurs récurrentes dans des copies.',
-      texte: 'Copie de [[Émilie Roux, groupe B, n° étudiant 2026-0417]] :\n« Le RGPD a été adopté en 2010 et s\'applique uniquement aux entreprises françaises. »\nNote provisoire : [[7/20]]. Observation : [[a redoublé l\'an dernier]].',
-      anon: 'Extrait de copie :\n« Le RGPD a été adopté en 2010 et s\'applique uniquement aux entreprises françaises. »',
-      bonne: 'anonymiser',
-      pourquoi: 'Pour repérer les erreurs (ici deux erreurs de fond), seul l\'extrait de copie compte. Le nom, le numéro d\'étudiant, la note et la situation scolaire sont des données personnelles inutiles à la tâche, et une note ou un redoublement peuvent porter préjudice à l\'étudiant. On ne colle que la production, sans l\'identité ni les notes.',
-      regle: 'Minimisation des données (RGPD, article 5, paragraphe 1, point c). La note et le parcours ne sont pas nécessaires pour repérer une erreur de contenu.'
-    },
-    {
-      id: 9, filiere: 'Commerce', titre: 'Fiche produit du catalogue',
-      contexte: 'Vous voulez raccourcir une fiche produit pour le site marchand.',
-      texte: 'Sac de voyage Escale 40 L, toile recyclée, dos matelassé, poche ordinateur 15 pouces.\nGarantie deux ans. Disponible en bleu, gris et sable.\nPrix public conseillé : 89 €. Livraison offerte dès 60 € d\'achat.',
-      bonne: 'coller',
-      pourquoi: 'La fiche est déjà publiée ou destinée à l\'être : caractéristiques, prix public, conditions de vente. Elle ne contient ni donnée personnelle ni secret. Le coller ne présente aucun risque.',
-      regle: 'Comme pour le premier cas : ce qui est public peut être confié à l\'IA. Le réflexe utile est de vérifier, pas de tout interdire.'
-    },
-    {
-      id: 10, filiere: 'Industrie', titre: 'Procédé de fabrication non breveté',
-      contexte: 'Vous voulez une aide pour rédiger une fiche de procédé destinée à l\'atelier.',
-      texte: 'Procédé [[Hélix-3]] (à ne pas diffuser) :\nTempérature de frittage [[1 240 °C pendant 47 minutes]], refroidissement en deux paliers.\nAlliage : [[62 % de nickel, 30 % de cuivre, 8 % de molybdène]], additif [[référence B-77]].\n[[Dépôt de brevet envisagé au premier trimestre 2027.]]',
-      bonne: 'ne_pas',
-      pourquoi: 'Le texte décrit un savoir-faire non protégé : composition, paramètres, additif. Le confier à un outil externe le fait sortir du cercle de confidentialité. S\'il devait être breveté, une divulgation préalable peut faire perdre la nouveauté de l\'invention. On rédige la fiche sans l\'IA, ou avec une trame vide de tout paramètre.',
-      regle: 'Secret des affaires (Code de commerce, article L. 151-1) et nouveauté d\'une invention (Code de la propriété intellectuelle, article L. 611-11) : une divulgation avant dépôt peut empêcher de breveter.'
-    }
+
+  /* ───────── Ressources humaines ───────── */
+  { filiere: 'Ressources humaines', niveau: 1, titre: 'Une offre d\'emploi avec une note interne', outil: G,
+    contexte: 'Vous voulez rendre plus attractive une offre avant sa publication.',
+    texte: `Offre : chargé(e) de développement RH, CDI, Nantes.
+Missions : suivi de la paie, relations avec les managers, appui au recrutement.
+Profil : 3 ans d'expérience, maîtrise d'un SIRH. Rémunération : 36 000 à 40 000 € brut annuel.
+[[Note interne (ne pas publier) : poste libéré par le départ de M. Delaunay, licencié pour faute grave en juin ; ne pas le mentionner. Budget réel autorisé : 46 000 €.]]`,
+    options: [
+      o('non', `Coller tel quel, pour gagner du temps`, `La note interne désigne une personne, révèle un licenciement et un budget non publié.`),
+      o('ideal', `Supprimer la note interne et ne coller que l'annonce`, `L'annonce est publique par nature ; seule la note pose problème.`),
+      o('risque', `Remplacer « M. Delaunay » par « un salarié » et garder le reste de la note`, `Le licenciement et le budget restent exposés, et le poste suffit à identifier la personne dans un petit service.`),
+      o('ok', `Rédiger l'annonce seul, sans IA`, `Aucun risque, mais on renonce à une aide utile alors qu'une simple suppression suffisait.`)
+    ],
+    regle: `Relisez les notes, commentaires et champs cachés avant de coller un texte « public ». Minimisation des données (RGPD, article 5, paragraphe 1, point c).` },
+
+  { filiere: 'Ressources humaines', niveau: 2, titre: 'Un compte rendu d\'entretien annuel', outil: E,
+    contexte: 'Vous voulez une synthèse structurée du compte rendu d\'un entretien annuel.',
+    texte: `Entretien annuel de [[Camille Martin]], [[matricule 4471]], assistante RH, [[site de Saint-Nazaire]].
+Points forts : rigueur, autonomie sur la paie.
+Points d'amélioration : délais de réponse aux candidats.
+Contexte : [[fatigue marquée depuis la reprise après son traitement]]. Objectif : réduire à cinq jours le délai de réponse.
+[[Demande d'augmentation de 150 € brut mensuel : refusée.]]`,
+    options: [
+      o('non', `Coller tel quel : l'outil est contractualisé, donc sûr`, `Le contrat encadre le transfert, il ne dispense pas de minimiser. La mention du traitement relève des données de santé et la rémunération est inutile à la tâche.`),
+      o('ideal', `Retirer identité, matricule, mention de santé et demande de rémunération, garder évaluation et objectifs`, `On garde ce dont l'IA a besoin pour synthétiser, rien de plus.`),
+      o('risque', `Remplacer le nom par « Salariée A » et garder tout le reste`, `La donnée de santé et la rémunération restent, et le poste sur un site précis permet de retrouver la personne.`),
+      o('ok', `Ne coller que les objectifs, sans les points forts ni d'amélioration`, `Sûr, mais la synthèse obtenue sera pauvre.`)
+    ],
+    regle: `Un outil contractualisé réduit le risque de transfert (RGPD, article 28) mais ne remplace ni la minimisation (article 5) ni l'interdiction de principe de traiter des données de santé (article 9).` },
+
+  { filiere: 'Ressources humaines', niveau: 2, titre: 'Un compte rendu de réunion du CSE', outil: E,
+    contexte: 'Vous voulez un résumé d\'une réunion du comité social et économique.',
+    texte: `Réunion du CSE du 17 septembre. Présents : [[Mme Paulin (élue CGT)]], [[M. Rocher (élu CFDT)]], [[M. Aubin (délégué syndical FO)]], la DRH, le directeur du site.
+[[Mme Paulin]] demande un bilan des accidents du travail. [[M. Rocher]] s'oppose à la modification des horaires d'équipe. [[M. Aubin]] annonce un préavis de grève pour le 8 octobre.
+La direction propose une consultation en novembre.`,
+    options: [
+      o('risque', `Coller le compte rendu tel quel pour obtenir un résumé`, `Les appartenances syndicales sont des données sensibles, et l'annonce d'une grève est attribuée à une personne nommée.`),
+      o('ideal', `Remplacer noms et sigles par « délégation A, B, C » et garder les positions exprimées`, `Le résumé reste utile ; on retire ce qui permet d'attribuer une opinion syndicale à quelqu'un.`),
+      o('ok', `Demander un modèle vide de compte rendu de CSE et le remplir soi-même`, `Sûr, au prix d'un gain de temps limité.`),
+      o('non', `Envoyer l'enregistrement audio de la réunion à un service de transcription gratuit en ligne`, `Voix identifiables, propos syndicaux, aucun contrat : c'est le pire scénario.`)
+    ],
+    regle: `L'appartenance syndicale fait partie des catégories particulières de données (RGPD, article 9). Les sigles qui permettent de remonter à la personne se traitent comme les noms.` },
+
+  { filiere: 'Ressources humaines', niveau: 3, titre: 'Classer trois candidats', outil: E,
+    contexte: 'Vous avez présélectionné trois candidats et vous voulez gagner du temps sur la comparaison.',
+    texte: `Poste : responsable logistique.
+[[Karim B., 52 ans, nationalité algérienne, Le Havre]] : 18 ans d'expérience, CACES, anglais courant.
+[[Julie M., 34 ans, en congé maternité jusqu'en mars, Nantes]] : 9 ans d'expérience, master logistique.
+[[Thomas R., 41 ans, Saint-Nazaire]] : 12 ans d'expérience, certification Lean.
+Demande : « Classe ces trois candidats du meilleur au moins bon. »`,
+    options: [
+      o('non', `Coller le tableau et utiliser tel quel le classement obtenu`, `Origine, âge et situation familiale n'ont rien à faire dans l'évaluation, et une décision fondée sur un seul traitement automatisé est encadrée (RGPD, article 22).`),
+      o('ideal', `Ne coller que compétences et expériences, sans identité, âge, nationalité ni situation, et demander une grille de comparaison que vous appliquez vous-même`, `L'IA aide à structurer, la décision reste humaine.`),
+      o('ok', `Demander seulement une grille de critères pour ce poste, sans aucun dossier`, `Le plus prudent, mais moins personnalisé.`),
+      o('risque', `Retirer les noms mais garder âge, ville et nationalité, car « ce sont des critères utiles »`, `Ces critères sont discriminatoires en recrutement, et leur combinaison ré-identifie les personnes.`)
+    ],
+    regle: `Les informations demandées à un candidat ne doivent servir qu'à apprécier sa capacité à occuper l'emploi (Code du travail, article L. 1221-6). Le recrutement est un domaine à haut risque : la supervision humaine doit être réelle (RGPD, article 22).` },
+
+  { filiere: 'Ressources humaines', niveau: 3, titre: 'Une plainte pour harcèlement', outil: E,
+    contexte: 'Vous préparez une note de synthèse pour la direction sur une enquête interne en cours.',
+    texte: `Dossier de [[Nathalie Colin]], [[responsable paie, agence de Vannes]] : plainte pour [[harcèlement moral]] visant [[son supérieur, M. Perrin]].
+Faits : [[remarques répétées en réunion d'équipe les 3 et 17 mars]] ; [[arrêt de travail du 21 mars pour syndrome anxio-dépressif]].
+Enquête interne en cours ; information du CSE prévue le mois prochain.`,
+    options: [
+      o('risque', `Coller le dossier tel quel dans l'outil validé, puisqu'il est contractualisé`, `Données de santé, allégations visant une personne nommée, procédure en cours : le contrat n'annule pas l'exigence de strict nécessaire.`),
+      o('ideal', `Demander un plan type de note de synthèse d'enquête interne, sans aucun fait`, `Vous obtenez la structure sans exposer le dossier.`),
+      o('ideal', `Demander au délégué à la protection des données ou au juriste si l'outil est autorisé pour les dossiers disciplinaires`, `Sur un dossier délicat, vérifier le cadre avant d'agir est le bon réflexe.`),
+      o('ok', `Pseudonymiser (« Salariée A », « Manager B »), généraliser les dates et retirer l'arrêt de travail, puis coller les faits`, `Le risque baisse nettement, mais dans une agence de taille modeste les faits restent reconnaissables.`)
+    ],
+    regle: `Les données de santé (RGPD, article 9) et les procédures disciplinaires appellent un cadre précis. Pseudonymiser ne suffit pas quand le groupe est petit (RGPD, article 4, point 5 ; considérant 26).` },
+
+  /* ───────── Marketing ───────── */
+  { filiere: 'Marketing', niveau: 1, titre: 'Un extrait de la base clients', outil: G,
+    contexte: 'Vous cherchez des tendances d\'achat dans la base clients (4 800 lignes).',
+    texte: `Nom ; e-mail ; ville ; dernier achat ; panier moyen
+[[Léa Fontaine]] ; [[lea.fontaine@exemple.fr]] ; Rennes ; [[12/09/2026]] ; 84 €
+[[Marc Duval]] ; [[m.duval@exemple.fr]] ; Angers ; [[03/09/2026]] ; 142 €
+[[Inès Roche]] ; [[ines.roche@exemple.fr]] ; Nantes ; [[21/09/2026]] ; 57 €
+(… 4 797 autres lignes)`,
+    options: [
+      o('non', `Coller un extrait tel quel`, `Noms et e-mails de clients identifiés, sans contrat avec l'outil.`),
+      o('ideal', `Calculer soi-même des agrégats (panier moyen par ville et par mois) et ne coller que ces chiffres`, `Pour une tendance, l'IA n'a pas besoin de lignes individuelles.`),
+      o('ok', `Coller des lignes en remplaçant nom et e-mail par « Client A, B… » et la date par le mois`, `Le risque baisse fortement ; la donnée reste pseudonymisée tant que vous conservez la clé de correspondance.`),
+      o('risque', `Garder prénoms et villes (« Léa, Rennes ») en retirant seulement les e-mails`, `Prénom, ville et date d'achat suffisent souvent à retrouver une personne.`)
+    ],
+    regle: `Anonymiser suppose que la ré-identification soit impossible ; un code remplaçant un nom reste une pseudonymisation (RGPD, article 4, point 5 ; considérant 26). La solution la plus sûre est souvent d'agréger.` },
+
+  { filiere: 'Marketing', niveau: 2, titre: 'Des avis clients publiés', outil: G,
+    contexte: 'Vous voulez une synthèse des avis publiés sur votre site.',
+    texte: `Avis 1 : « Livraison rapide, mais le colis est arrivé au [[4 rue des Mimosas, 44600 Saint-Nazaire]] avec un jour de retard. » (Julie, 3/5)
+Avis 2 : « Service client au top, merci à Karim ! Commande n° [[FR-2026-118842]]. » (anonyme, 5/5)
+Avis 3 : « Produit conforme, mais [[mon mari est malade et j'ai dû annuler la commande]]. » (Sandrine, 2/5)`,
+    options: [
+      o('risque', `Coller tel quel : les avis sont publics`, `Un avis publié n'autorise pas toute réutilisation ; adresse, numéro de commande et santé d'un proche sont glissés dans le texte libre.`),
+      o('ideal', `Relire, supprimer adresse, numéro de commande et mention de santé, puis coller`, `Le texte utile pour la synthèse est conservé.`),
+      o('ok', `Résumer soi-même les trois thèmes sans rien coller`, `Sûr, mais l'IA devient inutile.`),
+      o('non', `Coller avec prénoms et identifiants pour pouvoir répondre à chaque client depuis l'outil`, `Répondre aux clients n'exige pas de confier leurs identifiants à un outil externe.`)
+    ],
+    regle: `Une donnée publique reste une donnée personnelle : la finalité de la réutilisation doit être compatible, et les informations glissées dans un texte libre sont à retirer (RGPD, article 5).` },
+
+  { filiere: 'Marketing', niveau: 3, titre: 'Un brief de lancement confidentiel', outil: H,
+    contexte: 'Vous voulez des idées de slogans pour un produit non encore annoncé.',
+    texte: `Brief confidentiel : lancement du sérum [[Aurore 2]] (marque [[Laboratoires Vasseur]]), annonce prévue le [[14 novembre 2026]].
+Cible : femmes de 30 à 45 ans, urbaines.
+Budget média : [[420 000 €]] ; agence : [[Studio Marée]].
+Positionnement : « la routine simple, sans compromis ».`,
+    options: [
+      o('risque', `Coller tel quel : l'historique est désactivé, donc rien n'est conservé`, `Désactiver l'historique n'écarte pas toute conservation ni tout accès côté fournisseur, et ne remplace pas la confidentialité d'un lancement.`),
+      o('ideal', `Remplacer marque, produit, date, budget et agence par des termes génériques, et coller cible et positionnement`, `L'IA a besoin du ton et de la cible, pas du plan de lancement.`),
+      o('ideal', `Ne coller que la cible et le ton souhaité, sans aucun élément du plan de lancement`, `Encore plus sûr, pour un résultat équivalent.`),
+      o('ok', `Attendre l'accès à l'outil validé par l'organisation avant d'y coller le brief complet`, `Cohérent et prudent, au prix d'un délai.`)
+    ],
+    regle: `Le secret des affaires protège les informations non publiques ayant une valeur commerciale, sous réserve de mesures de protection raisonnables (Code de commerce, articles L. 151-1 et suivants).` },
+
+  /* ───────── Finance ───────── */
+  { filiere: 'Finance', niveau: 1, titre: 'Un contrat de financement avant annonce', outil: G,
+    contexte: 'Vous voulez un résumé d\'un contrat de financement.',
+    texte: `Contrat de financement de l'acquisition de [[la société Océanis Marine]], confidentiel jusqu'à l'annonce officielle.
+Montant : [[12 800 000 €]]. Emprunteur : [[groupe Vastel]].
+Versement sur le compte [[IBAN FR76 3000 6000 0112 3456 7890 189]].
+Signature prévue [[avant l'annonce publique]].`,
+    options: [
+      o('non', `Coller tel quel`, `Opération non annoncée, parties, montant et compte bancaire réunis.`),
+      o('risque', `Remplacer seulement l'IBAN par des X et garder le reste`, `Montant, parties et calendrier d'une opération non annoncée restent exposés.`),
+      o('ideal', `Ne rien coller ; demander une trame de synthèse de contrat de financement, à remplir hors ligne`, `Vous obtenez la méthode sans exposer l'opération.`),
+      o('ok', `Utiliser l'assistant hébergé sur les serveurs de l'organisation, s'il existe et si vous y êtes autorisé`, `La donnée ne quitte pas l'organisation, sous réserve d'une autorisation explicite.`)
+    ],
+    regle: `Secret des affaires (Code de commerce, article L. 151-1) et information privilégiée (règlement (UE) n° 596/2014, articles 7 et 14) : une opération non annoncée ne se confie pas à un outil externe.` },
+
+  { filiere: 'Finance', niveau: 2, titre: 'Un relevé bancaire à catégoriser', outil: E,
+    contexte: 'Vous êtes assistant dans un cabinet comptable et voulez catégoriser les opérations d\'un client.',
+    texte: `Date ; Libellé ; Montant
+02/09 ; VIR [[M. Yves Lambert]] loyer septembre ; -1 250,00
+05/09 ; PRLV [[Clinique du Pont : soins]] ; -380,00
+09/09 ; VIR [[Association Espoir 44 : don]] ; -100,00
+12/09 ; VIR SARL Bernard Toitures facture 2214 ; +4 860,00
+Solde : 38 412,75, compte [[IBAN FR76 1027 8060 …]]`,
+    options: [
+      o('risque', `Coller le relevé complet dans l'outil validé`, `Un relevé peut révéler santé, convictions et situation financière ; l'outil validé limite le risque mais le strict nécessaire n'est pas respecté.`),
+      o('ideal', `Demander à l'IA une formule ou un script de catégorisation, appliqué en local sur le fichier`, `La donnée ne quitte pas votre poste ; l'IA fournit seulement la méthode.`),
+      o('ok', `Ne garder que date et montant, et catégoriser les libellés à la main`, `Réduit l'exposition, mais le gain de temps est faible.`),
+      o('non', `Ajouter l'IBAN pour que l'IA « vérifie les virements »`, `L'IBAN n'est pas nécessaire pour catégoriser des opérations.`)
+    ],
+    regle: `Un relevé bancaire peut révéler des données sensibles (RGPD, article 9 : santé, convictions). On garde le strict nécessaire (article 5), et l'on traite souvent la donnée en local plutôt que de l'envoyer.` },
+
+  { filiere: 'Finance', niveau: 3, titre: 'Des résultats trimestriels non publiés', outil: H,
+    contexte: 'Vous voulez rendre plus clair un texte destiné au comité de direction.',
+    texte: `Note interne : résultats du troisième trimestre de [[NovaTech SA, société cotée]], à ne pas diffuser avant le [[28 octobre]].
+Chiffre d'affaires : [[412 M€, en hausse de 9 %]] ; résultat opérationnel [[en retrait de 14 %]] ; [[révision à la baisse des prévisions annuelles]].
+Demande : rendre le texte plus lisible.`,
+    options: [
+      o('non', `Coller tel quel`, `Information précise, non publique, susceptible d'influencer le cours : la divulguer hors de l'exercice normal des fonctions est interdite.`),
+      o('ideal', `Remplacer nom, chiffres et dates par des marqueurs (« [CA] », « [variation] »), travailler la structure, puis réintégrer les chiffres soi-même`, `L'IA améliore la forme, l'information sensible reste chez vous.`),
+      o('risque', `Arrondir les chiffres et garder le nom de la société`, `Le sens (baisse des prévisions) et l'ordre de grandeur restent une information sensible.`),
+      o('ok', `Attendre la publication officielle avant d'utiliser l'IA`, `Sûr, mais probablement inutile : la structure suffit.`)
+    ],
+    regle: `Information privilégiée et devoir de confidentialité avant publication (règlement (UE) n° 596/2014, articles 7 et 14) : la forme se travaille avec des marqueurs, pas avec les chiffres.` },
+
+  /* ───────── Santé ───────── */
+  { filiere: 'Santé', niveau: 1, titre: 'Un compte rendu de consultation', outil: G,
+    contexte: 'Vous voulez reformuler un compte rendu pour un courrier au médecin traitant.',
+    texte: `Patient : [[M. Henri Vidal]], né le [[14/03/1958]], [[12 rue des Tilleuls, Saint-Nazaire]].
+Motif : [[douleurs thoraciques à l'effort]]. Antécédents : [[diabète de type 2, hypertension]].
+Examens : [[ECG anormal]], test d'effort à programmer. Conclusion : orientation cardiologique.`,
+    options: [
+      o('non', `Coller tel quel`, `Identité, adresse, symptômes et antécédents : secret médical et données de santé.`),
+      o('risque', `Retirer nom et adresse, garder date de naissance, symptômes et antécédents`, `Le reste permet encore de retrouver le patient, surtout dans une petite ville.`),
+      o('ideal', `Rédiger un modèle de courrier avec champs vides, complété ensuite dans votre logiciel métier`, `Aucune donnée de santé n'est confiée à l'outil.`),
+      o('ideal', `Utiliser un outil de saisie ou de dictée prévu pour cet usage et hébergé chez un hébergeur de données de santé certifié`, `Les données de santé se traitent dans un cadre certifié, pas dans un outil grand public.`)
+    ],
+    regle: `Secret professionnel (Code de la santé publique, article L. 1110-4), données de santé (RGPD, article 9) et hébergement chez un hébergeur certifié (Code de la santé publique, article L. 1111-8).` },
+
+  { filiere: 'Santé', niveau: 2, titre: 'Un protocole d\'hygiène et un retour d\'expérience', outil: G,
+    contexte: 'Vous voulez reformuler un protocole d\'hygiène pour un affichage dans le service.',
+    texte: `Protocole d'hygiène des mains, service de cardiologie, CHU [[de Nantes]].
+1. Friction hydro-alcoolique avant et après chaque soin.
+2. Port de gants pour tout contact avec les liquides biologiques.
+Retour d'expérience : [[le 3 mai, le patient de la chambre 12, M. Guyot, est décédé d'une infection nosocomiale à la suite d'un défaut de friction de l'aide-soignante de nuit]].`,
+    options: [
+      o('non', `Coller le document entier`, `Le retour d'expérience désigne un patient décédé et met en cause une soignante.`),
+      o('ideal', `Supprimer le retour d'expérience et coller uniquement le protocole`, `Le protocole seul suffit à la tâche demandée.`),
+      o('risque', `Remplacer « M. Guyot » par « un patient » en gardant date, chambre et service`, `Date, chambre et service permettent de retrouver le patient et la soignante.`),
+      o('ok', `Ne rien coller`, `Sûr, mais la reformulation d'un protocole ne posait aucune difficulté une fois le retour retiré.`)
+    ],
+    regle: `Le secret professionnel couvre les informations sur les patients (Code de la santé publique, article L. 1110-4) ; une pseudonymisation partielle laisse subsister des éléments permettant l'identification.` },
+
+  { filiere: 'Santé', niveau: 3, titre: 'Des notes de stage pour un dossier de formation', outil: G,
+    contexte: 'Vous êtes étudiante en soins infirmiers et vous voulez de l\'aide pour rédiger une analyse de situation.',
+    texte: `Notes de stage : [[Mme R., 87 ans, chambre 8, service de gériatrie de l'hôpital de Saint-Nazaire]]. Chute nocturne le [[9 juin]], [[fracture du col du fémur]]. [[Sa fille, très en colère, a menacé de porter plainte.]]
+Demande : « Aide-moi à en tirer une analyse de situation pour mon dossier de formation. »`,
+    options: [
+      o('risque', `Coller telles quelles : le nom est déjà réduit à « Mme R. »`, `Âge, service, établissement, date et fracture suffisent à identifier la patiente.`),
+      o('ideal', `Décrire une situation type en changeant âge, sexe, service, établissement et contexte, en gardant les enseignements`, `L'analyse porte sur les pratiques, pas sur la personne.`),
+      o('ok', `Demander à l'IA la méthode de rédaction d'une analyse de situation, sans rien décrire`, `Sûr, mais moins directement utile.`),
+      o('non', `Coller les notes complètes avec l'établissement « pour mieux contextualiser »`, `Aucune analyse pédagogique n'exige de nommer l'établissement ni de reproduire les faits réels.`)
+    ],
+    regle: `Les informations recueillies en stage relèvent du secret professionnel (Code pénal, article 226-13 ; Code de la santé publique, article L. 1110-4). Une situation inventée à partir d'une situation vécue protège la personne.` },
+
+  /* ───────── Juridique ───────── */
+  { filiere: 'Juridique', niveau: 1, titre: 'Une clause à reformuler', outil: G,
+    contexte: 'Vous voulez une clause de confidentialité plus claire dans un contrat de prestation.',
+    texte: `Entre [[la société Pelloux Conseil (SIRET 812 345 678 00019)]] et [[la société Batinord]], pour [[la refonte du système de paie, montant 96 000 €]] :
+« Chacune des parties s'engage à ne pas divulguer les informations confidentielles de l'autre partie, sous réserve des obligations légales, pendant la durée du contrat et cinq ans après son terme. »`,
+    options: [
+      o('risque', `Coller le tout tel quel`, `Parties, identifiant d'entreprise, objet et montant du contrat sont confidentiels et inutiles à la reformulation.`),
+      o('ideal', `Ne coller que la clause`, `La reformulation ne dépend d'aucune identité.`),
+      o('ideal', `Remplacer les parties par « Prestataire » et « Client » et l'objet par « [mission] »`, `Le contexte contractuel est conservé, l'identification disparaît.`),
+      o('ok', `Reformuler soi-même à partir d'un modèle de clause`, `Sûr, plus long.`)
+    ],
+    regle: `Communiquer un contrat à un prestataire externe peut méconnaître une obligation de confidentialité (Code civil, article 1103 : les contrats tiennent lieu de loi à ceux qui les ont faits).` },
+
+  { filiere: 'Juridique', niveau: 2, titre: 'Le courriel d\'un client en garde à vue', outil: E,
+    contexte: 'Vous êtes collaborateur dans un cabinet d\'avocats et voulez préparer une consultation.',
+    texte: `De : [[M. Arnaud Le Goff]] : « Maître, comme convenu je vous précise les faits : le [[12 janvier]], j'ai [[signé de la main de mon associé, M. Fabre, un chèque de 18 000 € sans son accord]]. Il ignore [[que je suis mis en examen dans une autre affaire]]. Je souhaite savoir si je risque des poursuites pénales. »`,
+    options: [
+      o('risque', `Coller l'intégralité dans l'outil validé du cabinet`, `L'outil est contractualisé, mais le secret professionnel et la nature pénale des faits imposent de limiter la communication au strict nécessaire.`),
+      o('ideal', `Extraire les faits juridiquement utiles, remplacer les noms par des rôles, retirer la procédure d'une autre affaire, puis utiliser l'outil validé`, `Le raisonnement juridique n'a pas besoin de l'identité ni de l'autre procédure.`),
+      o('ok', `Demander le plan type d'une consultation en droit pénal des affaires, sans le dossier`, `Sûr, moins personnalisé.`),
+      o('non', `Coller dans un compte personnel pour aller plus vite`, `Aucun contrat, secret professionnel de l'avocat compromis.`)
+    ],
+    regle: `Les consultations adressées par un avocat à son client sont couvertes par le secret professionnel (loi n° 71-1130 du 31 décembre 1971, article 66-5 ; Code pénal, article 226-13).` },
+
+  { filiere: 'Juridique', niveau: 3, titre: 'Une décision de justice : quelle version ?', outil: G,
+    contexte: 'Vous voulez résumer un arrêt de cour d\'appel. Vous avez reçu la version complète de la décision par courriel ; une version pseudonymisée est publiée sur le site officiel.',
+    texte: `Arrêt du [[7 mars 2026]], cour d'appel de [[Rennes]] : [[M. Kévin Sorel]] contre [[société Transports Aubry]].
+Le salarié, [[conducteur poids lourd depuis 2014, atteint d'une sclérose en plaques déclarée en 2023]], a été licencié pour inaptitude. La cour juge que l'employeur n'a pas [[recherché de reclassement sérieux]].`,
+    options: [
+      o('risque', `Coller l'arrêt complet reçu par courriel`, `La version complète nomme les parties et révèle la santé du salarié.`),
+      o('ideal', `Récupérer la version pseudonymisée publiée et coller celle-ci`, `La décision est destinée à être publique, sous forme pseudonymisée.`),
+      o('risque', `Retirer seulement les noms dans la version complète et coller`, `Profession, ancienneté, maladie et juridiction suffisent à ré-identifier.`),
+      o('ok', `Résumer soi-même les points de droit et demander à l'IA de contrôler la cohérence du plan`, `Sûr, l'IA intervient sur la forme.`)
+    ],
+    regle: `Les décisions de justice sont mises à disposition du public à titre gratuit, sous une forme qui tient compte du risque de ré-identification (Code de l'organisation judiciaire, article L. 111-13). Utiliser la version publiée est le réflexe à avoir.` },
+
+  /* ───────── Éducation ───────── */
+  { filiere: 'Éducation', niveau: 1, titre: 'Des copies à corriger', outil: G,
+    contexte: 'Vous voulez repérer les erreurs récurrentes dans une copie.',
+    texte: `Copie de [[Émilie Roux, groupe B, n° étudiant 2026-0417]] :
+« Le RGPD a été adopté en 2010 et s'applique uniquement aux entreprises françaises. »
+Note provisoire : [[7/20]]. Observation : [[a redoublé l'an dernier]].`,
+    options: [
+      o('non', `Coller la copie avec nom, numéro, note et observation`, `Identité, note et parcours scolaire n'ont rien à voir avec la tâche.`),
+      o('ideal', `Ne coller que l'extrait de la production, sans identité ni note`, `Pour repérer des erreurs de fond, seul le contenu compte.`),
+      o('risque', `Retirer le nom mais garder le numéro d'étudiant`, `Le numéro est un identifiant direct qui retrouve la personne dans l'annuaire de l'établissement.`),
+      o('ok', `Corriger seul, sans IA`, `Sûr, mais on renonce à une aide qui ne présentait aucune difficulté.`)
+    ],
+    regle: `Minimisation des données (RGPD, article 5, paragraphe 1, point c) : ni la note, ni le parcours, ni l'identité ne sont nécessaires pour repérer une erreur de contenu.` },
+
+  { filiere: 'Éducation', niveau: 2, titre: 'Un aménagement d\'examen', outil: E,
+    contexte: 'Vous devez informer les enseignants de l\'organisation d\'une épreuve pour un étudiant.',
+    texte: `Notification d'aménagement d'examens : étudiant [[Baptiste Morel, n° 2026-0102, M1 RH]] : [[trouble du spectre de l'autisme]], [[reconnaissance MDPH]] ; aménagements : [[tiers-temps]], salle isolée, [[pauses à la demande]].
+Demande : rédiger un courriel à l'équipe enseignante pour organiser l'épreuve.`,
+    options: [
+      o('non', `Coller la notification pour un courriel personnalisé`, `Diagnostic et reconnaissance de handicap n'ont pas à être communiqués aux enseignants, encore moins à un outil.`),
+      o('ideal', `Demander un courriel type mentionnant seulement les aménagements (tiers-temps et salle isolée), sans nom ni pathologie`, `Les enseignants n'ont besoin que des aménagements.`),
+      o('risque', `Écrire « étudiant A » mais garder la pathologie « pour que les enseignants comprennent »`, `La pathologie n'a pas à être communiquée ; les aménagements suffisent.`),
+      o('ok', `Rédiger le courriel sans IA`, `Sûr, mais un modèle sans donnée suffisait.`)
+    ],
+    regle: `Le handicap et la santé sont des catégories particulières de données (RGPD, article 9) : on ne communique que ce qui est nécessaire (article 5), ici les aménagements et non le diagnostic.` },
+
+  { filiere: 'Éducation', niveau: 3, titre: 'Des commentaires « anonymes » dans une petite promotion', outil: H,
+    contexte: 'Vous voulez synthétiser les évaluations d\'un module suivi par 12 étudiants.',
+    texte: `Commentaires « anonymes » :
+1. « [[La seule alternante de Vannes]] n'arrive jamais à temps au premier cours, et le formateur le lui reproche. »
+2. « Trop de travail de groupe ; [[l'étudiant qui a redoublé]] fait attendre tout le monde. »
+3. « Le cas pratique était intéressant, mais [[le formateur a critiqué l'accent de Mamadou]] devant la classe. »`,
+    options: [
+      o('risque', `Coller tels quels : ils sont anonymes`, `Anonymes en apparence seulement : dans une promotion de 12, des détails et un prénom désignent des personnes.`),
+      o('ideal', `Retirer les détails identifiants, regrouper les commentaires par thèmes et coller les thèmes`, `La synthèse porte sur le module, pas sur les personnes.`),
+      o('ok', `Rédiger la synthèse soi-même`, `Sûr, plus long.`),
+      o('non', `Coller les commentaires avec la liste d'émargement pour rattacher chacun à son auteur`, `Cela lève l'anonymat des évaluations et détourne leur finalité.`)
+    ],
+    regle: `Un commentaire anonyme reste une donnée personnelle si l'on peut retrouver son auteur ou la personne visée (RGPD, considérant 26). Sur un petit effectif, l'anonymat tient rarement.` },
+
+  /* ───────── Commerce ───────── */
+  { filiere: 'Commerce', niveau: 1, titre: 'Une fiche produit avec un commentaire interne', outil: G,
+    contexte: 'Vous voulez raccourcir une fiche produit pour le site marchand.',
+    texte: `Sac de voyage Escale 40 L, toile recyclée, dos matelassé, poche ordinateur 15 pouces. Garantie 2 ans. Prix public : 89 €.
+[[Commentaire interne : prix d'achat fournisseur 21 €, marge 58 %, stock dormant à écouler avant décembre.]]`,
+    options: [
+      o('risque', `Coller tel quel : c'est une fiche produit`, `Le commentaire interne révèle marge, prix d'achat et situation de stock.`),
+      o('ideal', `Retirer le commentaire interne et coller la fiche`, `La fiche est publique par nature, le commentaire ne l'est pas.`),
+      o('ok', `Ne rien coller`, `Sûr, mais la fiche ne posait aucune difficulté une fois nettoyée.`),
+      o('non', `Ajouter le contrat fournisseur pour que l'IA propose un argumentaire de négociation`, `Le contrat contient des conditions confidentielles d'un tiers.`)
+    ],
+    regle: `Le secret des affaires protège aussi les marges et conditions d'achat (Code de commerce, article L. 151-1). Vérifiez ce qui accompagne un texte public.` },
+
+  { filiere: 'Commerce', niveau: 2, titre: 'La réclamation d\'un client mécontent', outil: G,
+    contexte: 'Vous voulez un projet de réponse à un client mécontent.',
+    texte: `De : [[Mme Chloé Aubert]] ([[chloe.aubert@exemple.fr]]), commande [[n° 88213]] :
+« Mon fauteuil est arrivé cassé. C'est la troisième fois que je vous écris. [[Je suis en fauteuil roulant]] et cette commande était pour moi. Je vais saisir la DGCCRF. »`,
+    options: [
+      o('risque', `Coller le courriel tel quel pour obtenir une réponse`, `Nom, e-mail, numéro de commande et handicap : plus qu'il n'en faut pour rédiger une réponse.`),
+      o('ideal', `Décrire la situation en quelques phrases, sans identité ni mention de santé (« client mécontent, produit cassé, relance, menace de signalement »)`, `L'IA a besoin du motif et du ton, pas de la personne.`),
+      o('risque', `Retirer nom, e-mail et numéro de commande, mais garder la phrase sur le fauteuil roulant`, `La mention de handicap reste une donnée de santé et une situation reconnaissable.`),
+      o('ok', `Utiliser un modèle de réponse de l'organisation`, `Sûr, moins personnalisé.`)
+    ],
+    regle: `Les données de santé sont interdites de traitement sauf exception (RGPD, article 9) ; pour une réponse commerciale, décrire le motif suffit (article 5).` },
+
+  { filiere: 'Commerce', niveau: 3, titre: 'Un contrat de distribution exclusive', outil: E,
+    contexte: 'Vous voulez repérer les points d\'attention d\'un contrat de distribution.',
+    texte: `CONTRAT DE DISTRIBUTION EXCLUSIVE : [[Groupe Solmar]] / [[Ateliers Kerrand]].
+Article 7 : les conditions tarifaires figurant en annexe 2 (remises de [[32 % au-delà de 50 000 unités]]) sont strictement confidentielles.
+Article 12 : durée de trois ans, tacite reconduction, résiliation avec préavis de six mois.`,
+    options: [
+      o('risque', `Coller le contrat entier dans l'outil validé pour obtenir les points d'attention`, `L'article 7 interdit de divulguer les conditions tarifaires : reste à vérifier si l'outil compte comme un tiers. Un contrat avec l'éditeur ne suffit pas.`),
+      o('ideal', `Relire la clause de confidentialité, puis coller le contrat sans l'annexe tarifaire`, `Vous vérifiez ce que le contrat autorise avant d'agir.`),
+      o('ideal', `Ne coller que les articles sur la durée, la reconduction et la résiliation`, `L'analyse demandée n'exige pas les conditions financières.`),
+      o('ok', `Demander une liste de contrôle générique d'un contrat de distribution exclusive, à appliquer soi-même`, `Sûr, moins précis.`)
+    ],
+    regle: `Une clause de confidentialité s'impose à vous : vérifiez si elle autorise la communication à des prestataires techniques (Code civil, article 1103) avant de confier un contrat à un outil, même contractualisé.` },
+
+  /* ───────── Industrie ───────── */
+  { filiere: 'Industrie', niveau: 1, titre: 'Un procédé de fabrication non breveté', outil: G,
+    contexte: 'Vous voulez rédiger une fiche de procédé pour l\'atelier.',
+    texte: `Procédé [[Hélix-3]] (à ne pas diffuser) : température de frittage [[1 240 °C pendant 47 minutes]], refroidissement en deux paliers.
+Alliage : [[62 % de nickel, 30 % de cuivre, 8 % de molybdène]], additif [[référence B-77]].
+[[Dépôt de brevet envisagé au premier trimestre 2027.]]`,
+    options: [
+      o('non', `Coller tel quel`, `Composition et paramètres d'un procédé non protégé sortent du cercle de confidentialité.`),
+      o('risque', `Arrondir les paramètres et garder l'alliage en pourcentages`, `L'alliage reste la partie la plus sensible du savoir-faire.`),
+      o('ideal', `Demander une trame de fiche de procédé sans aucun paramètre, à remplir hors ligne`, `La mise en forme ne dépend pas des valeurs.`),
+      o('ideal', `Utiliser l'assistant hébergé sur les serveurs de l'entreprise, s'il existe et si vous y êtes autorisé`, `La donnée ne quitte pas l'organisation.`)
+    ],
+    regle: `Secret des affaires (Code de commerce, article L. 151-1) et nouveauté d'une invention (Code de la propriété intellectuelle, article L. 611-11) : une divulgation avant dépôt peut empêcher de breveter.` },
+
+  { filiere: 'Industrie', niveau: 2, titre: 'Un script avec des identifiants', outil: G,
+    contexte: 'Vous cherchez de l\'aide pour corriger une erreur de connexion à une base de données.',
+    texte: `import psycopg2
+conn = psycopg2.connect(host="[[10.4.22.7]]", user="[[admin_prod]]", password="[[Kz9!rTq_2026]]", dbname="[[paie_prod]]")
+cur = conn.cursor()
+cur.execute("SELECT nom, salaire FROM salaries WHERE site = %s", ("Nantes",))
+# Erreur : psycopg2.OperationalError: connection timed out`,
+    options: [
+      o('non', `Coller tel quel : « c'est juste du code »`, `Adresse, identifiant, mot de passe et nom de la base de paie sont exposés.`),
+      o('risque', `Coller tel quel, puis changer le mot de passe par précaution`, `Le mot de passe est déjà exposé ; l'adresse, le nom de la base et la structure de la table de paie le sont aussi.`),
+      o('ideal', `Remplacer hôte, identifiant, mot de passe et nom de base par des valeurs factices, puis coller`, `L'erreur se diagnostique sans aucun secret.`),
+      o('ok', `Décrire l'erreur (« délai de connexion dépassé sur une base PostgreSQL ») sans coller le code`, `Sûr, parfois moins précis.`)
+    ],
+    regle: `Un identifiant collé dans un outil externe doit être considéré comme compromis : on le remplace avant, et on le change si l'erreur a été commise (RGPD, article 32 : sécurité du traitement).` },
+
+  { filiere: 'Industrie', niveau: 3, titre: 'Un accident du travail à analyser', outil: E,
+    contexte: 'Vous voulez de l\'aide pour construire l\'arbre des causes d\'un accident.',
+    texte: `Déclaration d'accident du 18 juin, atelier B, presse n° 3 : [[Éric Lorrain, opérateur, 52 ans, écrasement de deux doigts de la main droite]]. Témoin : [[Sabrina Petit]].
+Cause probable : capteur de sécurité contourné [[sur consigne verbale du chef d'équipe, M. Dupuy]].`,
+    options: [
+      o('risque', `Coller intégralement, car l'outil est validé`, `Santé d'un salarié nommé, mise en cause d'une personne, procédure éventuelle.`),
+      o('ideal', `Décrire les faits techniques (machine, séquence, dispositif contourné, environnement) sans nom, sans blessure et sans date précise`, `L'arbre des causes porte sur le système, pas sur les personnes.`),
+      o('risque', `Pseudonymiser (« opérateur A », « chef d'équipe B ») mais garder atelier, poste et date`, `Dans un atelier de quelques personnes, chacun reconnaît les protagonistes.`),
+      o('ok', `Construire l'arbre des causes seul, puis demander à l'IA de relire la logique`, `Sûr, l'IA intervient sur un résultat déjà anonyme.`)
+    ],
+    regle: `Les données de santé (RGPD, article 9) et les mises en cause de salariés appellent une extrême réserve : l'analyse des causes porte sur le système technique et organisationnel, pas sur les personnes.` }
   ];
 
+  CAS.forEach(function(c, i){ c.id = i + 1; });
+
   var app = document.getElementById('app');
-  var etat = { phase: 'accueil', filiere: 'Toutes', liste: [], i: 0, rep: {}, revele: false };
+  var etat = { filiere: 'Toutes', liste: [], i: 0, rep: {}, valide: {} };
+
+  function melanger(a){
+    var b = a.slice();
+    for (var i = b.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)); var t = b[i]; b[i] = b[j]; b[j] = t; }
+    return b;
+  }
 
   function filieres(){
     var f = [];
@@ -229,98 +517,139 @@
     return f;
   }
 
+  function esc(t){ return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
   function texteHtml(t, revele){
-    var s = t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    if (revele) { return s.replace(/\[\[(.+?)\]\]/g, '<mark class="sens">$1</mark>'); }
-    return s.replace(/\[\[(.+?)\]\]/g, '$1');
+    var s = esc(t);
+    return revele ? s.replace(/\[\[(.+?)\]\]/g, '<mark class="sens">$1</mark>') : s.replace(/\[\[(.+?)\]\]/g, '$1');
   }
 
-  function nettoyer(t){ return t.replace(/\[\[(.+?)\]\]/g, '$1'); }
+  function afficher(html){ app.innerHTML = fr(html); try { window.scrollTo(0, 0); } catch(e) {} }
 
-  function afficher(html){ app.innerHTML = fr(html); window.scrollTo(0, 0); }
+  function score(c, coches){
+    var max = 0, raw = 0, non = 0;
+    c.options.forEach(function(op, k){
+      if (VAL[op.v] > 0) max += VAL[op.v];
+      if (coches.indexOf(k) >= 0){ raw += VAL[op.v]; if (op.v === 'non') non++; }
+    });
+    return { pct: Math.max(0, raw) / max, non: non };
+  }
+
+  function classe(p){ return p >= 0.8 ? 'h' : (p >= 0.5 ? 'm' : 'l'); }
+  function pctTxt(p){ return Math.round(p * 100) + ' %'; }
 
   function accueil(){
-    var opts = '<option value="Toutes">Toutes les filières</option>' + filieres().map(function(f){
-      return '<option value="' + f + '"' + (etat.filiere === f ? ' selected' : '') + '>' + f + '</option>';
-    }).join('');
+    var nbParFiliere = {};
+    CAS.forEach(function(c){ nbParFiliere[c.filiere] = (nbParFiliere[c.filiere] || 0) + 1; });
+    var opts = '<option value="Court">Parcours court : un cas par filière (8 cas, au hasard)</option>' +
+      '<option value="Toutes">Toutes les filières (' + CAS.length + ' cas)</option>' +
+      filieres().map(function(f){ return '<option value="' + f + '">' + f + ' (' + nbParFiliere[f] + ' cas)</option>'; }).join('');
     afficher(
       '<div class="card"><h2>Le principe</h2>' +
-      '<p class="muted">Dix textes de la vie professionnelle, dans huit filières. Pour chacun, vous décidez : le coller tel quel, l\'anonymiser d\'abord, ou ne pas le coller du tout. Après chaque réponse, les éléments sensibles sont surlignés et la règle à retenir est rappelée.</p>' +
-      '<div class="info-box"><b>Hypothèse de travail&nbsp;:</b> ' + CONTEXTE.replace('Que faites-vous de ce texte ?', '') + 'Dans ces conditions, ce que vous collez peut être conservé et réutilisé par le fournisseur.</div>' +
-      '<div class="actions-row"><label class="muted" for="fil">Filière&nbsp;:</label><select id="fil">' + opts + '</select>' +
+      '<p class="muted">Chaque situation vous place devant un texte réel de votre métier, avec l\'outil d\'IA dont vous disposez. Vous cochez toutes les décisions que vous jugez raisonnables ; plusieurs peuvent l\'être. Ensuite, chaque option est évaluée (recommandée, acceptable, risquée ou à proscrire), les éléments sensibles sont surlignés et la règle à retenir est rappelée.</p>' +
+      '<div class="info-box"><b>Attention&nbsp;:</b> la bonne décision dépend du contenu, mais aussi de l\'outil. Un même texte peut être acceptable dans un assistant contractualisé et à proscrire dans un outil grand public. Cocher une option à proscrire coûte des points.</div>' +
+      '<div class="actions-row"><label class="muted" for="fil">Parcours&nbsp;:</label><select id="fil">' + opts + '</select>' +
       '<button class="btn-primary" id="go">Commencer</button></div></div>'
     );
     document.getElementById('go').onclick = function(){
-      etat.filiere = document.getElementById('fil').value;
-      etat.liste = CAS.filter(function(c){ return etat.filiere === 'Toutes' || c.filiere === etat.filiere; });
-      etat.i = 0; etat.rep = {}; etat.revele = false; etat.phase = 'jeu';
+      var v = document.getElementById('fil').value;
+      etat.filiere = v;
+      if (v === 'Court'){
+        etat.liste = filieres().map(function(f){
+          var l = CAS.filter(function(c){ return c.filiere === f; });
+          return l[Math.floor(Math.random() * l.length)];
+        });
+        etat.liste = melanger(etat.liste);
+      } else if (v === 'Toutes'){
+        etat.liste = melanger(CAS);
+      } else {
+        etat.liste = CAS.filter(function(c){ return c.filiere === v; });
+      }
+      etat.liste.forEach(function(c){ c.ordre = melanger(c.options.map(function(_, k){ return k; })); });
+      etat.i = 0; etat.rep = {}; etat.valide = {};
       cas();
     };
   }
 
   function cas(){
-    var c = etat.liste[etat.i], n = etat.liste.length;
-    var rep = etat.rep[c.id];
-    var html = '<div class="topbar"><span class="muted">Cas ' + (etat.i + 1) + ' sur ' + n + '</span>' +
-      '<div class="progress"><i style="width:' + (etat.i / n * 100) + '%"></i></div></div>' +
-      '<div class="card"><span class="tag">' + c.filiere + '</span><h2>' + c.titre + '</h2>' +
+    var c = etat.liste[etat.i], n = etat.liste.length, ok = !!etat.valide[c.id];
+    var coches = etat.rep[c.id] || [];
+    var html = '<div class="topbar"><span class="muted">Cas ' + (etat.i + 1) + ' sur ' + n + '</span><div class="progress"><i style="width:' + (etat.i / n * 100) + '%"></i></div></div>' +
+      '<div class="card"><span class="tag">' + c.filiere + '</span><span class="tag niv">' + NIVEAU[c.niveau] + '</span><h2>' + c.titre + '</h2>' +
       '<p class="ctx">' + c.contexte + '</p>' +
+      '<div class="tool-box"><b>Outil utilisé&nbsp;:</b> ' + c.outil + '</div>' +
       '<div class="doc-label">Texte que vous vous apprêtez à coller</div>' +
-      '<div class="doc">' + texteHtml(c.texte, !!rep) + '</div>' +
-      '<p class="ctx"><b>' + CONTEXTE + '</b></p><div class="opt-list">';
-    ['coller', 'anonymiser', 'ne_pas'].forEach(function(k){
-      var cls = 'opt-item';
-      if (rep) { if (k === c.bonne) cls += ' right'; else if (k === rep) cls += ' picked'; }
-      html += '<button class="' + cls + '" data-k="' + k + '"' + (rep ? ' disabled' : '') + '><span><b>' + CHOIX[k].label + '</b><small>' + CHOIX[k].aide + '</small></span></button>';
+      '<div class="doc">' + texteHtml(c.texte, ok) + '</div>' +
+      '<p class="ctx"><b>' + (ok ? 'Analyse de chaque option' : 'Cochez toutes les décisions que vous jugez raisonnables') + '</b></p><div class="opt-list">';
+    c.ordre.forEach(function(k){
+      var op = c.options[k], ch = coches.indexOf(k) >= 0;
+      var cls = 'opt' + (ok ? ' locked v-' + op.v + (ch ? ' chosen' : '') : '');
+      html += '<label class="' + cls + '"><input type="checkbox" data-k="' + k + '"' + (ch ? ' checked' : '') + (ok ? ' disabled' : '') + '><span>' +
+        (ok ? '<span class="verdict ' + op.v + '">' + VERDICT[op.v] + '</span>' + (ch ? '<span class="verdict" style="background:#e3e6eb;color:#1f2430">Votre choix</span>' : '') + '<br>' : '') +
+        op.t + (ok ? '<span class="opt-e">' + op.e + '</span>' : '') + '</span></label>';
     });
     html += '</div>';
-    if (rep) {
-      var ok = rep === c.bonne;
-      html += '<div class="feedback-box ' + (ok ? 'ok' : 'ko') + '"><b>' + (ok ? 'Bonne décision.' : 'Ce n\'est pas la décision la plus sûre.') + '</b>' +
-        (ok ? '' : 'Bonne réponse : ' + CHOIX[c.bonne].label.toLowerCase() + '. ') + c.pourquoi + '</div>';
-      if (c.anon) {
-        html += '<div class="doc-label">Version que vous pouvez coller</div><div class="doc">' + texteHtml(c.anon, false) + '</div>';
-      }
-      html += '<div class="feedback-box info"><b>À retenir</b>' + c.regle + '</div>';
-      html += '<div class="actions-row"><button class="btn-primary" id="suite">' + (etat.i + 1 < n ? 'Cas suivant' : 'Voir mon bilan') + '</button></div>';
+    if (!ok){
+      html += '<div class="actions-row"><button class="btn-primary" id="valider"' + (coches.length ? '' : ' disabled') + '>Valider ma réponse</button></div>';
+    } else {
+      var s = score(c, coches), p = s.pct;
+      var boite = p >= 0.8 ? 'ok' : (p >= 0.5 ? 'mid' : 'ko');
+      var titre = p >= 0.8 ? 'Décision solide' : (p >= 0.5 ? 'Décision partielle' : 'Décision fragile');
+      html += '<div class="feedback-box ' + boite + '"><b>' + titre + ' : ' + pctTxt(p) + '</b>' +
+        (s.non ? 'Vous avez coché une option à proscrire. ' : '') +
+        'Les options recommandées rapportent le plus de points ; une option acceptable en rapporte moins ; une option risquée ou à proscrire en retire.</div>' +
+        '<div class="feedback-box info"><b>À retenir</b>' + c.regle + '</div>' +
+        '<div class="actions-row"><button class="btn-primary" id="suite">' + (etat.i + 1 < n ? 'Cas suivant' : 'Voir mon bilan') + '</button></div>';
     }
     html += '</div>';
     afficher(html);
-    Array.prototype.forEach.call(app.querySelectorAll('.opt-item'), function(b){
-      b.onclick = function(){ etat.rep[c.id] = b.getAttribute('data-k'); cas(); };
-    });
-    var s = document.getElementById('suite');
-    if (s) s.onclick = function(){ if (etat.i + 1 < n) { etat.i++; cas(); } else { bilan(); } };
+    if (!ok){
+      var boxes = app.querySelectorAll('input[type=checkbox]');
+      var bt = document.getElementById('valider');
+      Array.prototype.forEach.call(boxes, function(b){
+        b.onchange = function(){
+          var sel = [];
+          Array.prototype.forEach.call(boxes, function(x){ if (x.checked) sel.push(parseInt(x.getAttribute('data-k'), 10)); });
+          etat.rep[c.id] = sel; bt.disabled = sel.length === 0;
+        };
+      });
+      bt.onclick = function(){ etat.valide[c.id] = true; cas(); };
+    } else {
+      document.getElementById('suite').onclick = function(){ if (etat.i + 1 < n){ etat.i++; cas(); } else { bilan(); } };
+    }
   }
 
   function bilan(){
-    var n = etat.liste.length, bons = 0, trop = 0, risque = 0;
-    var ordre = { coller: 0, anonymiser: 1, ne_pas: 2 };
+    var n = etat.liste.length, somme = 0, nons = 0, par = {};
     var lignes = etat.liste.map(function(c){
-      var r = etat.rep[c.id], ok = r === c.bonne;
-      if (ok) bons++; else if (ordre[r] < ordre[c.bonne]) risque++; else trop++;
-      return { c: c, r: r, ok: ok };
+      var s = score(c, etat.rep[c.id] || []);
+      somme += s.pct; nons += s.non;
+      (par[c.filiere] = par[c.filiere] || []).push(s.pct);
+      return { c: c, s: s };
     });
-    var titre = bons >= n * 0.8 ? 'Réflexes solides' : (bons >= n * 0.5 ? 'Réflexes à consolider' : 'Prudence à renforcer');
+    var moy = somme / n;
+    var titre = moy >= 0.8 ? 'Réflexes solides' : (moy >= 0.5 ? 'Réflexes à consolider' : 'Vigilance à renforcer');
+    var f = filieres().filter(function(x){ return par[x]; });
     var html = '<div class="card"><h2>Mon bilan&nbsp;: ' + titre + '</h2>' +
-      '<div class="tiles"><div class="tile"><b>' + bons + '&nbsp;/&nbsp;' + n + '</b><span>décisions justes</span></div>' +
-      '<div class="tile"><b>' + risque + '</b><span>décisions trop risquées</span></div>' +
-      '<div class="tile"><b>' + trop + '</b><span>décisions trop prudentes</span></div></div>' +
-      '<p class="muted">Deux erreurs existent&nbsp;: exposer ce qui aurait dû rester protégé, mais aussi s\'interdire l\'IA quand il n\'y a rien à protéger. Le bon réflexe consiste à se demander ce dont l\'IA a réellement besoin pour la tâche.</p>' +
-      '<table><thead><tr><th>Cas</th><th>Ma décision</th><th>Décision attendue</th><th></th></tr></thead><tbody>' +
-      lignes.map(function(l){
-        return '<tr><td>' + l.c.titre + '<br><span class="muted">' + l.c.filiere + '</span></td><td>' + CHOIX[l.r].label + '</td><td>' + CHOIX[l.c.bonne].label + '</td><td>' + (l.ok ? '<span class="ok-mark">✓</span>' : '<span class="ko-mark">✗</span>') + '</td></tr>';
-      }).join('') + '</tbody></table>' +
+      '<div class="tiles"><div class="tile"><b>' + pctTxt(moy) + '</b><span>score moyen</span></div>' +
+      '<div class="tile"><b>' + n + '</b><span>situations traitées</span></div>' +
+      '<div class="tile"><b>' + nons + '</b><span>options à proscrire cochées</span></div></div>' +
+      '<p class="muted">Un bon réflexe ne consiste pas à tout interdire : il consiste à retirer ce que l\'IA n\'a pas besoin de voir, à tenir compte de l\'outil utilisé et à savoir renoncer quand aucune version réduite du texte n\'est acceptable.</p>' +
+      '<table><thead><tr><th>Filière</th><th>Score moyen</th></tr></thead><tbody>' +
+      f.map(function(x){ var a = par[x].reduce(function(p, q){ return p + q; }, 0) / par[x].length; return '<tr><td>' + x + '</td><td class="pct ' + classe(a) + '">' + pctTxt(a) + '</td></tr>'; }).join('') +
+      '</tbody></table>' +
+      '<table><thead><tr><th>Cas</th><th>Niveau</th><th>Score</th></tr></thead><tbody>' +
+      lignes.map(function(l){ return '<tr><td>' + l.c.titre + '<br><span class="muted">' + l.c.filiere + '</span></td><td>' + l.c.niveau + '</td><td class="pct ' + classe(l.s.pct) + '">' + pctTxt(l.s.pct) + (l.s.non ? ' ⚠' : '') + '</td></tr>'; }).join('') +
+      '</tbody></table>' +
       '<div class="actions-row"><button class="btn-primary" id="copier">Copier mon bilan</button><button class="btn-ghost" id="reset">Réinitialiser la session</button><span class="muted" id="msg"></span></div></div>';
     afficher(html);
-    document.getElementById('reset').onclick = function(){ etat = { phase: 'accueil', filiere: 'Toutes', liste: [], i: 0, rep: {}, revele: false }; accueil(); };
+    document.getElementById('reset').onclick = function(){ etat = { filiere: 'Toutes', liste: [], i: 0, rep: {}, valide: {} }; accueil(); };
     document.getElementById('copier').onclick = function(){
-      var t = 'Simulateur de confidentialité des données — bilan\nScore : ' + bons + ' / ' + n + ' (' + risque + ' trop risquées, ' + trop + ' trop prudentes)\n' +
-        lignes.map(function(l){ return (l.ok ? '✓ ' : '✗ ') + l.c.titre + ' (' + l.c.filiere + ') : ' + CHOIX[l.r].label + (l.ok ? '' : ' → attendu : ' + CHOIX[l.c.bonne].label); }).join('\n');
+      var t = 'Simulateur de confidentialité des données — bilan\nScore moyen : ' + pctTxt(moy) + ' sur ' + n + ' situations ; options à proscrire cochées : ' + nons + '\n' +
+        lignes.map(function(l){ return '- ' + l.c.titre + ' (' + l.c.filiere + ', niveau ' + l.c.niveau + ') : ' + pctTxt(l.s.pct) + (l.s.non ? ' [option à proscrire cochée]' : ''); }).join('\n');
       var m = document.getElementById('msg');
       function ok(){ m.textContent = 'Bilan copié.'; }
       function ko(){ m.textContent = 'Copie impossible : sélectionnez le tableau et copiez-le.'; }
-      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(fr(t)).then(ok, ko); } else { ko(); }
+      if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(fr(t)).then(ok, ko); } else { ko(); }
     };
   }
 

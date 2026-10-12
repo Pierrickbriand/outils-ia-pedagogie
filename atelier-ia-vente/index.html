@@ -1,0 +1,1992 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atelier IA et vente</title>
+<meta name="description" content="Parcours guidé de 14 heures : régler Claude, explorer l'IA dans la vente, concevoir son outil d'aide à la vente et son mini-dossier.">
+<meta name="robots" content="noindex">
+<style>
+:root{
+  --fond:#F8FAFC; --carte:#FFFFFF; --encre:#0F172A; --texte:#334155; --discret:#64748B;
+  --trait:#E2E8F0; --trait-fort:#CBD5E1; --creux:#F1F5F9;
+  --accent:#059669; --accent-fonce:#047857; --accent-nuit:#065F46; --accent-pale:#ECFDF5; --accent-trait:#A7F3D0;
+  --rouge:#B91C1C; --rouge-pale:#FEF2F2; --rouge-trait:#FECACA;
+  --ambre:#B45309; --ambre-pale:#FFFBEB; --ambre-trait:#FDE68A;
+  --sans:"Avenir Next","Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --nav:280px; --etat:300px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:auto}
+body{margin:0;background:var(--fond);color:var(--texte);font-family:var(--sans);font-size:16px;line-height:1.55}
+h1,h2,h3,h4,p,ul,ol,figure{margin:0}
+ul,ol{padding:0;list-style:none}
+a{color:var(--accent-fonce);text-underline-offset:3px}
+a:hover{color:var(--accent-nuit)}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--encre);outline-offset:2px}
+[hidden]{display:none!important}
+
+/* Panneaux flottants */
+.flottant{background:rgba(255,255,255,.78);-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);border:1px solid var(--trait-fort)}
+
+/* Barre d'actions, en haut à gauche */
+.colonne{position:fixed;z-index:40;top:12px;left:12px;bottom:12px;width:var(--nav);display:flex;flex-direction:column;gap:8px}
+.barre{padding:8px}
+.barre-actions{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.barre-actions button{height:32px;padding:0 6px;font-size:12.5px;font-weight:600;background:var(--carte);border:1px solid var(--trait-fort);cursor:pointer;white-space:nowrap}
+.barre-actions button:hover{border-color:var(--accent);color:var(--accent-nuit)}
+.barre-actions button.plein{background:var(--accent-fonce);border-color:var(--accent-fonce);color:#fff}
+.barre-actions button.plein:hover{background:var(--accent-nuit);color:#fff}
+.barre-etat{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:12px;color:var(--discret);line-height:1.3}
+.barre-etat i{flex:none;width:8px;height:8px;background:var(--accent)}
+.barre-etat.alerte i{background:var(--ambre)}
+.barre-mobile{display:none}
+
+/* Navigation */
+.nav{flex:1;min-height:0;overflow:auto;padding:6px 0 12px}
+.nav h2{font-size:12.5px;font-weight:600;color:var(--discret);padding:14px 14px 6px}
+.nav a{display:flex;align-items:baseline;gap:8px;padding:8px 14px;color:var(--texte);text-decoration:none;font-size:14.5px;line-height:1.3;border-left:3px solid transparent}
+.nav a:hover{background:rgba(255,255,255,.9)}
+.nav a[aria-current="page"]{background:var(--carte);border-left-color:var(--accent);color:var(--encre);font-weight:600}
+.nav a span{flex:1}
+.nav a small{flex:none;font-size:12px;color:var(--discret);font-weight:400;font-variant-numeric:tabular-nums}
+.nav a.complet small{color:var(--accent-fonce);font-weight:600}
+.nav-global{margin:14px 14px 0;font-size:12.5px;color:var(--discret)}
+.nav-global b{color:var(--encre)}
+.filet{height:6px;background:var(--trait);margin-top:6px}
+.filet i{display:block;height:100%;background:var(--accent)}
+
+/* Zone principale */
+main{margin:0 calc(var(--etat) + 36px) 0 calc(var(--nav) + 36px);padding:28px 0 120px;min-height:100vh}
+.page{max-width:760px;margin:0 auto}
+.tete{padding:8px 0 22px}
+.tete .seance{font-size:14px;color:var(--discret)}
+.tete h1{font-size:clamp(28px,3.4vw,38px);line-height:1.08;letter-spacing:-.022em;font-weight:700;color:var(--encre);margin:6px 0 12px;text-wrap:balance}
+.tete .chapo{font-size:18px;line-height:1.5;color:var(--texte);max-width:62ch}
+
+.bloc{background:var(--carte);border:1px solid var(--trait);padding:20px 22px;margin-bottom:14px}
+.bloc h2{font-size:19px;line-height:1.25;color:var(--encre);font-weight:650;letter-spacing:-.01em}
+.bloc h3{font-size:15.5px;color:var(--encre);font-weight:650;margin-top:18px}
+.bloc p{margin-top:10px;max-width:68ch}
+.bloc p:first-child{margin-top:0}
+.bloc ul.tirets{margin-top:10px}
+.bloc ul.tirets li{position:relative;padding-left:22px;margin-top:5px;max-width:66ch}
+.bloc ul.tirets li::before{content:"–";position:absolute;left:4px;color:var(--accent-fonce);font-weight:700}
+.bloc ol.pas{counter-reset:pas;margin-top:12px}
+.bloc ol.pas>li{counter-increment:pas;position:relative;padding-left:34px;margin-top:9px;max-width:66ch}
+.bloc ol.pas>li::before{content:counter(pas);position:absolute;left:0;top:1px;width:22px;height:22px;display:grid;place-items:center;font-size:12.5px;font-weight:700;color:var(--accent-nuit);background:var(--accent-pale);border:1px solid var(--accent-trait)}
+.note{font-size:14px;color:var(--discret)}
+.duree{font-size:13px;color:var(--discret);font-weight:400;margin-left:8px;white-space:nowrap}
+
+/* Étape à cocher */
+.etape{border-left:3px solid var(--trait-fort)}
+.etape.faite{border-left-color:var(--accent)}
+.etape-tete{display:flex;align-items:flex-start;gap:14px;justify-content:space-between}
+.fait{flex:none;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--discret);cursor:pointer;user-select:none;padding:4px 9px;border:1px solid var(--trait-fort);background:var(--carte)}
+.fait input{appearance:none;-webkit-appearance:none;width:14px;height:14px;margin:0;border:1.5px solid var(--discret);background:#fff;display:grid;place-items:center;cursor:pointer}
+.fait input:checked{background:var(--accent-fonce);border-color:var(--accent-fonce)}
+.fait input:checked::after{content:"";width:8px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translateY(-1px)}
+.etape.faite .fait{color:var(--accent-nuit);border-color:var(--accent-trait);background:var(--accent-pale)}
+
+/* Repère */
+.repere{background:var(--accent-pale);border:1px solid var(--accent-trait);border-left:3px solid var(--accent)}
+.repere h2{font-size:16.5px}
+.repere .verif{font-size:13px;color:var(--accent-nuit);margin-top:12px}
+.sources{margin-top:12px;font-size:14px}
+.sources li{margin-top:4px;padding-left:22px;position:relative}
+.sources li::before{content:"↗";position:absolute;left:3px;color:var(--accent-fonce)}
+
+/* Champs */
+.champs{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;margin-top:14px}
+.champ{display:flex;flex-direction:column;gap:5px;min-width:0}
+.champ.large{grid-column:1/-1}
+.champ>span.l{font-size:14px;font-weight:600;color:var(--encre)}
+.champ>span.l em{font-style:normal;font-weight:400;color:var(--discret)}
+.champ .aide{font-size:13px;color:var(--discret);line-height:1.4}
+.champ input[type=text],.champ input[type=number],.champ input[type=date],.champ textarea,.champ select{width:100%;padding:9px 11px;border:1px solid var(--trait-fort);background:#fff;border-radius:0;line-height:1.45}
+.champ textarea{resize:vertical;min-height:72px}
+.champ input:focus,.champ textarea:focus,.champ select:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+.coches{display:grid;gap:6px;margin-top:12px}
+.coche{display:flex;gap:10px;align-items:flex-start;font-size:15px;cursor:pointer}
+.coche input{margin:4px 0 0;width:16px;height:16px;accent-color:var(--accent-fonce);flex:none}
+
+/* Consigne à copier */
+.consigne{margin-top:14px;border:1px solid var(--trait-fort);background:var(--creux)}
+.consigne-tete{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 8px 8px 14px;border-bottom:1px solid var(--trait-fort);background:#fff}
+.consigne-tete b{font-size:14px;color:var(--encre)}
+.consigne pre{margin:0;padding:14px;font-family:var(--mono);font-size:13px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto;color:var(--encre)}
+.consigne pre .vide{color:var(--ambre);background:var(--ambre-pale)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:34px;padding:0 13px;font-size:14px;font-weight:600;background:var(--carte);border:1px solid var(--trait-fort);cursor:pointer;text-decoration:none;color:var(--encre);white-space:nowrap}
+.btn:hover{border-color:var(--accent);color:var(--accent-nuit)}
+.btn.plein{background:var(--accent-fonce);border-color:var(--accent-fonce);color:#fff}
+.btn.plein:hover{background:var(--accent-nuit);color:#fff}
+.btn.ok{background:var(--accent-pale);border-color:var(--accent);color:var(--accent-nuit)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+
+/* Décision */
+.decision{border-top:3px solid var(--encre)}
+.decision .q{font-size:19px;font-weight:650;color:var(--encre);line-height:1.25;letter-spacing:-.01em}
+.decision .genre{font-size:13px;color:var(--discret);margin-bottom:4px}
+.options{display:grid;gap:8px;margin-top:14px}
+.option{display:flex;gap:11px;align-items:flex-start;padding:12px 14px;border:1px solid var(--trait-fort);background:#fff;cursor:pointer}
+.option:hover{border-color:var(--accent)}
+.option input{margin:4px 0 0;accent-color:var(--accent-fonce);width:16px;height:16px;flex:none}
+.option.choisi{border-color:var(--accent);background:var(--accent-pale);box-shadow:inset 3px 0 0 var(--accent)}
+.suite{margin-top:14px;padding:12px 14px;background:var(--creux);border-left:3px solid var(--encre)}
+.suite.grave{background:var(--rouge-pale);border-left-color:var(--rouge);color:#7F1D1D}
+.effets{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.effet{font-size:12.5px;font-weight:600;padding:2px 8px;border:1px solid var(--trait-fort);background:#fff;font-variant-numeric:tabular-nums}
+.effet.bon{border-color:var(--accent-trait);color:var(--accent-nuit);background:var(--accent-pale)}
+.effet.mauvais{border-color:var(--rouge-trait);color:var(--rouge);background:var(--rouge-pale)}
+
+/* Scène */
+.scene{background:var(--encre);border-color:var(--encre);color:#CBD5E1}
+.scene .genre{font-size:13px;color:#94A3B8}
+.scene h2{color:#fff;font-size:21px;margin-top:2px}
+.scene p{color:#E2E8F0;font-size:16.5px}
+.scene .reps{display:grid;gap:8px;margin-top:16px}
+.scene .rep{text-align:left;padding:11px 14px;background:transparent;border:1px solid #475569;color:#F1F5F9;cursor:pointer;line-height:1.4}
+.scene .rep:hover{border-color:#6EE7B7}
+.scene .rep.choisi{background:var(--accent-fonce);border-color:var(--accent-fonce);color:#fff}
+.scene .suite{background:#1E293B;border-left-color:#6EE7B7;color:#E2E8F0}
+.scene .effet{background:#1E293B;border-color:#475569;color:#E2E8F0}
+.scene .effet.bon{color:#6EE7B7;border-color:#065F46;background:#1E293B}
+.scene .effet.mauvais{color:#FCA5A5;border-color:#7F1D1D;background:#1E293B}
+.scene .verrou{color:#94A3B8;font-size:15px}
+.scene .champ>span.l{color:#fff}
+.scene .champ textarea{background:#fff;color:var(--encre)}
+.scene :focus-visible{outline-color:#6EE7B7}
+
+/* Schéma */
+.schema{margin-top:14px;border:1px solid var(--trait-fort);background:#fff}
+.schema svg{display:block;width:100%;height:auto;background:var(--fond)}
+.schema img{display:block;width:100%;height:auto;border-top:1px solid var(--trait-fort)}
+.schema figcaption{padding:12px 14px;border-top:1px solid var(--trait-fort);font-size:14.5px}
+.schema figcaption ol{counter-reset:leg}
+.schema figcaption li{counter-increment:leg;position:relative;padding-left:30px;margin-top:5px}
+.schema figcaption li::before{content:counter(leg);position:absolute;left:0;top:1px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--accent-fonce);color:#fff;font-size:12px;font-weight:700}
+.schema figcaption .note{margin-top:9px}
+
+/* Tableaux */
+.tab{width:100%;border-collapse:collapse;margin-top:14px;font-size:14px}
+.tab th{text-align:left;font-weight:600;color:var(--encre);padding:7px 8px;border-bottom:2px solid var(--encre);vertical-align:bottom;line-height:1.25}
+.tab td{padding:6px 6px;border-bottom:1px solid var(--trait);vertical-align:top}
+.tab td input,.tab td textarea,.tab td select{width:100%;padding:7px 8px;border:1px solid var(--trait-fort);background:#fff;border-radius:0;font-size:14px;line-height:1.4}
+.tab td textarea{resize:vertical;min-height:54px}
+.tab.donnees{font-family:var(--mono);font-size:12px}
+.tab.donnees th{font-weight:600;border-bottom-width:1px}
+.defile{overflow-x:auto}
+
+/* Idées */
+.idees{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.idee{border:1px solid var(--trait-fort);padding:14px;background:#fff;display:flex;flex-direction:column;gap:6px}
+.idee.choisie{border-color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
+.idee .fam{font-size:12.5px;color:var(--discret)}
+.idee h3{margin:0;font-size:16px}
+.idee p{margin:0;font-size:14px;line-height:1.45}
+.idee .niv{display:flex;gap:3px;align-items:center;font-size:12.5px;color:var(--discret)}
+.idee .niv i{width:14px;height:6px;background:var(--trait)}
+.idee .niv i.on{background:var(--accent)}
+.idee .btn{align-self:flex-start;margin-top:auto}
+
+/* Parcours des deux séances */
+.parcours{margin-top:14px;border-left:3px solid var(--accent)}
+.parcours li{padding:10px 0 10px 18px;border-bottom:1px solid var(--trait);position:relative}
+.parcours li:last-child{border-bottom:0}
+.parcours li::before{content:"";position:absolute;left:-8px;top:17px;width:13px;height:13px;background:var(--accent)}
+.parcours li.entre::before{background:#fff;border:3px solid var(--accent)}
+.parcours b{display:block;color:var(--encre)}
+
+/* Résultats chiffrés */
+.resultats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:14px;border:1px solid var(--trait-fort)}
+.resultats div{padding:12px 14px;border-right:1px solid var(--trait);border-bottom:1px solid var(--trait);background:#fff}
+.resultats div:nth-child(3n){border-right:0}
+.resultats dt{font-size:13px;color:var(--discret);line-height:1.3}
+.resultats dd{margin:4px 0 0;font-size:22px;font-weight:700;color:var(--encre);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.resultats dd.neg{color:var(--rouge)}
+.resultats dd small{font-size:13px;font-weight:400;color:var(--discret)}
+
+/* État du projet */
+.etat{position:fixed;z-index:30;top:12px;right:12px;width:var(--etat);max-height:calc(100vh - 24px);overflow:auto;padding:16px}
+.etat h2{font-size:15px;color:var(--encre);font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.etat h2 button{display:none}
+.jauge{margin-top:14px}
+.jauge-l{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13.5px}
+.jauge-l b{color:var(--encre);font-weight:650}
+.jauge-l span{color:var(--discret);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.seg{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;margin-top:5px}
+.seg i{height:10px;background:var(--trait)}
+.seg.vert i.on{background:var(--accent)}
+.seg.neutre i.on{background:#475569}
+.seg.ambre i.on{background:#D97706}
+.seg.rouge i.on{background:var(--rouge)}
+.jauge small{display:block;font-size:12px;color:var(--discret);margin-top:3px}
+.etat h3{font-size:13.5px;color:var(--encre);margin-top:18px;padding-top:12px;border-top:1px solid var(--trait-fort)}
+.alertes{margin-top:8px;display:grid;gap:6px}
+.alerte{display:block;font-size:13px;line-height:1.4;padding:8px 10px;border:1px solid var(--trait-fort);border-left-width:3px;background:#fff;text-decoration:none;color:var(--texte)}
+.alerte.rouge{border-color:var(--rouge-trait);border-left-color:var(--rouge);background:var(--rouge-pale);color:#7F1D1D}
+.alerte.orange{border-color:var(--ambre-trait);border-left-color:var(--ambre);background:var(--ambre-pale);color:#78350F}
+.alerte.info{border-left-color:var(--discret)}
+a.alerte:hover{border-color:var(--encre)}
+.calme{font-size:13px;color:var(--discret);margin-top:8px}
+.bouton-etat{display:none}
+
+/* Pied de chapitre */
+.pied{display:flex;justify-content:space-between;gap:10px;margin-top:22px}
+
+/* Rappel, message bref, dialogue */
+.rappel{position:fixed;z-index:50;left:50%;bottom:16px;transform:translateX(-50%);width:min(620px,calc(100vw - 24px));padding:12px 14px;display:flex;gap:12px;align-items:center;justify-content:space-between;border-color:var(--ambre);font-size:14.5px;color:var(--encre)}
+.rappel div{display:flex;gap:6px;flex:none}
+.bref{position:fixed;z-index:60;left:50%;bottom:76px;transform:translateX(-50%);background:var(--encre);color:#fff;padding:8px 14px;font-size:14px;font-weight:600}
+dialog{border:1px solid var(--encre);padding:0;width:min(480px,calc(100vw - 32px));border-radius:0;color:var(--texte)}
+dialog::backdrop{background:rgba(15,23,42,.45);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+dialog form{padding:22px}
+dialog h2{font-size:19px;color:var(--encre)}
+dialog p{margin-top:10px}
+dialog .actions{justify-content:flex-end;margin-top:20px}
+
+/* Aperçu du dossier */
+.dossier{background:#fff;color:var(--encre);font-size:14.5px;line-height:1.5}
+.dossier .couv{border-bottom:3px solid var(--encre);padding-bottom:14px;margin-bottom:18px}
+.dossier .couv h1{font-size:26px;line-height:1.15;letter-spacing:-.015em;margin:4px 0 8px}
+.dossier .couv p{margin:2px 0;color:var(--texte)}
+.dossier h2{font-size:17px;margin:22px 0 8px;padding-top:10px;border-top:1px solid var(--trait-fort);color:var(--encre)}
+.dossier h3{font-size:14.5px;margin:12px 0 2px;color:var(--encre)}
+.dossier p{margin:3px 0;max-width:none;white-space:pre-wrap;overflow-wrap:anywhere}
+.dossier .vide{color:var(--ambre);font-style:italic}
+.dossier dl{margin:6px 0;display:grid;grid-template-columns:minmax(150px,32%) 1fr;gap:3px 14px}
+.dossier dt{color:var(--discret)}
+.dossier dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.dossier table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+.dossier th,.dossier td{border:1px solid var(--trait-fort);padding:5px 7px;text-align:left;vertical-align:top;white-space:pre-wrap}
+.dossier th{background:var(--creux)}
+.dossier .jauges{break-inside:avoid}
+.dossier .jg{display:grid;grid-template-columns:150px 1fr 110px;gap:10px;align-items:center;margin:4px 0}
+.dossier .jg .seg{margin:0}
+.dossier ul{margin:6px 0}
+.dossier ul li{padding-left:18px;position:relative;margin:3px 0}
+.dossier ul li::before{content:"–";position:absolute;left:2px}
+.dossier pre{font-family:var(--mono);font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--creux);padding:10px;margin:6px 0;border:1px solid var(--trait)}
+#impression{display:none}
+
+/* Écrans moyens : l'état devient un volet */
+@media (max-width:1239px){
+  main{margin-right:24px}
+  .etat{display:none;box-shadow:0 12px 40px rgba(15,23,42,.18)}
+  .etat.ouvert{display:block}
+  .etat h2 button{display:inline-flex}
+  .bouton-etat{display:flex;position:fixed;z-index:29;right:12px;top:12px;align-items:center;gap:8px;height:40px;padding:0 12px;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--encre)}
+  .bouton-etat .pastilles{display:flex;gap:3px}
+  .bouton-etat .pastilles i{width:8px;height:14px;background:var(--accent)}
+  .bouton-etat .pastilles i.neutre{background:#475569}
+  .bouton-etat .pastilles i.ambre{background:#D97706}
+  .bouton-etat .pastilles i.rouge{background:var(--rouge)}
+  .page{padding-top:44px}
+}
+/* Petits écrans : la navigation devient un volet */
+@media (max-width:899px){
+  main{margin:0;padding:112px 16px 120px}
+  .page{padding-top:0}
+  .colonne{top:0;left:0;right:0;bottom:auto;width:auto;gap:0}
+  .barre{border-width:0 0 1px;padding:8px 12px}
+  .barre-actions{grid-template-columns:repeat(4,1fr)}
+  .barre-mobile{display:flex;gap:4px;margin-top:6px}
+  .barre-mobile button{flex:1;height:32px;font-size:13px;font-weight:600;background:var(--carte);border:1px solid var(--trait-fort);cursor:pointer}
+  .barre-etat{display:none}
+  .bouton-etat{display:none}
+  .nav{display:none;position:fixed;top:87px;left:0;right:0;bottom:0;border-width:0;background:rgba(255,255,255,.97)}
+  .nav.ouvert{display:block}
+  .etat{top:87px;right:0;left:0;width:auto;max-height:calc(100vh - 87px);border-width:0 0 1px;background:rgba(255,255,255,.97)}
+  .champs,.idees{grid-template-columns:1fr}
+  .resultats{grid-template-columns:1fr 1fr}
+  .resultats div:nth-child(3n){border-right:1px solid var(--trait)}
+  .resultats div:nth-child(2n){border-right:0}
+  .bloc{padding:16px}
+  .etape-tete{flex-direction:column;gap:10px}
+  .tab.large-mobile{min-width:640px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .btn,.option,.rep,.nav a{transition:border-color .12s,background-color .12s}
+}
+
+/* Impression : seul le dossier sort */
+@page{size:A4;margin:16mm 15mm}
+@media print{
+  html,body{background:#fff}
+  body>*:not(#impression){display:none!important}
+  #impression{display:block}
+  .dossier{font-size:10.5pt}
+  .dossier h2{break-after:avoid}
+  .dossier h3{break-after:avoid}
+  .dossier table,.dossier .jg,.dossier dl>*{break-inside:avoid}
+  .seg i,.dossier th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+
+</style>
+</head>
+<body>
+
+<div class="colonne">
+<div class="barre flottant" role="toolbar" aria-label="Fichier de projet">
+  <div class="barre-actions">
+    <button type="button" data-action="nouveau" title="Nouveau projet (Alt + N)">Nouveau</button>
+    <button type="button" data-action="ouvrir" title="Ouvrir un fichier de projet (Alt + O)">Ouvrir</button>
+    <button type="button" data-action="enregistrer" class="plein" title="Enregistrer le fichier de projet (Ctrl + S ou ⌘ S)">Enregistrer</button>
+    <button type="button" data-action="exporter" title="Exporter le dossier en PDF (Ctrl + E ou ⌘ E)">Exporter</button>
+  </div>
+  <div class="barre-etat" id="barre-etat" aria-live="polite"><i></i><span>Prêt</span></div>
+  <div class="barre-mobile">
+    <button type="button" data-action="volet-nav" aria-controls="nav" aria-expanded="false">Étapes</button>
+    <button type="button" data-action="volet-etat" aria-controls="etat" aria-expanded="false">État du projet</button>
+  </div>
+</div>
+
+<nav class="nav flottant" id="nav" aria-label="Étapes du parcours"></nav>
+</div>
+
+<main id="main" tabindex="-1"><div class="page" id="page"></div></main>
+
+<button type="button" class="bouton-etat flottant" data-action="volet-etat" aria-controls="etat" aria-expanded="false">
+  <span class="pastilles" id="pastilles"></span>État du projet
+</button>
+<aside class="etat flottant" id="etat" aria-label="État du projet"></aside>
+
+<div class="rappel flottant" id="rappel" hidden role="status">
+  <span>Enregistre ton fichier de projet avant de fermer. Le navigateur peut tout perdre.</span>
+  <div>
+    <button type="button" class="btn plein" data-action="enregistrer">Enregistrer</button>
+    <button type="button" class="btn" data-action="plus-tard">Plus tard</button>
+  </div>
+</div>
+<div class="bref" id="bref" hidden role="status"></div>
+
+<dialog id="dlg" aria-labelledby="dlg-t">
+  <form method="dialog">
+    <h2 id="dlg-t"></h2>
+    <p id="dlg-p"></p>
+    <div class="actions">
+      <button class="btn" value="non" id="dlg-non">Annuler</button>
+      <button class="btn plein" value="oui" id="dlg-oui">Continuer</button>
+    </div>
+  </form>
+</dialog>
+
+<input type="file" id="fichier" accept=".json,application/json" hidden>
+<div id="impression" class="dossier"></div>
+
+<script>
+(function () {
+'use strict';
+/* ───────── Données du parcours ───────── */
+const APP = { id: 'atelier-ia-vente', version: 1 };
+const CLE = 'atelier-ia-vente-v1';
+const VERIFIE_LE = '12 octobre 2026';
+
+const SOURCES = {
+  ia_ce: { t: `Commission européenne – Législation sur l'IA et calendrier d'application`, u: 'https://digital-strategy.ec.europa.eu/fr/policies/regulatory-framework-ai' },
+  ia_texte: { t: `Règlement (UE) 2024/1689 sur l'intelligence artificielle – texte officiel`, u: 'https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=OJ:L_202401689' },
+  ia_omnibus: { t: `Règlement (UE) 2026/1744 – calendrier modifié`, u: 'https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=OJ:L_202601744' },
+  cnil_profilage: { t: `CNIL – Profilage et décision entièrement automatisée`, u: 'https://www.cnil.fr/fr/profilage-et-decision-entierement-automatisee' },
+  cnil_prospection: { t: `CNIL – La prospection commerciale par courrier électronique, SMS-MMS et automate d'appel`, u: 'https://www.cnil.fr/fr/la-prospection-commerciale-par-courrier-electronique-sms-mms-et-automate-dappel' },
+  cnil_tel: { t: `CNIL – La prospection commerciale par téléphone`, u: 'https://www.cnil.fr/fr/prospection-commerciale-par-telephone-hors-automate-dappel-quelles-sont-les-regles' },
+  dgccrf: { t: `DGCCRF – Démarchage téléphonique : les règles pour les professionnels`, u: 'https://www.economie.gouv.fr/dgccrf/les-fiches-pratiques/demarchage-telephonique-professionnels-mettez-vous-en-conformite-avec-la-reglementation' },
+  rgpd: { t: `CNIL – Texte du RGPD, article par article`, u: 'https://www.cnil.fr/fr/reglement-europeen-protection-donnees' },
+  cnil_debut: { t: `CNIL – RGPD : par où commencer`, u: 'https://www.cnil.fr/fr/me-mettre-en-conformite/rgpd-par-ou-commencer' },
+  cnil_ia: { t: `CNIL – Intelligence artificielle`, u: 'https://www.cnil.fr/fr/technologies/intelligence-artificielle-ia' },
+  claude_limites: { t: `Aide de Claude – bien utiliser ses limites d'usage (en anglais)`, u: 'https://support.claude.com/en/articles/9797557' },
+  cnil_reutilisation: { t: `CNIL – La réutilisation des données publiquement accessibles en ligne à des fins de démarchage commercial`, u: 'https://www.cnil.fr/fr/la-reutilisation-des-donnees-publiquement-accessibles-en-ligne-des-fins-de-demarchage-commercial' },
+  cnil_generative: { t: `CNIL – Questions-réponses sur l'utilisation d'un système d'IA générative`, u: 'https://www.cnil.fr/fr/les-questions-reponses-de-la-cnil-sur-lutilisation-dun-systeme-dia-generative' },
+  cnil_information: { t: `CNIL – Comment informer les personnes et assurer la transparence`, u: 'https://www.cnil.fr/fr/conformite-rgpd-information-des-personnes-et-transparence' },
+  secret: { t: `Légifrance – Code de commerce, protection du secret des affaires (articles L151-1 et suivants)`, u: 'https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000005634379/LEGISCTA000037266547/' },
+  claude_projets: { t: `Aide de Claude – créer et gérer des projets (en anglais)`, u: 'https://support.claude.com/en/articles/9519177' }
+};
+
+const OUTILS = {
+  calibrateur: 'https://pierrickbriand.github.io/Calibrateur-de-preferences-Claude/',
+  entraineur: 'https://pierrickbriand.github.io/entraineur-de-prompt/'
+};
+
+const JAUGES = {
+  risque:    { l: 'Risque juridique', base: 40, sens: -1, aide: 'Plus bas, c\'est mieux.', niv: ['faible', 'modéré', 'à surveiller', 'élevé'] },
+  charge:    { l: 'Charge de travail', base: 40, sens: -1, aide: 'Plus bas, c\'est mieux.', niv: ['légère', 'modérée', 'à surveiller', 'lourde'] },
+  confiance: { l: 'Confiance', base: 50, sens: 1, aide: 'Clients et équipe. Plus haut, c\'est mieux.', niv: ['solide', 'correcte', 'à surveiller', 'fragile'] },
+  sobriete:  { l: 'Sobriété', base: 50, sens: 1, aide: 'Données et calcul. Plus haut, c\'est mieux.', niv: ['bonne', 'correcte', 'à surveiller', 'faible'] }
+};
+
+const DECISIONS = {
+  donnees: {
+    q: `Avec quelles données vas-tu travailler ?`,
+    sources: ['cnil_debut', 'cnil_generative'],
+    options: [
+      { id: 'fictives', l: `Un jeu fictif, fourni par cette page ou fabriqué avec Claude`, e: { risque: -5 },
+        suite: `Bon choix pour apprendre. Garde des colonnes réalistes : ton outil devra tenir face à de vraies données.` },
+      { id: 'anonymes', l: `Un export réel de mon entreprise, anonymisé par mes soins, avec l'accord écrit de mon tuteur`, e: { risque: 5, charge: 5, confiance: 5 },
+        suite: `Tes résultats seront plus crédibles. Supprimer les noms ne suffit pas toujours. Un compte se reconnaît à son secteur, à sa ville, à son chiffre d'affaires. Garde une trace de l'accord.` },
+      { id: 'reelles', l: `Le fichier des comptes et des affaires, tel quel`, e: { risque: 35, confiance: -25, sobriete: -5 }, grave: true,
+        suite: `Stop. Tu confies à un tiers les données de tes clients et les prix de ton entreprise. Change ce choix avant de continuer.` }
+    ]
+  },
+  comptes: {
+    q: `Quelles données ton outil utilise-t-il pour cibler les comptes ?`,
+    sources: ['cnil_reutilisation', 'cnil_prospection'],
+    options: [
+      { id: 'entreprise', l: `Les données d'entreprise : secteur, taille, historique d'affaires avec nous`, e: { risque: -5, sobriete: 10 },
+        suite: `Ces données décrivent des entreprises, pas des personnes. Ton ciblage reste simple à expliquer à un client.` },
+      { id: 'signaux', l: `Les données d'entreprise, plus les signaux publics : presse, recrutements, appels d'offres, fonction des décideurs`, e: { risque: 5, charge: 5, sobriete: -5 },
+        suite: `Tu repères mieux le bon moment. La fonction d'un décideur reste une donnée personnelle : informe-le dès le premier contact et laisse-le refuser.` },
+      { id: 'tout', l: `Tout ce qui se trouve sur les décideurs : profils aspirés, vie privée, opinions, loisirs`, e: { risque: 25, charge: 10, confiance: -20, sobriete: -15 }, grave: true,
+        suite: `Tu fiches des personnes sans objectif précis. Une donnée visible en ligne n'est pas libre d'usage pour autant.` }
+    ]
+  },
+  qualif: {
+    q: `Qui décide de poursuivre ou d'abandonner une affaire ?`,
+    sources: ['cnil_profilage'],
+    options: [
+      { id: 'humain', l: `Le score éclaire. L'ingénieur d'affaires décide et note sa raison`, e: { charge: 5, confiance: 5 },
+        suite: `Tu gardes la décision et tu laisses une trace. Tes raisons serviront à corriger le score.` },
+      { id: 'seuil', l: `Le score écarte les affaires sous un seuil, sauf demande contraire de l'ingénieur d'affaires`, e: { risque: 5, charge: -5, confiance: -5 },
+        suite: `Tu gagnes du temps sur les petites affaires. Vérifie chaque mois ce que le seuil a écarté.` },
+      { id: 'seul', l: `Le score décide seul : une affaire mal notée n'est plus suivie`, e: { risque: 10, charge: -10, confiance: -15 }, grave: true,
+        suite: `Un score apprend du passé. Il note mal les nouveaux clients et les nouveaux marchés, faute d'historique.` }
+    ]
+  },
+  offre: {
+    q: `Ton client t'envoie son cahier des charges. Qu'en fais-tu avec l'IA ?`,
+    sources: ['secret', 'cnil_generative'],
+    options: [
+      { id: 'resume', l: `Je rédige un résumé sans nom, sans prix ni détail technique sensible, et je travaille dessus`, e: { risque: -5, charge: 5, sobriete: 5 },
+        suite: `Tu perds une demi-heure et tu gardes la maîtrise. Ton résumé prouve aussi que tu as compris le besoin.` },
+      { id: 'accord', l: `Je le charge dans l'outil d'IA validé par mon entreprise, après accord du client`, e: { charge: 5, confiance: 5 },
+        suite: `Tu respectes l'engagement pris. Garde une trace écrite de l'accord et de l'outil utilisé.` },
+      { id: 'tout', l: `Je le colle tel quel dans mon compte Claude personnel, pour gagner du temps`, e: { risque: 25, charge: -5, confiance: -20 }, grave: true,
+        suite: `Tu transmets à un tiers un document que ton client t'a confié. Relis l'engagement de confidentialité signé par ton entreprise.` }
+    ]
+  },
+  prix: {
+    q: `Ton client demande une remise. Qui valide le prix proposé par l'IA ?`,
+    sources: ['cnil_profilage'],
+    options: [
+      { id: 'humain', l: `L'IA calcule la marge et propose trois scénarios. L'ingénieur d'affaires choisit, dans sa délégation`, e: { confiance: 5, sobriete: 5 },
+        suite: `Tu négocies avec des chiffres vérifiés. La décision reste dans les limites fixées par ta direction.` },
+      { id: 'seuil', l: `L'IA accorde seule les remises jusqu'à 5 %. Au-delà, un responsable valide`, e: { charge: -5 },
+        suite: `La règle est claire si tout le monde la connaît. Écris-la dans l'outil et teste ses cas limites.` },
+      { id: 'auto', l: `L'IA fixe le prix et la remise de chaque client, sans validation`, e: { risque: 20, charge: -10, confiance: -15, sobriete: -5 }, grave: true,
+        suite: `Personne ne peut expliquer pourquoi deux clients paient des prix différents. Ta marge dépend d'un calcul que tu ne contrôles pas.` }
+    ]
+  },
+  reunions: {
+    q: `Une IA transcrit tes réunions avec le client. Comment l'annonces-tu ?`,
+    sources: ['cnil_information', 'ia_ce'],
+    options: [
+      { id: 'annonce', l: `Je l'annonce au début, j'explique l'usage et je coupe si quelqu'un refuse`, e: { risque: -5, confiance: 5 },
+        suite: `Le client sait ce qui est conservé, et pourquoi. Tu gagnes un compte rendu fiable, que tu relis avant envoi.` },
+      { id: 'invitation', l: `Je l'indique dans l'invitation, sans y revenir en séance`, e: { confiance: -5 },
+        suite: `L'information existe, mais peu de gens lisent une invitation. Un rappel de dix secondes lève le doute.` },
+      { id: 'cache', l: `Je ne dis rien : l'outil tourne en arrière-plan`, e: { risque: 25, confiance: -20 }, grave: true,
+        suite: `Tu enregistres des personnes à leur insu. Leur voix et leurs propos sont des données personnelles.` }
+    ]
+  },
+  perimetre: {
+    q: `Quelle ambition pour ta première version ?`,
+    options: [
+      { id: 'une', l: `Une seule fonction, qui marche du début à la fin`, e: { charge: -10, sobriete: 5 },
+        suite: `Tu auras un outil qui fonctionne le 27 novembre. La complexité viendra par versions.` },
+      { id: 'trois', l: `Trois fonctions liées entre elles`, e: { charge: 15 },
+        suite: `C'est faisable si tu livres une fonction à la fois. Décide dès maintenant laquelle passe en premier.` },
+      { id: 'plateforme', l: `Une plateforme complète, qui couvre tout le cycle d'une affaire`, e: { risque: 5, charge: 35, sobriete: -10 }, grave: true,
+        suite: `Tu risques de présenter une maquette qui ne calcule rien. Réduis le périmètre : une version fait une chose, et la fait bien.` }
+    ]
+  },
+  technique: {
+    q: `Sur quelle base technique ?`,
+    options: [
+      { id: 'html', l: `Une page HTML seule : les données se collent ou se saisissent`, e: { charge: -5, sobriete: 10 },
+        suite: `Rien à installer, rien à autoriser. Les données restent sur l'appareil de l'utilisateur.` },
+      { id: 'sheets', l: `Une page reliée à Google Sheets par Apps Script`, e: { charge: 15 },
+        suite: `L'outil lit et écrit dans une feuille partagée. Compte une heure pour les autorisations et le déploiement.` },
+      { id: 'ia', l: `Une application qui appelle une IA à chaque action`, e: { risque: 10, charge: 15, sobriete: -20 },
+        suite: `Chaque clic consomme du calcul et envoie des données à un tiers. Demande-toi quelles actions une règle simple suffit à traiter.` }
+    ]
+  },
+  prevision: {
+    q: `Ton outil produit un chiffre : score, classement ou prévision. Comment le présentes-tu à ta direction ?`,
+    options: [
+      { id: 'fourchette', l: `Avec une fourchette, mes hypothèses et la date des données`, e: { charge: 5, confiance: 5 },
+        suite: `Ta direction sait ce que vaut le chiffre. Elle décide en connaissant la marge d'erreur.` },
+      { id: 'unique', l: `Un seul chiffre, arrondi, avec la mention « estimation »`, e: { confiance: -5 },
+        suite: `Le mot « estimation » disparaîtra à la première reprise. Ajoute au moins une borne basse.` },
+      { id: 'optimiste', l: `Le chiffre le plus favorable : il motive l'équipe et rassure la direction`, e: { risque: 5, confiance: -15 }, grave: true,
+        suite: `Tu engages ta crédibilité sur le scénario le plus fragile. Un budget construit dessus se retournera contre toi.` }
+    ]
+  },
+  preuve: {
+    q: `D'où viennent les chiffres de ton retour sur investissement ?`,
+    options: [
+      { id: 'mesure', l: `J'ai chronométré la tâche avant et après, sur plusieurs cas`, e: { charge: 5, confiance: 5 },
+        suite: `Tes chiffres tiennent face au jury. Indique le nombre de cas mesurés.` },
+      { id: 'estime', l: `Je les ai estimés avec mon tuteur ou mes coéquipiers`, e: {},
+        suite: `C'est acceptable si tu l'écris. Donne une hypothèse basse et une hypothèse haute.` },
+      { id: 'externe', l: `Je reprends les gains annoncés par un éditeur ou par un article`, e: { risque: 10, confiance: -10 }, grave: true,
+        suite: `Ces chiffres ne décrivent pas ta situation. Le jury te demandera ce que tu as observé toi-même.` }
+    ]
+  }
+};
+
+const SCENES = {
+  s_ao: {
+    titre: `Mardi, 8 h 50 : ta réponse à l'appel d'offres est partie`,
+    dependDe: ['comptes', 'qualif', 'offre'],
+    variantes: [
+      { id: 'fuite', si: c => c.choix.offre === 'tout',
+        texte: `L'acheteur de ton client t'appelle. Son cahier des charges portait la mention « confidentiel ». Il te demande dans quels outils tu l'as chargé.`,
+        reps: [
+          { id: 'a', l: `Tu dis la vérité, tu supprimes la conversation et tu préviens ta direction`, e: { risque: -10, charge: 10, confiance: 5 }, suite: `L'appel est désagréable. Tu restes un interlocuteur que l'on peut croire.` },
+          { id: 'b', l: `Tu réponds que l'outil est sécurisé, sans avoir vérifié`, e: { risque: 10, confiance: -10 }, suite: `Tu affirmes ce que tu ignores. L'acheteur demandera une preuve écrite.` },
+          { id: 'c', l: `Tu changes de sujet`, e: { confiance: -15 }, suite: `Ton silence répond à ta place. Le client en parlera à son service juridique.` }
+        ] },
+      { id: 'intrusif', si: c => c.choix.comptes === 'tout',
+        texte: `Un directeur des achats répond à ton e-mail : « Comment connaissez-vous mon club de sport et le nom de mes enfants ? » Il met sa direction en copie.`,
+        reps: [
+          { id: 'a', l: `Tu lui dis d'où viennent les données, tu les supprimes et tu ne gardes que les fonctions`, e: { risque: -10, charge: 10, confiance: 10 }, suite: `Tu perds une journée. Tu gagnes un ciblage que tu sais expliquer.` },
+          { id: 'b', l: `Tu réponds que ces informations sont publiques`, e: { risque: 5, confiance: -10 }, suite: `Publique ne veut pas dire libre d'usage. Le compte se ferme pour longtemps.` },
+          { id: 'c', l: `Tu ne réponds pas`, e: { confiance: -15 }, suite: `Ton silence confirme ses craintes. Il en parle à ses homologues.` }
+        ] },
+      { id: 'score', si: c => c.choix.qualif === 'seul',
+        texte: `Ton outil a écarté une affaire notée 32 sur 100. Un concurrent vient de la signer : 240 000 €. Le client était nouveau, donc sans historique.`,
+        reps: [
+          { id: 'a', l: `Tu fais revoir par un ingénieur d'affaires chaque affaire écartée, et toutes celles des nouveaux clients`, e: { risque: -5, charge: 10, confiance: 10 }, suite: `Tu rends la décision à ceux qui connaissent le terrain. Le score redevient une aide.` },
+          { id: 'b', l: `Tu abaisses le seuil de dix points`, e: { charge: 5 }, suite: `Tu déplaces le problème. Le score ignore toujours ce qu'il n'a jamais vu.` },
+          { id: 'c', l: `Tu ne changes rien : une erreur ne fait pas une règle`, e: { confiance: -10 }, suite: `Tu ne sais pas combien d'affaires semblables ont été écartées. Personne ne les compte.` }
+        ] },
+      { id: 'prudent', si: () => true,
+        texte: `Ta réponse est partie deux jours plus tôt que d'habitude. Ton directeur veut aller plus loin : « Charge tout le dossier client dans l'IA, e-mails compris. »`,
+        reps: [
+          { id: 'a', l: `Tu proposes une version sans noms ni prix, chargée après accord du client`, e: { charge: 5, confiance: 5 }, suite: `Tu avances sans trahir un engagement. Tu sauras si le gain vaut l'effort.` },
+          { id: 'b', l: `Tu charges tout le dossier`, e: { risque: 15, confiance: -10, sobriete: -5 }, suite: `Tu ne sais plus ce qui est sorti de l'entreprise. Relis ton choix sur le cahier des charges.` },
+          { id: 'c', l: `Tu refuses et tu montres les deux jours déjà gagnés`, e: { confiance: 5 }, suite: `Tu défends une méthode qui marche. Prépare des chiffres pour convaincre.` }
+        ] }
+    ]
+  },
+  s_compte: {
+    titre: `Jeudi, 17 h 42 : ton client clé t'écrit`,
+    dependDe: ['prix', 'reunions'],
+    variantes: [
+      { id: 'enregistre', si: c => c.choix.reunions === 'cache',
+        texte: `Ton client reçoit par erreur le compte rendu automatique de la réunion. Il y lit ses hésitations sur le budget, mot pour mot. Personne ne l'avait prévenu.`,
+        reps: [
+          { id: 'a', l: `Tu présentes tes excuses, tu supprimes l'enregistrement et tu annonces désormais la transcription`, e: { risque: -15, charge: 5, confiance: 10 }, suite: `Tu corriges à la source. Retourne aussi modifier ton choix sur les réunions.` },
+          { id: 'b', l: `Tu réponds que tout le monde fait pareil`, e: { confiance: -10 }, suite: `Tu réponds à côté. Le reproche portait sur la franchise.` },
+          { id: 'c', l: `Tu coupes l'envoi automatique, sans rien dire`, e: { risque: -5, confiance: -5 }, suite: `Tu continues d'enregistrer des personnes qui l'ignorent.` }
+        ] },
+      { id: 'remise', si: c => c.choix.prix === 'auto',
+        texte: `L'IA a accordé 18 % de remise à ton client clé. La marge de l'affaire passe sous le seuil fixé par ta direction. Le devis est déjà parti.`,
+        reps: [
+          { id: 'a', l: `Tu préviens ta direction et tu remets une validation humaine au-delà de 5 %`, e: { risque: -10, charge: 10, confiance: 5 }, suite: `Tu assumes le devis envoyé. L'erreur ne se reproduira pas.` },
+          { id: 'b', l: `Tu rappelles le client pour retirer la remise`, e: { confiance: -15 }, suite: `Ton client retient que ta parole écrite ne vaut rien.` },
+          { id: 'c', l: `Tu ne dis rien et tu espères que personne ne regarde`, e: { risque: 10, confiance: -10 }, suite: `La marge apparaîtra au prochain point d'affaires. Ton silence aussi.` }
+        ] },
+      { id: 'mefiance', si: c => c.j.confiance <= 40,
+        texte: `Ton client clé consulte deux concurrents. Son acheteur t'explique : « Nous ne savons plus très bien ce que vous faites de nos informations. »`,
+        reps: [
+          { id: 'a', l: `Tu demandes un rendez-vous et tu remets par écrit tes règles d'usage de l'IA`, e: { risque: -5, charge: 10, confiance: 15 }, suite: `Tu traites la vraie question. Ces règles serviront à tous tes comptes.` },
+          { id: 'b', l: `Tu baisses ton prix pour garder le compte`, e: { confiance: -5 }, suite: `Tu paies sans répondre. La méfiance reste, la marge part.` },
+          { id: 'c', l: `Tu attends le résultat de la consultation`, e: { confiance: -10 }, suite: `Tu laisses tes concurrents répondre à ta place.` }
+        ] },
+      { id: 'reclamation', si: () => true,
+        texte: `Ton client clé se plaint d'un retard de livraison. Ton outil propose une réponse type en dix secondes. Le contrat prévoit des pénalités.`,
+        reps: [
+          { id: 'a', l: `Tu appelles le client, puis tu confirmes par écrit après avoir relu le contrat`, e: { charge: 5, confiance: 5 }, suite: `Tu traites un client clé comme tel. La réponse type attendra un cas plus simple.` },
+          { id: 'b', l: `Tu envoies la réponse type telle quelle`, e: { risque: 10, confiance: -10 }, suite: `La réponse promet un geste que le contrat ne prévoit pas. Tu viens d'engager ton entreprise.` },
+          { id: 'c', l: `Tu colles le contrat dans l'IA pour qu'elle corrige la réponse`, e: { risque: 10, sobriete: -5 }, suite: `La réponse sera plus juste. Le contrat, lui, vient de sortir de l'entreprise.` }
+        ] }
+    ]
+  },
+  s_j10: {
+    titre: `17 novembre : dix jours avant la présentation`,
+    dependDe: ['perimetre', 'technique', 'prevision'],
+    variantes: [
+      { id: 'reelles', si: c => c.choix.donnees === 'reelles',
+        texte: `Ton tuteur découvre le fichier des comptes dans ta conversation avec Claude. Il te demande qui t'a autorisé.`,
+        reps: [
+          { id: 'a', l: `Tu supprimes la conversation, tu préviens ton tuteur et tu repars sur des données fictives`, e: { risque: -20, charge: 10, confiance: 10 }, suite: `Tu répares ce qui peut l'être. Modifie aussi ton choix de données à l'étape 2.` },
+          { id: 'b', l: `Tu expliques que c'était pour gagner du temps`, e: { confiance: -10 }, suite: `L'explication ne change rien au problème.` }
+        ] },
+      { id: 'retard', si: c => c.j.charge >= 65,
+        texte: `Ton application affiche trois écrans. Un seul calcule quelque chose. Le reste est une maquette.`,
+        reps: [
+          { id: 'a', l: `Tu gardes la fonction qui marche et tu la termines`, e: { charge: -20, confiance: 5 }, suite: `Tu présenteras un outil qui fonctionne. Les autres fonctions passent dans « la suite ».` },
+          { id: 'b', l: `Tu demandes à Claude de tout reconstruire d'un coup`, e: { charge: 10, sobriete: -10 }, suite: `Tu repars de zéro sans avoir compris ce qui bloquait.` },
+          { id: 'c', l: `Tu continues sur les trois écrans en même temps`, e: { charge: 10 }, suite: `Le risque de tout présenter à moitié augmente.` }
+        ] },
+      { id: 'chiffre', si: c => c.choix.prevision === 'optimiste',
+        texte: `Ton tuteur a présenté ton chiffre en réunion commerciale. Le directeur demande la marge d'erreur. Tu n'en as pas.`,
+        reps: [
+          { id: 'a', l: `Tu recalcules avec une fourchette et tu l'envoies avec tes hypothèses`, e: { charge: 5, confiance: 10 }, suite: `Tu corriges avant que le chiffre n'entre dans un budget. Retourne aussi modifier ton choix.` },
+          { id: 'b', l: `Tu réponds que l'IA se trompe rarement`, e: { risque: 5, confiance: -10 }, suite: `Tu n'as rien mesuré. Le directeur le comprend tout de suite.` },
+          { id: 'c', l: `Tu retires la prévision de l'outil`, e: { charge: -5, confiance: -5 }, suite: `Tu supprimes la fonction la plus attendue, au lieu de la rendre honnête.` }
+        ] },
+      { id: 'pret', si: () => true,
+        texte: `Ton outil fonctionne. Un collègue veut l'utiliser dès lundi sur ses vraies affaires.`,
+        reps: [
+          { id: 'a', l: `Tu écris une page de mode d'emploi : ce que l'outil fait, ses limites, qui vérifie`, e: { risque: -5, charge: 5, confiance: 5 }, suite: `Ton outil peut vivre sans toi. C'est un argument fort devant le jury.` },
+          { id: 'b', l: `Tu lui envoies le fichier tel quel`, e: { risque: 10, confiance: -5 }, suite: `Il utilisera l'outil hors du cadre que tu as testé.` },
+          { id: 'c', l: `Tu refuses : l'outil reste un exercice`, e: { confiance: -5 }, suite: `Tu passes à côté d'un vrai retour d'usage.` }
+        ] }
+    ]
+  }
+};
+
+const QUESTIONS_JURY = {
+  risque: `Si votre outil se trompe sur un client, qui est responsable, et comment le client peut-il contester ?`,
+  charge: `Qui fait vivre l'outil après votre départ, et combien de temps cela prend-il chaque mois ?`,
+  confiance: `Que dites-vous au client sur l'usage de l'IA, et à quel moment ?`,
+  sobriete: `Quelles étapes de votre outil pourraient fonctionner sans IA ?`
+};
+
+const QUALIF = [
+  { id: 'confidentiel', q: `Ton outil reçoit-il des documents confidentiels d'un client ou de ton entreprise ?`,
+    aide: `Cahier des charges, contrat, grille de prix, coût de revient, compte rendu de réunion.`,
+    oui: `Vérifie l'engagement de confidentialité signé et la règle de ton entreprise sur les outils d'IA. Dis où part chaque document.`, sources: ['secret', 'cnil_generative'] },
+  { id: 'perso', q: `Ton outil traite-t-il des données personnelles ?`,
+    aide: `Une entreprise n'est pas une personne. Un contact nommé chez un client en est une : nom, fonction, e-mail.`,
+    oui: `Vérifie trois points : l'objectif du traitement, les données réellement nécessaires, l'information donnée aux personnes.`, sources: ['cnil_debut', 'rgpd'] },
+  { id: 'prospection', q: `Sert-il à prospecter par e-mail, SMS ou téléphone ?`,
+    aide: `Préparer une liste de contacts ou rédiger des messages compte aussi.`,
+    oui: `La règle change selon le canal et selon le public : particuliers ou professionnels. Dis laquelle s'applique à ton cas.`, sources: ['cnil_prospection', 'dgccrf', 'cnil_tel'] },
+  { id: 'profil', q: `Établit-il un score ou un profil par personne ?`,
+    aide: `Un score par entreprise n'est pas un profil de personne. Un score par contact en est un.`,
+    oui: `C'est du profilage. Explique la règle de calcul et dis comment une personne peut s'y opposer.`, sources: ['cnil_profilage'] },
+  { id: 'decision', q: `Prend-il seul une décision qui pèse sur une personne ?`,
+    aide: `Exemples : un prix, un refus, une priorité. Le RGPD protège les personnes : pense aux artisans et aux indépendants.`,
+    oui: `L'article 22 du RGPD encadre ces décisions. Dis où un humain intervient et comment le client conteste.`, sources: ['cnil_profilage', 'rgpd'] },
+  { id: 'interaction', q: `Un client échange-t-il avec une IA, ou reçoit-il un contenu qu'elle a généré ?`,
+    aide: `Agent conversationnel, e-mail rédigé par l'IA, image ou voix de synthèse.`,
+    oui: `Les règles de transparence de l'article 50 s'appliquent depuis le 2 août 2026. Dis ce que le client voit, et à quel moment.`, sources: ['ia_ce', 'ia_texte'] },
+  { id: 'emotions', q: `Analyse-t-il la voix, le visage ou les émotions de vendeurs ou de clients ?`,
+    aide: `Exemple : un outil qui note le ton des vendeurs pendant les appels.`,
+    oui: `La reconnaissance des émotions sur le lieu de travail figure parmi les pratiques interdites (article 5). Lis la définition à l'article 3 et conclus pour ton cas.`, sources: ['ia_ce', 'ia_texte'] }
+];
+
+const IDEES = [
+  { id: 'rdv', fam: 'Aide à la vente', t: `Préparateur de rendez-vous`, pour: `Ingénieur d'affaires`, in: `Fiche client, historique des échanges, objectif du rendez-vous`, out: `Plan d'entretien, questions à poser, objections probables`, niv: 1, vig: `L'IA peut inventer des faits sur le client.` },
+  { id: 'qualif', fam: 'Aide à la vente', t: `Qualificateur de prospects`, pour: `Commercial sédentaire`, in: `Réponses à huit questions de découverte`, out: `Score de maturité et prochaine action`, niv: 1, vig: `Un score n'est pas une vérité : affiche la règle.` },
+  { id: 'objections', fam: 'Aide à la vente', t: `Entraîneur aux objections`, pour: `Nouveau vendeur`, in: `Offre, dix objections fréquentes`, out: `Échange simulé et grille d'auto-évaluation`, niv: 2, vig: `Les réponses types vieillissent : qui les met à jour ?` },
+  { id: 'devis', fam: 'Aide à la vente', t: `Configurateur de devis`, pour: `Ingénieur d'affaires, assistant commercial`, in: `Catalogue, options, remises autorisées`, out: `Devis chiffré, marge, alerte si la remise sort de la règle`, niv: 2, vig: `Chaque calcul se vérifie à la main.` },
+  { id: 'portefeuille', fam: 'Aide à la décision', t: `Priorisateur de portefeuille`, pour: `Ingénieur d'affaires, responsable d'équipe`, in: `Affaires en cours : montant, étape, ancienneté, dernier contact`, out: `Classement et affaires à relancer cette semaine`, niv: 2, vig: `La règle favorise-t-elle toujours les gros comptes ?` },
+  { id: 'prevision', fam: 'Aide à la décision', t: `Prévision des ventes`, pour: `Responsable commercial`, in: `Historique mensuel sur 24 mois`, out: `Prévision à trois mois, avec fourchette`, niv: 3, vig: `Une prévision sans fourchette trompe.` },
+  { id: 'marge', fam: 'Aide à la décision', t: `Simulateur de remise et de marge`, pour: `Commercial en négociation`, in: `Prix, coût, volume, remise demandée`, out: `Marge, seuil à ne pas franchir, trois scénarios`, niv: 1, vig: `Le coût de revient est une donnée confidentielle.` },
+  { id: 'depart', fam: 'Aide à la décision', t: `Détecteur de clients qui décrochent`, pour: `Chargé de clientèle`, in: `Fréquence d'achat, réclamations, satisfaction`, out: `Liste d'alerte et action proposée par client`, niv: 3, vig: `C'est du profilage si le client est une personne.` },
+  { id: 'tri', fam: 'Expérience client', t: `Tri des réclamations`, pour: `Service client`, in: `Messages de clients`, out: `Thème, urgence, réponse proposée, validation par un conseiller`, niv: 2, vig: `L'ironie et les cas sensibles trompent les règles.` },
+  { id: 'agent', fam: 'Expérience client', t: `Scénario d'agent conversationnel`, pour: `Service client, site marchand`, in: `Quinze questions fréquentes et leurs réponses`, out: `Arbre de dialogue et passage à un conseiller`, niv: 2, vig: `L'agent annonce qu'il est une machine.` },
+  { id: 'activite', fam: 'Pilotage', t: `Tableau de bord d'activité`, pour: `Commercial, responsable d'équipe`, in: `Appels, rendez-vous, devis, ventes par semaine`, out: `Taux de transformation par étape et point faible`, niv: 2, vig: `Mesurer une personne n'est pas neutre : qui voit quoi ?` },
+  { id: 'appel', fam: 'Aide à la décision', t: `Grille de décision d'appel d'offres`, pour: `Ingénieur d'affaires`, in: `Critères de l'appel d'offres, atouts, concurrence, charge de réponse`, out: `Note pondérée, décision argumentée d'y aller ou non, points à lever`, niv: 2, vig: `La pondération traduit une stratégie : qui la fixe ?` }
+];
+
+/* ───────── Jeux de données fictifs, différents pour chaque étudiant ───────── */
+function graine(texte) {
+  let h = 2166136261;
+  for (let i = 0; i < texte.length; i++) { h ^= texte.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function hasard(g) {
+  let a = g || 1;
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const entre = (r, a, b) => Math.round(a + r() * (b - a));
+const pioche = (r, liste) => liste[Math.floor(r() * liste.length)];
+
+function jeuClients(nom, particuliers) {
+  const r = hasard(graine('clients|' + (nom || 'atelier').toLowerCase().trim()));
+  const secteurs = ['industrie', 'bâtiment', 'commerce de détail', 'restauration', 'transport', 'services aux entreprises', 'santé', 'agriculture'];
+  const zones = ['centre-ville', 'périphérie', 'bourg', 'rural'];
+  const canaux = particuliers ? ['e-mail', 'SMS', 'téléphone', 'magasin'] : ['e-mail', 'téléphone', 'visite', 'salon'];
+  const origines = particuliers ? ['achat en magasin', 'formulaire web', 'jeu concours', 'fichier acheté'] : ['client historique', 'formulaire web', 'salon', 'fichier acheté'];
+  const profils = [
+    { n: 7, anc: [24, 96], jours: [3, 30], cmd: [8, 20], ca: [18000, 60000], ouv: [35, 70], note: [8, 10] },
+    { n: 9, anc: [18, 80], jours: [20, 75], cmd: [4, 9], ca: [6000, 20000], ouv: [20, 55], note: [6, 9] },
+    { n: 8, anc: [1, 8], jours: [5, 45], cmd: [1, 3], ca: [800, 5000], ouv: [30, 75], note: [6, 10] },
+    { n: 7, anc: [30, 110], jours: [150, 340], cmd: [0, 2], ca: [0, 3000], ouv: [0, 18], note: [3, 7] },
+    { n: 5, anc: [36, 120], jours: [95, 200], cmd: [1, 4], ca: [9000, 30000], ouv: [5, 25], note: [2, 6] }
+  ];
+  const lignes = [];
+  profils.forEach(p => {
+    for (let i = 0; i < p.n; i++) {
+      const cmd = entre(r, p.cmd[0], p.cmd[1]);
+      let ca = cmd === 0 ? 0 : entre(r, p.ca[0], p.ca[1]);
+      if (particuliers) ca = Math.round(ca / 40);
+      lignes.push({
+        a: particuliers ? pioche(r, zones) : pioche(r, secteurs),
+        b: particuliers ? (r() < 0.55 ? 'oui' : 'non') : entre(r, 4, 420),
+        anc: entre(r, p.anc[0], p.anc[1]), jours: entre(r, p.jours[0], p.jours[1]), cmd, ca,
+        canal: pioche(r, canaux), ouv: entre(r, p.ouv[0], p.ouv[1]), note: String(entre(r, p.note[0], p.note[1])),
+        origine: pioche(r, origines)
+      });
+    }
+  });
+  for (let i = lignes.length - 1; i > 0; i--) { const k = Math.floor(r() * (i + 1)); [lignes[i], lignes[k]] = [lignes[k], lignes[i]]; }
+  lignes.forEach((l, i) => { l.id = 'C' + String(i + 1).padStart(3, '0'); });
+  /* Trois anomalies volontaires */
+  const n = lignes.length;
+  const x1 = entre(r, 2, 9), x2 = entre(r, 12, 20), x3 = entre(r, 24, n - 2);
+  lignes[x1].note = ''; lignes[(x1 + 11) % n].note = '';
+  lignes[x2].id = lignes[x2 - 1].id;
+  lignes[x3].cmd = 0; lignes[x3].jours = 0; lignes[x3].ca = particuliers ? 310 : 12400;
+  const entete = ['id', particuliers ? 'zone' : 'secteur', particuliers ? 'carte_fidelite' : 'effectif', 'anciennete_mois', 'jours_depuis_derniere_commande', 'commandes_12_mois', 'ca_12_mois_eur', 'canal_prefere', 'taux_ouverture_emails_pct', 'note_satisfaction_10', 'origine_contact'];
+  const corps = lignes.map(l => [l.id, l.a, l.b, l.anc, l.jours, l.cmd, l.ca, l.canal, l.ouv, l.note, l.origine]);
+  return { entete, corps, csv: [entete].concat(corps).map(l => l.join(';')).join('\n') };
+}
+
+const MESSAGES = [
+  [1, `Troisième relance pour ma commande du 2 septembre. Toujours rien. Je veux être remboursé.`],
+  [0, `Votre conseiller m'a raccroché au nez. C'est inadmissible.`],
+  [0, `Facture en double ce mois-ci. Merci de corriger rapidement.`],
+  [0, `Le produit est arrivé cassé. L'emballage était ouvert.`],
+  [0, `J'attends un rappel depuis dix jours. Personne ne me contacte.`],
+  [0, `Le prix a augmenté sans prévenir. Je réfléchis à partir.`],
+  [0, `Impossible de joindre le service client. Quarante minutes d'attente, puis coupure.`],
+  [0, `On m'a vendu une option dont je n'ai pas besoin. Je veux l'annuler.`],
+  [0, `Le technicien n'est pas venu au rendez-vous. C'est la deuxième fois.`],
+  [0, `Je résilie à la fin du mois. Envoyez-moi la procédure.`],
+  [0, `Livraison en avance et produit conforme. Merci à l'équipe.`],
+  [1, `Votre conseillère Mélanie a réglé mon problème en cinq minutes. Bravo.`],
+  [0, `Très bon conseil en magasin. J'ai pris le modèle au-dessus et je ne regrette pas.`],
+  [0, `Devis reçu en une heure. Clair et complet.`],
+  [0, `Je recommande. Service sérieux depuis trois ans.`],
+  [0, `Merci pour le geste commercial. Je reste client.`],
+  [0, `Pouvez-vous m'envoyer une copie de ma facture d'août ?`],
+  [0, `Quels sont vos horaires pendant les vacances de la Toussaint ?`],
+  [0, `Je souhaite changer l'adresse de livraison de ma commande.`],
+  [0, `Le contrat se renouvelle-t-il automatiquement ?`],
+  [0, `Proposez-vous une formation pour la nouvelle version ?`],
+  [0, `Où en est ma commande ? Je n'ai pas reçu de numéro de suivi.`],
+  [1, `Bravo pour la rapidité : trois semaines pour un colis.`],
+  [0, `Super, encore une mise à jour qui efface mes réglages.`],
+  [1, `Merci pour la surprise sur la facture, j'adore payer plus.`],
+  [0, `Le produit est très bien. Dommage que la notice soit en allemand.`],
+  [0, `Conseiller aimable, mais il n'a pas résolu mon problème.`],
+  [1, `Rien à dire.`],
+  [0, `Je vous laisse une dernière chance.`],
+  [0, `Livré vite, mais ce n'est pas la bonne couleur. Je le garde quand même.`],
+  [1, `Je suis en panne depuis ce matin et j'ai quinze salariés à l'arrêt. Rappelez-moi d'urgence au 06 00 00 00 00.`],
+  [0, `Si je n'ai pas de réponse demain, je publie mon avis partout.`],
+  [1, `Mon père de 84 ans a signé ce contrat au téléphone sans comprendre. Je demande l'annulation.`],
+  [1, `Votre agent en ligne tourne en rond. Je veux parler à une personne.`],
+  [0, `J'ai été prélevé deux fois. Mon compte est à découvert à cause de vous.`],
+  [1, `Je ne veux plus recevoir vos e-mails. Je l'ai déjà demandé deux fois.`]
+];
+
+function jeuMessages(nom) {
+  const r = hasard(graine('messages|' + (nom || 'atelier').toLowerCase().trim()));
+  const canaux = ['e-mail', 'formulaire', 'avis en ligne', 'agent en ligne', 'téléphone (transcrit)'];
+  const gardes = MESSAGES.filter(m => m[0] === 1);
+  const autres = MESSAGES.filter(m => m[0] === 0);
+  for (let i = autres.length - 1; i > 0; i--) { const k = Math.floor(r() * (i + 1)); [autres[i], autres[k]] = [autres[k], autres[i]]; }
+  const choisis = gardes.concat(autres.slice(0, 24 - gardes.length));
+  for (let i = choisis.length - 1; i > 0; i--) { const k = Math.floor(r() * (i + 1)); [choisis[i], choisis[k]] = [choisis[k], choisis[i]]; }
+  const entete = ['id', 'date', 'canal', 'client_depuis_mois', 'message'];
+  const corps = choisis.map((m, i) => {
+    const jour = entre(r, 0, 25);
+    const d = new Date(Date.UTC(2026, 8, 15 + jour));
+    return ['M' + String(i + 1).padStart(2, '0'), d.toISOString().slice(0, 10), pioche(r, canaux), entre(r, 1, 96), m[1]];
+  });
+  return { entete, corps, csv: [entete].concat(corps).map(l => l.join(';')).join('\n') };
+}
+
+/* ───────── État, sauvegarde, calcul ───────── */
+function nouvelEtat() {
+  return { app: APP.id, version: APP.version, cree: new Date().toISOString(), maj: null, exportLe: null, modifs: 0,
+    chapitre: 'depart', champs: {}, faits: {}, choix: {}, scenes: {} };
+}
+let S = nouvelEtat();
+let stockageOk = true;
+
+function charger() {
+  try {
+    const brut = localStorage.getItem(CLE);
+    if (brut) { const d = JSON.parse(brut); if (d && d.app === APP.id) S = Object.assign(nouvelEtat(), d); }
+  } catch (e) { stockageOk = false; }
+}
+let minuteur = null;
+function sauver() {
+  clearTimeout(minuteur);
+  minuteur = setTimeout(() => {
+    try { localStorage.setItem(CLE, JSON.stringify(S)); stockageOk = true; } catch (e) { stockageOk = false; }
+    majBarre();
+  }, 250);
+}
+function toucher() { S.maj = new Date().toISOString(); S.modifs = (S.modifs || 0) + 1; sauver(); }
+
+const v = (cle, defaut) => { const x = S.champs[cle]; return (x === undefined || x === null) ? (defaut === undefined ? '' : defaut) : x; };
+const rempli = cle => String(v(cle)).trim().length > 0;
+const num = (cle, defaut) => { const x = parseFloat(String(v(cle, defaut)).replace(/\s/g, '').replace(',', '.')); return isFinite(x) ? x : NaN; };
+const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const borne = x => Math.max(0, Math.min(100, x));
+
+/* Typographie française : espaces insécables, apostrophes, milliers */
+function typo(t) {
+  return String(t)
+    .replace(/(\p{L})'(?=\p{L}|«)/gu, '$1’')
+    .replace(/« /g, '« ').replace(/ »/g, ' »')
+    .replace(/ ([:;!?])/g, ' $1')
+    .replace(/(\d) (\d{3})(?!\d)/g, '$1 $2')
+    .replace(/(\d) h (\d)/g, '$1 h $2')
+    .replace(/(\d) (%|€|h|min|heures?|minutes?|jours?|semaines?|mois|ans?)(?![\p{L}])/gu, '$1 $2')
+    .replace(/n° /g, 'n° ');
+}
+function typoNoeuds(racine) {
+  const marcheur = document.createTreeWalker(racine, NodeFilter.SHOW_TEXT, {
+    acceptNode(n) {
+      const p = n.parentElement;
+      if (!p || p.closest('pre,textarea,script,style,[data-brut]')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  const noeuds = []; while (marcheur.nextNode()) noeuds.push(marcheur.currentNode);
+  noeuds.forEach(n => { const t = typo(n.nodeValue); if (t !== n.nodeValue) n.nodeValue = t; });
+  racine.querySelectorAll('[placeholder]').forEach(e => e.setAttribute('placeholder', typo(e.getAttribute('placeholder'))));
+}
+const nb = (x, dec) => isFinite(x) ? x.toLocaleString('fr-FR', { maximumFractionDigits: dec || 0, minimumFractionDigits: 0 }) : '–';
+const heure = iso => { const d = new Date(iso); return d.getHours() + ' h ' + String(d.getMinutes()).padStart(2, '0'); };
+const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+const dateFr = d => (d.getDate() === 1 ? '1er' : d.getDate()) + ' ' + MOIS[d.getMonth()] + ' ' + d.getFullYear();
+
+/* Ordre de calcul : les choix d'un chapitre, puis la scène qui en découle */
+const ORDRE = [
+  ['d', 'donnees'], ['d', 'comptes'], ['d', 'qualif'], ['d', 'offre'], ['s', 's_ao'],
+  ['d', 'prix'], ['d', 'reunions'], ['s', 's_compte'],
+  ['d', 'perimetre'], ['d', 'technique'], ['d', 'prevision'], ['s', 's_j10'], ['d', 'preuve']
+];
+function appliquer(j, e) { Object.keys(e || {}).forEach(k => { j[k] = borne(j[k] + e[k]); }); }
+function calcul() {
+  const j = {}; Object.keys(JAUGES).forEach(k => { j[k] = JAUGES[k].base; });
+  const variantes = {};
+  ORDRE.forEach(([type, id]) => {
+    if (type === 'd') {
+      const o = DECISIONS[id].options.find(x => x.id === S.choix[id]);
+      if (o) appliquer(j, o.e);
+    } else {
+      const sc = SCENES[id];
+      if (!sc.dependDe.every(d => S.choix[d])) { variantes[id] = null; return; }
+      const va = sc.variantes.find(x => x.si({ j: Object.assign({}, j), choix: S.choix }));
+      variantes[id] = va;
+      const rep = S.scenes[id] && S.scenes[id][va.id];
+      const r = va.reps.find(x => x.id === rep);
+      if (r) appliquer(j, r.e);
+    }
+  });
+  const c = S.choix;
+  const drap = {
+    donneesReelles: c.donnees === 'reelles', decideursFiches: c.comptes === 'tout', scoreSeul: c.qualif === 'seul', cdcColle: c.offre === 'tout',
+    prixAuto: c.prix === 'auto', reunionCachee: c.reunions === 'cache', tropLarge: c.perimetre === 'plateforme',
+    chiffreSeul: c.prevision === 'optimiste', preuveFaible: c.preuve === 'externe'
+  };
+  /* Question du jury : le point le plus faible */
+  const faiblesse = { risque: j.risque, charge: j.charge, confiance: 100 - j.confiance, sobriete: 100 - j.sobriete };
+  const faible = Object.keys(faiblesse).sort((a, b) => faiblesse[b] - faiblesse[a])[0];
+  return { j, variantes, drap, faible };
+}
+function niveau(k, x) {
+  const g = JAUGES[k], r = g.sens < 0 ? (x <= 30 ? 0 : x <= 50 ? 1 : x <= 64 ? 2 : 3) : (x >= 70 ? 0 : x >= 50 ? 1 : x >= 36 ? 2 : 3);
+  return [['vert', 'neutre', 'ambre', 'rouge'][r], g.niv[r]];
+}
+function alertes(C) {
+  const a = [], d = C.drap, j = C.j;
+  if (d.donneesReelles) a.push(['rouge', `Données réelles : change ton choix à l'étape 2 avant d'aller plus loin.`, 'filrouge']);
+  if (d.cdcColle) a.push(['rouge', `Cahier des charges du client chargé sans accord : relis ton engagement de confidentialité.`, 'atelier1']);
+  if (d.decideursFiches) a.push(['rouge', `Décideurs fichés sans objectif précis : ne garde que leur fonction.`, 'atelier1']);
+  if (d.reunionCachee) a.push(['rouge', `Réunions transcrites à l'insu des participants.`, 'atelier2']);
+  if (d.scoreSeul) a.push(['orange', `Affaires écartées par le score seul : prévois une revue humaine.`, 'atelier1']);
+  if (d.prixAuto) a.push(['orange', `Remises accordées sans validation : fixe un seuil.`, 'atelier2']);
+  if (d.chiffreSeul) a.push(['orange', `Chiffre présenté sans fourchette ni hypothèses.`, 'fabrique']);
+  if (d.tropLarge || j.charge >= 65) a.push(['orange', `Périmètre trop large pour le 27 novembre.`, 'fabrique']);
+  if (j.sobriete <= 35) a.push(['orange', `Ton outil collecte ou calcule plus que nécessaire.`, 'dossier']);
+  if (j.confiance <= 35) a.push(['orange', `Confiance fragile : que sait le client de ton outil ?`, 'dossier']);
+  if (d.preuveFaible) a.push(['orange', `Retour sur investissement sans mesure personnelle.`, 'dossier']);
+  const sansJustif = Object.keys(DECISIONS).filter(id => S.choix[id] && !rempli('j_' + id)).length;
+  if (sansJustif) a.push(['info', sansJustif === 1 ? `Un choix reste sans justification.` : sansJustif + ` choix restent sans justification.`, null]);
+  return a;
+}
+
+/* ───────── Registre et aides de rendu ───────── */
+const REG = { etapes: {}, champs: {}, decisions: {}, scenes: {} };
+let CH = null; /* chapitre en cours de rendu */
+
+function champ(cle, libelle, o) {
+  o = o || {};
+  REG.champs[cle] = { l: libelle, ch: CH, requis: !!o.requis };
+  const val = v(cle, o.defaut);
+  const facultatif = o.requis ? '' : ' <em>(facultatif)</em>';
+  let saisie;
+  if (o.type === 'zone') saisie = `<textarea data-champ="${cle}" rows="${o.lignes || 3}" placeholder="${esc(o.ex || '')}">${esc(val)}</textarea>`;
+  else if (o.type === 'liste') saisie = `<select data-champ="${cle}">${[['', 'Choisir…']].concat(o.options).map(x => `<option value="${esc(x[0])}"${String(val) === String(x[0]) ? ' selected' : ''}>${esc(x[1])}</option>`).join('')}</select>`;
+  else saisie = `<input type="text"${o.type === 'nombre' ? ' inputmode="decimal"' : ''} data-champ="${cle}" value="${esc(val)}" placeholder="${esc(o.ex || '')}" autocomplete="off">`;
+  return `<label class="champ${o.large ? ' large' : ''}"><span class="l">${libelle}${o.sansMention ? '' : facultatif}</span>${saisie}${o.aide ? `<span class="aide">${o.aide}</span>` : ''}</label>`;
+}
+function coche(cle, libelle, defaut) {
+  REG.champs[cle] = { l: libelle, ch: CH, requis: false, coche: true };
+  const on = v(cle, defaut ? 'oui' : 'non') === 'oui';
+  return `<label class="coche"><input type="checkbox" data-coche="${cle}"${on ? ' checked' : ''}><span>${libelle}</span></label>`;
+}
+const estCoche = (cle, defaut) => v(cle, defaut ? 'oui' : 'non') === 'oui';
+
+function etape(id, titre, duree, corps) {
+  REG.etapes[id] = CH;
+  const fait = !!S.faits[id];
+  return `<section class="bloc etape${fait ? ' faite' : ''}" id="e-${id}">
+    <div class="etape-tete"><h2>${titre}${duree ? `<span class="duree">${duree}</span>` : ''}</h2>
+    <label class="fait"><input type="checkbox" data-fait="${id}"${fait ? ' checked' : ''}>Fait</label></div>
+    ${corps}</section>`;
+}
+function bloc(titre, corps, classe) { return `<section class="bloc${classe ? ' ' + classe : ''}">${titre ? `<h2>${titre}</h2>` : ''}${corps}</section>`; }
+function liens(ids) { return `<ul class="sources">${ids.map(i => `<li><a href="${SOURCES[i].u}" target="_blank" rel="noopener">${SOURCES[i].t}</a></li>`).join('')}</ul>`; }
+function repere(titre, corps, ids) {
+  return `<section class="bloc repere"><h2>${titre}</h2>${corps}${ids ? liens(ids) + `<p class="verif">Repères vérifiés le ${VERIFIE_LE} sur les sources officielles. Le droit change : relis la source avant de la citer.</p>` : ''}</section>`;
+}
+function tirets(items) { return `<ul class="tirets">${items.map((x, i) => `<li>${x}${/[?!]$/.test(x) ? '' : i === items.length - 1 ? '.' : ' ;'}</li>`).join('')}</ul>`; }
+function pas(items) { return `<ol class="pas">${items.map(x => `<li>${x}</li>`).join('')}</ol>`; }
+
+const CONSIGNES = {};
+function consigne(id, titre) {
+  return `<div class="consigne"><div class="consigne-tete"><b>${titre}</b><button type="button" class="btn" data-copier="${id}">Copier</button></div><pre data-consigne="${id}" tabindex="0"></pre></div>`;
+}
+const VIDE = '⟦à compléter⟧';
+const ou = (cle, defaut) => rempli(cle) ? String(v(cle)).trim() : (defaut || VIDE);
+
+function effets(e) {
+  const k = Object.keys(e || {}); if (!k.length) return '';
+  return `<div class="effets">${k.map(x => { const bon = (e[x] * JAUGES[x].sens) > 0; return `<span class="effet ${bon ? 'bon' : 'mauvais'}">${JAUGES[x].l} ${e[x] > 0 ? '+' : '−'}${Math.abs(e[x])}</span>`; }).join('')}</div>`;
+}
+function decision(id) {
+  REG.decisions[id] = CH;
+  REG.champs['j_' + id] = { l: 'Justification', ch: CH, requis: true };
+  const d = DECISIONS[id], choisi = S.choix[id], o = d.options.find(x => x.id === choisi);
+  return `<section class="bloc decision" id="d-${id}">
+    <p class="genre">Un choix à faire</p><p class="q">${d.q}</p>
+    <div class="options" role="radiogroup" aria-label="${esc(d.q)}">${d.options.map(x => `<label class="option${x.id === choisi ? ' choisi' : ''}"><input type="radio" name="d-${id}" value="${x.id}" data-decision="${id}"${x.id === choisi ? ' checked' : ''}><span>${x.l}</span></label>`).join('')}</div>
+    ${o ? `<div class="suite${o.grave ? ' grave' : ''}">${o.suite}</div>${effets(o.e)}
+      <div class="champs"><label class="champ large"><span class="l">Justifie ton choix en trois lignes</span><textarea data-champ="j_${id}" rows="3" placeholder="Ce que j'ai lu, ce que j'en conclus pour mon cas.">${esc(v('j_' + id))}</textarea>${d.sources ? `<span class="aide">Appuie-toi sur un texte. Tu peux changer d'avis : l'état du projet se recalcule.</span>` : `<span class="aide">Tu peux changer d'avis : l'état du projet se recalcule.</span>`}</label></div>
+      ${d.sources ? liens(d.sources) : ''}` : `<p class="note" style="margin-top:12px">Ton choix modifie l'état du projet, affiché à droite.</p>`}
+  </section>`;
+}
+function scene(id, C) {
+  REG.scenes[id] = CH;
+  const sc = SCENES[id], va = C.variantes[id];
+  if (!va) return `<section class="bloc scene" id="s-${id}"><p class="genre">Une scène</p><h2>${sc.titre}</h2><p class="verrou">Fais d'abord tes choix ci-dessus : la scène en dépend.</p></section>`;
+  const rep = S.scenes[id] && S.scenes[id][va.id], r = va.reps.find(x => x.id === rep);
+  return `<section class="bloc scene" id="s-${id}"><p class="genre">Une scène, née de tes choix</p><h2>${sc.titre}</h2><p>${va.texte}</p>
+    <div class="reps">${va.reps.map(x => `<button type="button" class="rep${x.id === rep ? ' choisi' : ''}" data-scene="${id}" data-variante="${va.id}" data-rep="${x.id}" aria-pressed="${x.id === rep}">${x.l}</button>`).join('')}</div>
+    ${r ? `<div class="suite">${r.suite}</div>${effets(r.e)}` : ''}</section>`;
+}
+
+/* Progression */
+function progression(ch, C) {
+  let total = 0, fait = 0;
+  Object.keys(REG.etapes).forEach(id => { if (REG.etapes[id] === ch) { total++; if (S.faits[id]) fait++; } });
+  Object.keys(REG.decisions).forEach(id => { if (REG.decisions[id] === ch) { total++; if (S.choix[id]) fait++; } });
+  Object.keys(REG.scenes).forEach(id => { if (REG.scenes[id] === ch) { total++; const va = C.variantes[id]; if (va && S.scenes[id] && S.scenes[id][va.id]) fait++; } });
+  return [fait, total];
+}
+
+/* ───────── Schémas simplifiés des écrans ───────── */
+const G = {
+  r: (x, y, w, h, f, s) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${f || '#fff'}"${s ? ` stroke="${s}"` : ''}/>`,
+  t: (x, y, txt, o) => { o = o || {}; return `<text x="${x}" y="${y}" font-size="${o.s || 12}" fill="${o.c || '#475569'}"${o.b ? ' font-weight="700"' : ''}${o.a ? ` text-anchor="${o.a}"` : ''}>${txt}</text>`; },
+  h: (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#ECFDF5" stroke="#059669" stroke-width="2.5"/>`,
+  p: (n, x, y) => `<circle cx="${x}" cy="${y}" r="11" fill="#047857" stroke="#fff" stroke-width="2"/><text x="${x}" y="${y + 4}" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">${n}</text>`,
+  l: (x, y, w) => `<rect x="${x}" y="${y}" width="${w}" height="7" fill="#E2E8F0"/>`
+};
+function barreLaterale(actif) {
+  const it = (y, txt, on) => (on ? G.h(8, y - 17, 164, 26) : '') + G.t(20, y, txt, { c: on ? '#065F46' : '#475569', b: on });
+  return G.r(0, 0, 180, 340, '#F1F5F9') + `<line x1="180" y1="0" x2="180" y2="340" stroke="#CBD5E1"/>`
+    + G.t(18, 28, 'Claude', { b: true, s: 14, c: '#0F172A' })
+    + G.r(12, 42, 156, 28, '#fff', '#CBD5E1') + G.t(22, 61, '+ Nouvelle conversation')
+    + it(98, 'Projets', actif === 'projets') + it(126, 'Artefacts', false)
+    + G.t(20, 160, 'Récents', { c: '#94A3B8', s: 11 }) + G.l(20, 172, 120) + G.l(20, 188, 96) + G.l(20, 204, 132);
+}
+const SCHEMAS = {
+  parametres: {
+    titre: `Ouvrir les paramètres de Claude`, capture: 'claude-parametres.png',
+    svg: () => barreLaterale()
+      + G.r(12, 208, 196, 82, '#fff', '#CBD5E1') + G.h(18, 214, 184, 26) + G.t(30, 232, 'Paramètres', { c: '#065F46', b: true })
+      + G.t(30, 256, 'Langue') + G.t(30, 278, 'Se déconnecter')
+      + G.h(8, 298, 164, 34) + `<circle cx="28" cy="315" r="10" fill="#94A3B8"/>` + G.t(46, 319, 'Ton nom', { c: '#0F172A', b: true })
+      + G.t(410, 140, 'Comment puis-je t’aider ?', { s: 18, c: '#0F172A', a: 'middle' })
+      + G.r(250, 164, 320, 56, '#fff', '#CBD5E1') + G.t(264, 196, 'Écris ton message…', { c: '#94A3B8' })
+      + G.p(1, 172, 298) + G.p(2, 202, 214),
+    legende: [`Clique sur ton nom, en bas à gauche.`, `Choisis « Paramètres ».`]
+  },
+  instructions: {
+    titre: `Coller tes préférences personnelles`, capture: 'claude-instructions.png',
+    svg: () => G.r(0, 0, 640, 340, '#fff') + G.t(24, 34, 'Paramètres', { b: true, s: 16, c: '#0F172A' })
+      + `<line x1="0" y1="52" x2="640" y2="52" stroke="#E2E8F0"/><line x1="190" y1="52" x2="190" y2="340" stroke="#E2E8F0"/>`
+      + G.t(24, 84, 'Général') + G.h(14, 96, 162, 28) + G.t(24, 115, 'Profil', { c: '#065F46', b: true })
+      + G.t(24, 150, 'Confidentialité') + G.t(24, 180, 'Capacités') + G.t(24, 210, 'Connecteurs')
+      + G.t(214, 84, 'Instructions pour Claude', { b: true, s: 14, c: '#0F172A' })
+      + G.t(214, 104, 'Tes préférences s’appliquent à toutes tes conversations.', { s: 11, c: '#64748B' })
+      + G.h(214, 116, 400, 150) + G.l(228, 134, 300) + G.l(228, 152, 340) + G.l(228, 170, 260) + G.l(228, 188, 320) + G.l(228, 206, 180)
+      + G.r(514, 282, 100, 32, '#047857') + G.t(564, 303, 'Enregistrer', { c: '#fff', b: true, a: 'middle' })
+      + G.p(1, 176, 96) + G.p(2, 614, 116) + G.p(3, 614, 282),
+    legende: [`Ouvre l'onglet « Profil ». Selon ta version, il peut s'appeler « Général » ou « Compte ».`, `Colle tes préférences dans le champ « Instructions pour Claude ».`, `Enregistre, si un bouton s'affiche.`]
+  },
+  projet: {
+    titre: `Créer ton projet et y ranger tes textes`, capture: 'claude-projet.png',
+    svg: () => barreLaterale('projets')
+      + G.t(204, 34, 'Projets', { b: true, s: 16, c: '#0F172A' }) + G.h(494, 14, 132, 30) + G.t(560, 34, '+ Nouveau projet', { c: '#065F46', b: true, a: 'middle' })
+      + `<line x1="180" y1="58" x2="640" y2="58" stroke="#E2E8F0"/>`
+      + G.t(204, 86, 'Dans le projet « Atelier vente »', { s: 11, c: '#64748B' })
+      + G.r(204, 100, 232, 64, '#fff', '#CBD5E1') + G.t(216, 136, 'Écris ton message…', { c: '#94A3B8' })
+      + G.l(204, 186, 200) + G.l(204, 204, 160) + G.l(204, 222, 190)
+      + G.h(456, 100, 170, 92) + G.t(468, 122, 'Instructions', { b: true, c: '#065F46' }) + G.l(468, 136, 130) + G.l(468, 152, 110) + G.l(468, 168, 140)
+      + G.h(456, 206, 170, 92) + G.t(468, 228, 'Fichiers', { b: true, c: '#065F46' }) + G.t(606, 228, '+', { b: true, c: '#065F46', s: 16, a: 'middle' }) + G.r(468, 242, 64, 40, '#fff', '#A7F3D0') + G.r(540, 242, 64, 40, '#fff', '#A7F3D0')
+      + G.p(1, 172, 81) + G.p(2, 494, 14) + G.p(3, 456, 100) + G.p(4, 456, 206),
+    legende: [`Dans la barre de gauche, ouvre « Projets ».`, `Clique sur « Nouveau projet » et nomme-le « Atelier vente ».`, `Colle les instructions du projet dans la zone « Instructions ».`, `Ajoute ta fiche de contexte dans « Fichiers », avec le bouton « + ».`]
+  },
+  artefact: {
+    titre: `Récupérer ton application`, capture: 'claude-artefact.png',
+    svg: () => G.r(0, 0, 640, 340, '#fff') + `<line x1="270" y1="0" x2="270" y2="340" stroke="#CBD5E1"/>`
+      + G.r(60, 22, 190, 44, '#F1F5F9') + G.l(72, 34, 150) + G.l(72, 48, 110)
+      + G.l(20, 90, 220) + G.l(20, 106, 190) + G.l(20, 122, 210)
+      + G.r(20, 142, 180, 36, '#fff', '#CBD5E1') + G.t(32, 165, 'Segmenteur.html', { c: '#0F172A', b: true })
+      + G.r(20, 276, 230, 46, '#fff', '#CBD5E1') + G.t(32, 304, 'Écris ton message…', { c: '#94A3B8' })
+      + G.r(270, 0, 370, 44, '#F1F5F9') + G.t(286, 27, 'Segmenteur', { c: '#0F172A', b: true })
+      + G.h(484, 8, 70, 28) + G.t(519, 27, 'Copier', { c: '#065F46', b: true, a: 'middle' })
+      + G.h(562, 8, 66, 28) + G.t(595, 27, '⤓', { c: '#065F46', b: true, a: 'middle', s: 15 })
+      + G.h(286, 60, 338, 262) + G.r(302, 78, 306, 34, '#fff', '#A7F3D0') + G.l(314, 92, 160)
+      + G.r(302, 124, 146, 80, '#fff', '#A7F3D0') + G.r(462, 124, 146, 80, '#fff', '#A7F3D0') + G.l(302, 222, 306) + G.l(302, 240, 260) + G.l(302, 258, 290) + G.l(302, 276, 200)
+      + G.p(1, 286, 60) + G.p(2, 484, 8) + G.p(3, 628, 8),
+    legende: [`L'aperçu s'ouvre à droite de la conversation. Teste ton outil ici.`, `« Copier » récupère tout le code.`, `Le bouton de téléchargement enregistre le fichier sur ton ordinateur.`]
+  },
+  sheets: {
+    titre: `Ouvrir Apps Script depuis Google Sheets`, capture: 'sheets-extensions.png',
+    svg: () => {
+      const menus = ['Fichier', 'Édition', 'Affichage', 'Insertion', 'Format', 'Données', 'Outils'];
+      let x = 16, m = '';
+      menus.forEach(t => { m += G.t(x, 62, t); x += t.length * 6.6 + 16; });
+      let grille = '';
+      for (let i = 0; i < 8; i++) grille += `<line x1="0" y1="${100 + i * 28}" x2="640" y2="${100 + i * 28}" stroke="#E2E8F0"/>`;
+      for (let i = 0; i < 7; i++) grille += `<line x1="${40 + i * 100}" y1="100" x2="${40 + i * 100}" y2="300" stroke="#E2E8F0"/>`;
+      return G.r(0, 0, 640, 300, '#fff') + G.t(16, 28, 'Mes données – Google Sheets', { b: true, s: 14, c: '#0F172A' }) + m
+        + grille + G.h(x - 8, 44, 86, 28) + G.t(x, 62, 'Extensions', { c: '#065F46', b: true })
+        + G.r(x - 8, 76, 200, 96, '#fff', '#CBD5E1') + G.t(x + 6, 98, 'Modules complémentaires') + G.t(x + 6, 124, 'Macros')
+        + G.h(x - 2, 136, 188, 28) + G.t(x + 6, 155, 'Apps Script', { c: '#065F46', b: true })
+        + G.p(1, x + 78, 44) + G.p(2, x + 186, 136);
+    },
+    legende: [`Dans ta feuille Google Sheets, ouvre le menu « Extensions ».`, `Choisis « Apps Script ». L'éditeur s'ouvre dans un nouvel onglet.`]
+  },
+  appsscript: {
+    titre: `Coller, enregistrer et déployer dans Apps Script`, capture: 'apps-script-editeur.png',
+    svg: () => G.r(0, 0, 640, 320, '#fff') + G.r(0, 0, 640, 46, '#F1F5F9') + G.t(16, 29, 'Apps Script', { b: true, s: 14, c: '#0F172A' }) + G.t(110, 29, 'Mon outil de vente')
+      + G.h(530, 8, 96, 30) + G.t(578, 28, 'Déployer ▾', { c: '#065F46', b: true, a: 'middle' })
+      + `<line x1="170" y1="46" x2="170" y2="320" stroke="#CBD5E1"/>`
+      + G.t(16, 74, 'Fichiers', { b: true, c: '#0F172A' }) + G.h(128, 58, 28, 24) + G.t(142, 75, '+', { b: true, c: '#065F46', s: 16, a: 'middle' })
+      + G.r(8, 90, 154, 26, '#E2E8F0') + G.t(18, 107, 'Code.gs', { c: '#0F172A' }) + G.t(18, 135, 'Index.html')
+      + G.r(170, 46, 470, 36, '#fff') + `<line x1="170" y1="82" x2="640" y2="82" stroke="#E2E8F0"/>`
+      + G.h(184, 52, 104, 24) + G.t(236, 69, 'Enregistrer', { c: '#065F46', b: true, a: 'middle' }) + G.t(304, 69, '▷ Exécuter')
+      + G.t(186, 108, '1', { c: '#94A3B8', s: 11 }) + G.l(206, 101, 220) + G.t(186, 128, '2', { c: '#94A3B8', s: 11 }) + G.l(222, 121, 260)
+      + G.t(186, 148, '3', { c: '#94A3B8', s: 11 }) + G.l(222, 141, 180) + G.t(186, 168, '4', { c: '#94A3B8', s: 11 }) + G.l(206, 161, 60)
+      + G.t(186, 188, '5', { c: '#94A3B8', s: 11 }) + G.t(186, 208, '6', { c: '#94A3B8', s: 11 }) + G.l(206, 201, 240) + G.t(186, 228, '7', { c: '#94A3B8', s: 11 }) + G.l(222, 221, 300)
+      + G.p(1, 128, 58) + G.p(2, 184, 52) + G.p(3, 530, 8),
+    legende: [`Le bouton « + » ajoute un fichier. Choisis « HTML » et nomme-le « Index ».`, `Colle le code dans chaque fichier, puis enregistre.`, `Clique sur « Déployer », puis « Nouveau déploiement », type « Application Web ».`]
+  }
+};
+function schema(id) {
+  const s = SCHEMAS[id];
+  const h = id === 'sheets' ? 300 : id === 'appsscript' ? 320 : 340;
+  return `<figure class="schema" data-capture="captures/${s.capture}"><svg viewBox="0 0 640 ${h}" role="img" aria-label="${esc(s.titre)}"><rect width="640" height="${h}" fill="#fff"/>${s.svg()}<rect x=".5" y=".5" width="639" height="${h - 1}" fill="none" stroke="#CBD5E1"/></svg>
+    <figcaption><ol>${s.legende.map(x => `<li>${x}</li>`).join('')}</ol><p class="note">Schéma simplifié : la disposition peut différer sur ton écran.</p></figcaption></figure>`;
+}
+const capturesVues = {};
+function chargerCaptures(racine) {
+  if (location.protocol === 'file:') return;
+  racine.querySelectorAll('figure[data-capture]').forEach(f => {
+    const src = f.getAttribute('data-capture');
+    const poser = () => { if (!f.querySelector('img')) { const i = document.createElement('img'); i.src = src; i.alt = 'Capture d’écran : ' + f.querySelector('svg').getAttribute('aria-label'); f.insertBefore(i, f.querySelector('figcaption')); } };
+    if (capturesVues[src] === true) return poser();
+    if (capturesVues[src] === false) return;
+    const img = new Image();
+    img.onload = () => { capturesVues[src] = true; poser(); };
+    img.onerror = () => { capturesVues[src] = false; };
+    img.src = src;
+  });
+}
+
+/* ───────── Consignes à copier dans Claude ───────── */
+const prenom = () => rempli('id_nom') ? String(v('id_nom')).trim().split(/\s+/)[0] : VIDE;
+const particuliers = () => v('fr_clients') === 'part';
+const LIB_CLIENTS = { pro: 'des professionnels', part: 'des particuliers', mixte: 'des professionnels et des particuliers' };
+const libChoix = id => { const o = DECISIONS[id].options.find(x => x.id === S.choix[id]); return o ? o.l : VIDE; };
+
+/* Chaque consigne renvoie [texte, données brutes] : la typographie ne touche pas aux données */
+Object.assign(CONSIGNES, {
+  instructions: () => {
+    const m = [];
+    if (estCoche('ip_questions', true)) m.push(`Pose-moi au plus trois questions avant de produire quoi que ce soit.`);
+    if (estCoche('ip_plan', true)) m.push(`Propose un plan court avant de coder, et attends mon accord.`);
+    if (estCoche('ip_complet', true)) m.push(`Livre toujours des fichiers complets, jamais des extraits.`);
+    if (estCoche('ip_change', true)) m.push(`Après chaque modification, dis en une phrase ce qui a changé.`);
+    if (estCoche('ip_doutes', true)) m.push(`Signale tes doutes et les calculs que je dois vérifier à la main.`);
+    if (estCoche('ip_contredire', true)) m.push(`Contredis-moi quand mon idée est trop large ou risquée.`);
+    const niv = v('ip_niveau') === 'initie' ? `J'ai déjà modifié une page web ou un tableur avancé.` : `Je débute : explique chaque étape simplement.`;
+    return [`Tu es mon assistant de conception d'outils d'aide à la vente.
+
+QUI JE SUIS
+Je m'appelle ${prenom()}. Je suis ${ou('id_poste')} chez ${ou('id_entreprise')}, secteur : ${ou('id_secteur')}. Je ne suis pas développeur. ${niv}
+
+CE QUE NOUS FAISONS
+Je conçois une application simple qui aide à vendre ou à décider. Je la construis par versions : une fonction qui marche, puis la suivante.
+
+TA MÉTHODE
+${m.map(x => '– ' + x).join('\n')}
+
+GARDE-FOUS
+– Travaille uniquement avec des données fictives. Si je colle des données qui semblent réelles (noms, e-mails, téléphones), arrête-toi et préviens-moi.
+– Affiche toujours la règle de calcul d'un score, d'un classement ou d'une prévision.
+– Ne présente jamais une estimation comme un fait. Dis ce que tu supposes.
+– Ne fais jamais ceci : ${ou('ip_jamais')}
+
+STYLE
+– Réponds en français, en phrases courtes. ${v('ip_adresse') === 'vous' ? 'Vouvoie-moi.' : 'Tutoie-moi.'}
+– Ma façon de travailler : ${ou('ip_travail')}`];
+  },
+  test_instructions: () => [`Avant de commencer, réponds en cinq lignes. Quel est ton rôle dans ce projet ? Quelles règles suis-tu ? Que refuses-tu de faire ?`],
+  fiche: () => [`FICHE DE CONTEXTE COMMERCIAL
+Entreprise : ${ou('id_entreprise')}
+Secteur : ${ou('id_secteur')}
+Mon poste : ${ou('id_poste')}
+Offre principale : ${ou('fr_offre')}
+Clients : ${LIB_CLIENTS[v('fr_clients')] || VIDE}
+Cycle de vente : ${ou('fr_cycle')}
+Canaux de contact : ${ou('fr_canaux')}
+Équipe commerciale : ${ou('fr_equipe', 'non précisé')}
+Outils actuels : ${ou('fr_outils', 'non précisé')}
+Données disponibles : ${ou('fr_donnees')}
+Problème commercial n° 1 : ${ou('fr_probleme')}
+Indicateur à améliorer : ${ou('fr_indicateur')}`],
+  pistes: () => [`En t'appuyant sur ma fiche de contexte, propose trois tâches de vente où une application simple m'aiderait.
+Pour chacune, donne en une ligne : l'utilisateur, les données nécessaires, le résultat produit, le risque principal.
+Termine par la piste que tu choisirais, et dis pourquoi. Ne code rien.`],
+  jeu_fictif: () => [`Fabrique un jeu de données fictif adapté à ma fiche de contexte.
+Format : 40 lignes, CSV, séparateur point-virgule, colonnes réalistes pour mon activité.
+Aucun nom de personne, aucune entreprise existante.
+Glisse trois anomalies sans me dire lesquelles : je dois les trouver.
+Donne d'abord la liste des colonnes, avec leur définition.`],
+  a1_analyse: () => [`Voici un jeu de données fictif de clients (CSV, séparateur point-virgule).
+
+1. Décris chaque colonne en une ligne. Signale les anomalies que tu vois.
+2. Propose trois façons de segmenter ces clients. Pour chacune : critères, règle de calcul, nombre de clients par segment.
+3. Recommande une segmentation et justifie-la en trois phrases, pour ce contexte : ${ou('fr_offre', 'voir ma fiche de contexte')}.
+4. Montre le calcul détaillé pour deux clients de ton choix.
+Ne code rien pour l'instant. Si une donnée manque, dis-le au lieu de supposer.
+
+[DONNÉES]`, jeuClients(v('id_nom'), particuliers()).csv],
+  a1_outil: () => [`Construis un outil nommé « Segmenteur ».
+Il tient dans un seul fichier HTML, avec le CSS et le JavaScript, sans bibliothèque externe. Il fonctionne hors connexion.
+
+Ce que fait l'outil :
+– je colle un fichier CSV (séparateur point-virgule) dans une zone de texte ;
+– l'outil calcule pour chaque client un score de récence, de fréquence et de montant, de 1 à 3 ;
+– il classe chaque client dans un segment, selon cette règle : ${ou('a1_segmentation')} ;
+– il affiche un tableau triable, le nombre de clients par segment et une action commerciale par segment ;
+– il affiche la règle de calcul en clair, pour que je la vérifie à la main ;
+– il signale les lignes incomplètes ou incohérentes, au lieu de les ignorer.
+
+Contraintes : interface en français, sobre, lisible sur téléphone. Données d'exemple fictives intégrées. Aucune donnée envoyée sur Internet.
+Livre le fichier complet. Dis ensuite en trois lignes comment le tester.`],
+  a1_messages: () => [`Pour chaque segment de notre segmentation, rédige un e-mail de 80 mots au plus. Contexte : ${ou('fr_offre', 'voir ma fiche de contexte')}, destinataires : ${LIB_CLIENTS[v('fr_clients')] || 'voir ma fiche de contexte'}.
+Règles :
+– aucune promesse chiffrée ;
+– aucun fait absent de ma fiche de contexte ;
+– une seule action demandée par message ;
+– une phrase simple pour refuser les messages suivants.
+Sous chaque e-mail, liste ce que tu as supposé sans le savoir.`],
+  a2_classer: () => [`Voici des messages de clients fictifs (CSV, séparateur point-virgule).
+
+Classe chaque message dans un tableau : identifiant, thème, ton (positif, neutre, négatif), urgence de 1 à 3, action proposée.
+Ajoute une colonne « doute » : écris « oui » quand le ton est ambigu ou ironique, et dis pourquoi.
+Signale à part les messages qui contiennent une donnée personnelle ou une situation sensible.
+Ne réponds pas aux clients. Ne déduis rien sur leur vie privée.
+
+[MESSAGES]`, jeuMessages(v('id_nom')).csv],
+  a2_tri: () => [`Construis un outil nommé « Tri des réclamations ».
+Il tient dans un seul fichier HTML, sans bibliothèque externe et sans appel à une IA. Il fonctionne hors connexion.
+
+Ce que fait l'outil :
+– je colle des messages de clients, un par ligne ou en CSV avec point-virgule ;
+– l'outil propose pour chacun un thème et une urgence, à partir de mots-clés que je peux modifier ;
+– il place en tête les messages urgents et marque « à lire par un conseiller » les cas sensibles ;
+– il propose un modèle de réponse par thème, que le conseiller modifie avant envoi ;
+– il n'envoie rien : le conseiller copie la réponse qu'il a validée.
+
+Affiche la liste des mots-clés et la règle d'urgence. Données d'exemple fictives intégrées. Interface en français.
+Livre le fichier complet, puis cite trois messages qui tromperaient ton outil.`],
+  a2_agent: () => [`Construis une maquette d'agent conversationnel pour ce contexte : ${ou('fr_offre', 'voir ma fiche de contexte')}.
+Un seul fichier HTML, sans bibliothèque externe et sans appel à une IA : les réponses suivent un arbre de dialogue.
+
+Règles de l'agent :
+– son premier message annonce qu'il est un assistant automatique ;
+– il traite cinq demandes fréquentes : suivi de commande, facture, horaires, modification, réclamation ;
+– un bouton « Parler à un conseiller » reste visible en permanence ;
+– il passe la main dès que le client exprime de la colère, une urgence ou une situation sensible ;
+– il ne promet ni remboursement ni geste commercial.
+
+Affiche l'arbre de dialogue sous la maquette, pour que je le corrige. Interface en français.
+Livre le fichier complet, puis liste trois situations où l'agent répondrait mal.`],
+  cadrage: () => [`Je veux construire l'outil décrit ci-dessous. Lis mon cahier de commande.
+Pose-moi au plus trois questions si un point bloque. Propose ensuite un plan court : écrans, données, règles de calcul, limites.
+Ne code rien avant mon accord.
+
+CAHIER DE COMMANDE
+Nom de l'outil : ${ou('cc_nom')}
+Utilisateur : ${ou('cc_utilisateur')}
+Problème à résoudre : ${ou('cc_probleme')}
+Données en entrée : ${ou('cc_entrees')}
+Résultat attendu : ${ou('cc_resultat')}
+Règles de calcul : ${ou('cc_regles')}
+Ce que l'outil ne fait pas : ${ou('cc_hors')}
+Place de l'humain : ${ou('cc_humain')}
+Ambition de la version 1 : ${libChoix('perimetre')}
+Base technique : ${libChoix('technique')}`],
+  construction: () => {
+    const corr = rempli('cc_corrections') ? `, avec ces corrections : ${String(v('cc_corrections')).trim()}` : '';
+    const t = S.choix.technique;
+    if (t === 'sheets') return [`Ton plan me convient${corr}. Construis la version 1 avec Google Apps Script.
+
+Contraintes :
+– deux fichiers complets, Code.gs et Index.html ;
+– l'outil lit et écrit dans une feuille Google Sheets : propose les onglets et les colonnes ;
+– une fonction crée la feuille et des données d'exemple fictives, sans jamais écraser des données existantes ;
+– les règles de calcul s'affichent en clair dans l'outil ;
+– un message clair s'affiche quand une donnée manque ou semble fausse ;
+– interface en français, sobre, lisible sur téléphone.
+
+Donne ensuite la procédure d'installation, en étapes numérotées, pour un débutant.
+Elle dit où coller chaque fichier, comment enregistrer, autoriser et déployer. Elle dit aussi quoi refaire après une modification.`];
+    if (t === 'ia') return [`Ton plan me convient${corr}. Construis la version 1 sous forme d'artefact.
+
+Contraintes :
+– l'outil appelle l'IA pour une seule étape, celle où une règle écrite ne suffit pas : dis laquelle et pourquoi ;
+– toutes les autres étapes suivent des règles affichées en clair ;
+– avant chaque appel, l'outil montre à l'écran ce qu'il envoie à l'IA ;
+– la réponse de l'IA est présentée comme une proposition, que l'utilisateur valide ou corrige ;
+– des données d'exemple fictives sont intégrées ;
+– interface en français, sobre, lisible sur téléphone.
+
+Livre l'artefact complet. Explique ensuite en cinq lignes comment vérifier un résultat à la main.`];
+    return [`Ton plan me convient${corr}. Construis la version 1.
+
+Contraintes :
+– un seul fichier HTML (HTML, CSS et JavaScript ensemble), sans bibliothèque externe, utilisable hors connexion ;
+– des données d'exemple fictives intégrées, et un moyen de coller ou de saisir les miennes ;
+– les règles de calcul affichées en clair dans l'outil ;
+– un message clair quand une donnée manque ou semble fausse ;
+– aucune donnée envoyée sur Internet ;
+– interface en français, sobre, lisible sur téléphone.
+
+Livre le fichier complet. Explique ensuite en cinq lignes comment vérifier un calcul à la main.`];
+  },
+  modification: () => [`Dans l'outil, modifie seulement ceci : ${VIDE}
+Ne change rien d'autre. Livre le fichier complet. Dis en une phrase ce qui a changé.`],
+  controle: () => [`Contrôle de l'outil.
+1. Voici un cas de test : ${rempli('t1_cas') ? String(v('t1_cas')).trim() : VIDE}. Détaille le calcul pas à pas et donne le résultat attendu.
+2. Cite trois cas où l'outil donnerait un résultat faux ou injuste pour un client.
+3. Dis quelles règles tu as choisies sans que je te les donne.`],
+  apps_script: () => [`Je veux relier mon outil à une feuille Google Sheets avec Google Apps Script. Je débute.
+Ma feuille contient ces colonnes : ${ou('cc_entrees')}.
+Donne-moi deux fichiers complets, Code.gs et Index.html, qui reprennent mon outil actuel.
+L'outil lit les lignes de la feuille, les affiche, puis enregistre les résultats dans un onglet séparé.
+Il n'écrase jamais une donnée existante.
+Donne ensuite la procédure d'installation, en étapes numérotées, pour un débutant :
+– où coller chaque fichier ;
+– comment enregistrer, autoriser et déployer en application web ;
+– quoi refaire après une modification.`],
+  jury: () => [`Voici mon mini-dossier. Joue le rôle d'un jury exigeant, en fin de module.
+Pose-moi cinq questions difficiles sur : l'utilité réelle de l'outil, le retour sur investissement, le cadre légal, l'éthique, les limites.
+Ne donne pas les réponses. Signale chaque affirmation de mon dossier qui manque de preuve.
+
+[MINI-DOSSIER]`, texteDossier()]
+});
+
+function texteConsigne(id) {
+  const r = CONSIGNES[id]();
+  return typo(r[0]) + (r[1] ? '\n' + r[1] : '');
+}
+
+/* ───────── Contenu des chapitres ───────── */
+function jeu(type) {
+  const d = type === 'clients' ? jeuClients(v('id_nom'), particuliers()) : jeuMessages(v('id_nom'));
+  return `<div class="defile"><table class="tab donnees" data-brut><thead><tr>${d.entete.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+    <tbody>${d.corps.slice(0, 5).map(l => `<tr>${l.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    <p class="note">Aperçu : 5 lignes sur ${d.corps.length}. Ton jeu est calculé à partir de ton nom : il diffère de celui de tes coéquipiers.</p>
+    <div class="actions"><button type="button" class="btn" data-copier-jeu="${type}">Copier les données</button><button type="button" class="btn" data-telecharger-jeu="${type}">Télécharger le fichier .csv</button></div>`;
+}
+function tableau(entetes, lignes, classe) {
+  return `<div class="defile"><table class="tab ${classe || ''}"><thead><tr>${entetes.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${lignes.map(l => `<tr>${l.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+const cel = (cle, o) => { o = o || {}; REG.champs[cle] = { l: o.l || cle, ch: CH, requis: !!o.requis };
+  if (o.liste) return `<select data-champ="${cle}" aria-label="${esc(o.l || '')}">${[['', '…']].concat(o.liste).map(x => `<option value="${x[0]}"${v(cle) === x[0] ? ' selected' : ''}>${x[1]}</option>`).join('')}</select>`;
+  if (o.court) return `<input type="text" data-champ="${cle}" value="${esc(v(cle))}" aria-label="${esc(o.l || '')}" autocomplete="off">`;
+  return `<textarea data-champ="${cle}" rows="2" aria-label="${esc(o.l || '')}">${esc(v(cle))}</textarea>`; };
+
+function blocQualif(q) {
+  const cle = 'q_' + q.id, rep = v(cle);
+  REG.champs[cle] = { l: q.q, ch: CH, requis: true };
+  REG.champs['qj_' + q.id] = { l: 'Justification', ch: CH, requis: false };
+  const opt = [['oui', 'Oui'], ['non', 'Non'], ['nsp', 'Je ne sais pas']];
+  return `<div class="qualif" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--trait)">
+    <h3 style="margin-top:0">${q.q}</h3><p class="note" style="margin-top:4px">${q.aide}</p>
+    <div class="actions" role="radiogroup" aria-label="${esc(q.q)}">${opt.map(o => `<button type="button" class="btn${rep === o[0] ? ' ok' : ''}" role="radio" aria-checked="${rep === o[0]}" data-radio="${cle}" data-valeur="${o[0]}">${o[1]}</button>`).join('')}</div>
+    ${rep === 'oui' ? `<div class="suite">${q.oui}</div>${liens(q.sources)}<div class="champs"><label class="champ large"><span class="l">Ta justification</span><textarea data-champ="qj_${q.id}" rows="3" placeholder="La règle qui s'applique, et ce que ton outil prévoit.">${esc(v('qj_' + q.id))}</textarea></label></div>` : ''}
+    ${rep === 'nsp' ? `<div class="suite">Demande à ton tuteur ou au délégué à la protection des données. Note sa réponse, puis tranche.</div><div class="champs"><label class="champ large"><span class="l">La réponse obtenue</span><textarea data-champ="qj_${q.id}" rows="2">${esc(v('qj_' + q.id))}</textarea></label></div>` : ''}
+  </div>`;
+}
+
+const CHAPITRES = [
+/* ── Départ ── */
+{ id: 'depart', nav: 'Départ', groupe: 0, seance: 'Module de 14 heures – 13 octobre et 27 novembre 2026',
+  titre: `Conçois ton outil d'aide à la vente`,
+  chapo: `En deux séances, tu règles Claude, tu explores l'IA dans la vente, puis tu construis ta propre application. Tu réfléchis en équipe. Tu construis seul.`,
+  rendu: () => bloc(`Les deux séances`, `<ul class="parcours">
+      <li><b>13 octobre 2026, de 8 h 30 à 16 h 30</b>Tu règles Claude, tu choisis ton fil rouge, tu suis deux ateliers. Tu repars avec la première version de ton application.</li>
+      <li class="entre"><b>Entre les deux séances</b>Tu fais tester ton outil, tu mesures le temps gagné, tu complètes ton dossier.</li>
+      <li><b>27 novembre 2026, de 8 h 30 à 16 h 30</b>Tu suis deux nouveaux ateliers, tu termines ton outil, tu le présentes au groupe.</li></ul>`)
+    + etape('depart_identite', `Dis qui tu es`, '', `<p>Ces informations servent à tes consignes et à ton dossier. Elles restent sur ton appareil : la page n'envoie rien sur Internet.</p>
+      <div class="champs">${champ('id_nom', 'Prénom et nom', { requis: true, sansMention: true })}${champ('id_equipe', `Nom de ton équipe`, { requis: true, sansMention: true })}
+      ${champ('id_coequipiers', `Tes coéquipiers`, { ex: 'Prénoms', requis: true, sansMention: true })}${champ('id_poste', `Ton poste en alternance`, { ex: 'Chargé de clientèle', requis: true, sansMention: true })}
+      ${champ('id_entreprise', `Ton entreprise`, { ex: 'Nom réel ou « Entreprise X »', requis: true, sansMention: true })}${champ('id_secteur', `Son secteur`, { ex: 'Négoce de matériaux', requis: true, sansMention: true })}</div>`)
+    + bloc(`Comment marche cette page`, tirets([
+        `chaque étape contient des actions à cocher et des consignes à copier dans Claude`,
+        `chaque choix modifie l'état de ton projet : risque juridique, charge de travail, confiance, sobriété`,
+        `tes choix sont ceux d'un ingénieur d'affaires : cibler, qualifier, répondre, chiffrer, suivre, prévoir`,
+        `ils déclenchent des scènes : deux étudiants ne vivront pas la même histoire`,
+        `ton travail s'enregistre seul sur cet appareil`]) + `
+      <h3>Le fichier de projet, ta vraie sauvegarde</h3><p>Le navigateur peut tout perdre : cache vidé, autre ordinateur. Enregistre ton fichier de projet à chaque fin de séance. Tu le rouvres avec « Ouvrir » pour reprendre.</p>`
+      + tableau(['Action', 'Bouton', 'Raccourci'], [
+        ['Repartir de zéro', '« Nouveau »', 'Alt + N'], ['Reprendre un fichier de projet', '« Ouvrir »', 'Alt + O'],
+        ['Enregistrer le fichier de projet', '« Enregistrer »', 'Ctrl + S, ou ⌘ S sur Mac'], ['Exporter le dossier en PDF', '« Exporter »', 'Ctrl + E, ou ⌘ E sur Mac']]))
+    + etape('depart_regles', `Retiens trois règles`, '', pas([
+        `<b>Aucune donnée réelle dans Claude.</b> Ni client, ni prospect, ni collègue. Tu travailles avec des données fictives.`,
+        `<b>Une version fait une chose, et la fait bien.</b> La complexité vient ensuite, fonction après fonction.`,
+        `<b>Tu vérifies chaque calcul à la main, au moins une fois.</b> Un outil qui se trompe avec assurance coûte cher.`]))
+    + bloc(`Ce qui est noté`, `<p>Tu rends un mini-dossier en PDF sur le LMS. Il montre ce que ton application apporte : retour d'usage, retour sur investissement, éthique, cadre légal.</p>
+      <p>Le 27 novembre, tu présentes ton application au groupe, avec une simulation si besoin. Ton formateur te donnera le barème.</p>`)
+    + bloc(`Déroulé indicatif du 13 octobre`, tableau(['Heure', 'Étape'], [
+        ['8 h 30', 'Départ et constitution des équipes'], ['9 h 00', 'Régler Claude'], ['9 h 45', 'Ton fil rouge'],
+        ['10 h 45', 'Atelier « Cibler et personnaliser »'], ['13 h 00', 'Atelier « Soigner l\'expérience client »'],
+        ['14 h 15', 'Ta fabrique : première version'], ['16 h 00', 'État du projet et enregistrement du fichier']]))
+},
+
+/* ── 1. Régler Claude ── */
+{ id: 'claude', nav: '1. Régler Claude', groupe: 0, seance: 'Séance du 13 octobre – 45 min',
+  titre: `Règle Claude avant de lui parler`,
+  chapo: `Claude travaille mieux quand il sait qui tu es et comment tu veux travailler. Tu règles deux niveaux : tes préférences personnelles, puis les instructions de ton projet.`,
+  rendu: () => etape('c_compte', `Ouvre Claude`, '5 min', `<p>Va sur <a href="https://claude.ai" target="_blank" rel="noopener">claude.ai</a> et connecte-toi. La formule gratuite permet de suivre le module. Elle limite le nombre de messages : chaque message compte.</p>
+      <h3>Formule gratuite : fais durer tes messages</h3>` + tirets([
+        `regroupe tes demandes dans un seul message`, `donne tout le contexte dès le début`,
+        `range tes textes dans ton projet, pour ne pas les recoller`, `ouvre une nouvelle conversation quand la précédente devient longue`,
+        `quand la limite est atteinte, avance sur cette page en attendant`]) + liens(['claude_limites'])
+      + `<p class="note">Ouvre aussi « Paramètres », puis « Confidentialité ». Regarde si tes conversations servent à améliorer les modèles, et décide.</p>`)
+    + etape('c_prefs', `Rédige tes préférences personnelles`, '15 min', `<p>Tes préférences disent à Claude qui tu es et comment te répondre. Elles valent pour toutes tes conversations.</p>`
+      + pas([`Ouvre le calibrateur dans un nouvel onglet.`, `Rédige tes préférences : métier, style, ce qu'il faut éviter, règles de langue.`, `Corrige-les jusqu'à obtenir une bonne note.`, `Colle-les dans Claude, à l'endroit que montrent les deux schémas.`])
+      + `<div class="actions"><a class="btn plein" href="${OUTILS.calibrateur}" target="_blank" rel="noopener">Ouvrir le calibrateur de préférences</a></div>`
+      + schema('parametres') + schema('instructions')
+      + `<div class="champs">${champ('c_prefs', `Colle ici tes préférences finales`, { type: 'zone', lignes: 5, large: true, requis: true, sansMention: true, aide: `Elles figureront en annexe de ton dossier.` })}</div>`)
+    + etape('c_projet', `Crée ton projet « Atelier vente »`, '5 min', `<p>Un projet garde tes instructions et tes fichiers d'une conversation à l'autre. La formule gratuite autorise cinq projets.</p>` + schema('projet') + liens(['claude_projets']))
+    + etape('c_instructions', `Rédige les instructions de ton projet`, '15 min', `<p>Les instructions fixent le rôle de Claude et sa méthode dans ce projet. Remplis d'abord ton identité, à la page « Départ ».</p>
+      <div class="champs">${champ('ip_niveau', `Ton niveau technique`, { type: 'liste', options: [['debutant', 'Je débute'], ['initie', `J'ai déjà modifié une page web ou un tableur avancé`]], sansMention: true })}
+      ${champ('ip_adresse', `Claude te dit`, { type: 'liste', options: [['tu', 'Tu'], ['vous', 'Vous']], sansMention: true })}</div>
+      <h3>La méthode que tu imposes à Claude</h3>
+      <div class="coches">${coche('ip_questions', `Poser au plus trois questions avant de produire`, true)}${coche('ip_plan', `Proposer un plan court avant de coder`, true)}
+      ${coche('ip_complet', `Livrer des fichiers complets, jamais des extraits`, true)}${coche('ip_change', `Dire en une phrase ce qui a changé`, true)}
+      ${coche('ip_doutes', `Signaler ses doutes et les calculs à vérifier`, true)}${coche('ip_contredire', `Te contredire quand ton idée est trop large ou risquée`, true)}</div>
+      <div class="champs">${champ('ip_travail', `Ta façon de travailler`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Je travaille par petites étapes. Je teste chaque version avant de continuer.` })}
+      ${champ('ip_jamais', `Ce que Claude ne doit jamais faire`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Inventer un chiffre. Ajouter une fonction que je n'ai pas demandée.` })}</div>`
+      + consigne('instructions', `Instructions du projet`)
+      + `<p>Colle ce texte dans la zone « Instructions » de ton projet. C'est une base : relis-la et réécris ce qui ne te ressemble pas.</p>`)
+    + etape('c_test', `Vérifie que Claude a compris`, '5 min', `<p>Ouvre une conversation dans ton projet et envoie cette consigne.</p>` + consigne('test_instructions', `Consigne de vérification`)
+      + `<div class="champs">${champ('c_test', `Ce que Claude a mal compris, et ta correction`, { type: 'zone', large: true })}</div>`)
+    + bloc(`Pour progresser : l'entraîneur de consignes`, `<p>Tu veux mieux rédiger tes consignes ? L'outil « Entraîneur de prompt » analyse tes essais et te fait recommencer jusqu'au bon résultat.</p>
+      <div class="actions"><a class="btn" href="${OUTILS.entraineur}" target="_blank" rel="noopener">Ouvrir l'entraîneur</a></div>`)
+},
+
+/* ── 2. Fil rouge ── */
+{ id: 'filrouge', nav: '2. Ton fil rouge', groupe: 0, seance: 'Séance du 13 octobre – 45 min',
+  titre: `Choisis ton fil rouge`,
+  chapo: `Ton fil rouge est une situation commerciale réelle : celle de ton alternance. Tous tes ateliers s'y rattachent.`,
+  rendu: C => etape('f_equipe', `En équipe : trouve ton problème commercial n° 1`, '15 min', pas([
+        `Chacun présente son entreprise en deux minutes : ce qu'elle vend, à qui, comment.`,
+        `L'équipe pose des questions jusqu'à trouver le problème qui coûte le plus de temps ou de ventes.`,
+        `Chacun repart avec son problème, formulé en une phrase.`])
+      + `<p class="note">Pas d'alternance en ce moment ? Prends une entreprise où tu as travaillé, ou celle d'un coéquipier.</p>`)
+    + etape('f_fiche', `Rédige ta fiche de contexte`, '15 min', `<p>Tu peux remplacer le nom de l'entreprise par « Entreprise X ». N'écris aucun nom de client ni de collègue.</p>
+      <div class="champs">${champ('fr_offre', `Offre principale`, { requis: true, sansMention: true, large: true, ex: `Location de matériel de chantier, avec livraison` })}
+      ${champ('fr_clients', `Tes clients sont`, { type: 'liste', options: [['pro', 'des professionnels'], ['part', 'des particuliers'], ['mixte', 'les deux']], requis: true, sansMention: true })}
+      ${champ('fr_cycle', `Cycle de vente`, { requis: true, sansMention: true, ex: `Trois semaines, du premier contact au devis signé` })}
+      ${champ('fr_canaux', `Canaux de contact`, { requis: true, sansMention: true, ex: `Téléphone, e-mail, visite, salon` })}
+      ${champ('fr_equipe', `Équipe commerciale`, { ex: `Quatre commerciaux, une assistante` })}
+      ${champ('fr_outils', `Outils actuels`, { ex: `Tableur, logiciel de gestion de la relation client` })}
+      ${champ('fr_donnees', `Données disponibles`, { requis: true, sansMention: true, ex: `Historique des commandes, devis, appels` })}
+      ${champ('fr_probleme', `Problème commercial n° 1`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Les commerciaux relancent les devis au hasard. Un devis sur trois n'est jamais relancé.` })}
+      ${champ('fr_indicateur', `Indicateur à améliorer`, { large: true, requis: true, sansMention: true, ex: `Taux de devis relancés sous sept jours` })}</div>`
+      + consigne('fiche', `Fiche de contexte commercial`)
+      + `<p>Ajoute cette fiche aux fichiers de ton projet Claude. Si le bouton manque, colle-la au début de chaque conversation.</p>`)
+    + repere(`Données de clients : ce qui est permis`, `<p>Une donnée personnelle concerne une personne identifiable : le nom, la fonction ou l'e-mail d'un contact chez ton client.</p>
+      <p>Le RGPD demande de ne traiter que les données nécessaires à l'objectif. Coller un fichier client dans un outil d'IA grand public, c'est confier ces données à un tiers. Seule ton entreprise peut l'autoriser.</p>
+      <p>La CNIL recommande de ne saisir aucune information confidentielle dans un service d'IA grand public. Elle conseille une charte interne, qui fixe les usages permis.</p>`, ['cnil_debut', 'cnil_generative', 'cnil_ia'])
+    + decision('donnees')
+    + etape('f_pistes', `Fais émerger trois pistes d'application`, '10 min', consigne('pistes', `Consigne à envoyer dans ton projet`)
+      + `<div class="champs">${champ('fr_pistes', `Les pistes que tu retiens`, { type: 'zone', large: true, requis: true, sansMention: true })}</div>`)
+    + bloc(`En option : un jeu de données à ton image`, `<p>Les ateliers fournissent des jeux fictifs. Tu peux aussi en faire fabriquer un, plus proche de ton activité.</p>` + consigne('jeu_fictif', `Consigne à envoyer dans ton projet`))
+},
+
+/* ── 3. Atelier 1 ── */
+{ id: 'atelier1', nav: '3. Cibler et personnaliser', groupe: 0, seance: 'Séance du 13 octobre – atelier de 75 min',
+  titre: `Cible tes comptes et personnalise tes messages`,
+  chapo: `L'IA sait regrouper des comptes et adapter un message. Elle sait aussi se tromper avec assurance. Tu vas mesurer les deux.`,
+  rendu: C => repere(`Ce que l'IA fait bien, ce qu'elle fait mal`, `<p>Elle fait bien trois choses :</p>` + tirets([
+        `segmenter : regrouper des clients qui se ressemblent`, `personnaliser : adapter un message à un segment`, `lire des avis : classer des textes par thème et par ton`])
+      + `<p>Elle a trois faiblesses :</p>` + tirets([`elle invente des raisons quand les données manquent`, `elle lit mal l'ironie`, `elle reproduit les déséquilibres de tes données`]))
+    + etape('a1_jeu', `Récupère ton jeu de données`, '5 min', `<p>Ce jeu de 36 clients est fictif. Il contient au moins trois anomalies, glissées exprès.</p>` + jeu('clients'))
+    + etape('a1_analyse', `Fais parler les données`, '15 min', `<p>Les données sont déjà dans la consigne : un seul message suffit.</p>` + consigne('a1_analyse', `Consigne d'analyse`)
+      + `<div class="champs">${champ('a1_segmentation', `La segmentation que tu retiens, avec sa règle de calcul`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Fidèles : commande depuis moins de 60 jours et au moins 4 commandes. Endormis : aucune commande depuis 150 jours.` })}</div>`)
+    + etape('a1_verif', `Vérifie à la main`, '10 min', `<p>Choisis deux clients dans ton jeu. Applique la règle toi-même, puis compare avec la réponse de Claude.</p>
+      <div class="champs">${champ('a1_verif', `Résultat de ta vérification`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `C012 : Claude le classe « fidèle ». La règle donne « endormi » : il a ignoré la date.` })}
+      ${champ('a1_anomalies', `Les anomalies trouvées, par toi ou par Claude`, { type: 'zone', large: true, requis: true, sansMention: true })}</div>`)
+    + etape('a1_outil', `Construis ton « Segmenteur »`, '20 min', consigne('a1_outil', `Consigne de construction`)
+      + `<p>Teste l'outil avec ton jeu de données. Si un calcul est faux, demande une correction ciblée, pas une réécriture.</p>`)
+    + etape('a1_messages', `Personnalise les messages`, '10 min', consigne('a1_messages', `Consigne de rédaction`)
+      + `<div class="champs">${champ('a1_inventions', `Ce que Claude avait supposé ou inventé`, { type: 'zone', large: true, requis: true, sansMention: true })}</div>`)
+    + repere(`Cibler, prospecter, répondre : les règles`, tirets([
+        `un compte est une entreprise : ses données ne sont pas des données personnelles. Le nom, la fonction et l'e-mail d'un décideur en sont`,
+        `par e-mail, auprès de professionnels : la personne est informée et peut s'opposer. L'objet du message doit concerner sa profession`,
+        `chaque message dit qui l'envoie et offre un moyen simple de refuser les suivants`,
+        `une donnée visible en ligne reste une donnée personnelle. Elle n'est pas librement réutilisable pour prospecter. La CNIL demande d'informer la personne au plus tard au premier contact, et de citer la source`,
+        `le secret des affaires couvre une information peu connue, de valeur commerciale, que son détenteur protège. Le Code de commerce le définit à l'article L151-1. Un cahier des charges peut en relever`,
+        `un score par affaire ou par entreprise n'est pas un profil de personne. Un score par décideur en est un`])
+      + `<p>Auprès de particuliers, les règles sont plus strictes. Le consentement préalable vaut pour l'e-mail, le SMS et, depuis le 11 août 2026, le téléphone.</p>`, ['cnil_prospection', 'cnil_reutilisation', 'secret', 'cnil_profilage', 'dgccrf'])
+    + decision('comptes') + decision('qualif') + decision('offre')
+    + scene('s_ao', C)
+    + bloc(`Ta trace`, `<div class="champs">${champ('a1_retiens', `Ce que tu retiens pour ton application`, { type: 'zone', large: true, requis: true, sansMention: true })}</div>`)
+},
+
+/* ── 4. Atelier 2 ── */
+{ id: 'atelier2', nav: '4. Soigner l\'expérience client', groupe: 0, seance: 'Séance du 13 octobre – atelier de 75 min',
+  titre: `Soigne l'expérience client`,
+  chapo: `Un client mécontent veut une réponse rapide et juste, et une personne quand il la demande. Tu vas voir où l'IA aide, et où elle abîme la relation.`,
+  rendu: C => etape('a2_jeu', `Récupère tes messages de clients`, '5 min', `<p>Ces 24 messages sont fictifs. Certains sont ironiques. D'autres contiennent une donnée personnelle ou une situation sensible.</p>` + jeu('messages'))
+    + etape('a2_classer', `Fais classer les messages`, '15 min', consigne('a2_classer', `Consigne de classement`))
+    + etape('a2_mesure', `Mesure l'erreur de l'IA`, '15 min', `<p>Relis huit messages au moins. Pour chacun, décide du ton et de l'urgence avant de lire la réponse de Claude.</p>
+      <div class="champs">${champ('a2_verifies', `Messages vérifiés`, { type: 'nombre', requis: true, sansMention: true, ex: '8' })}${champ('a2_desaccords', `Désaccords avec Claude`, { type: 'nombre', requis: true, sansMention: true, ex: '2' })}</div>
+      <div class="suite" id="a2-taux"></div>
+      <div class="champs">${champ('a2_erreurs', `Les erreurs typiques de Claude sur tes messages`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Il classe l'ironie en « positif ». Il rate l'urgence quand le ton reste poli.` })}</div>`)
+    + etape('a2_outil', `Construis l'un des deux outils`, '25 min', `<p>Choisis celui qui sert le mieux ton fil rouge. Aucun des deux n'appelle une IA : ils suivent des règles que tu peux lire.</p>`
+      + consigne('a2_tri', `Outil A : tri des réclamations`) + consigne('a2_agent', `Outil B : maquette d'agent conversationnel`)
+      + `<div class="champs">${champ('a2_choix', `L'outil que tu as construit`, { type: 'liste', options: [['tri', 'Tri des réclamations'], ['agent', 'Agent conversationnel']], requis: true, sansMention: true })}
+      ${champ('a2_pieges', `Les trois cas qui trompent ton outil`, { type: 'zone', large: true, requis: true, sansMention: true })}</div>`)
+    + repere(`Transparence, enregistrement, décision automatique : les règles`, tirets([
+        `depuis le 2 août 2026, les règles de transparence du règlement européen sur l'IA s'appliquent (article 50). Une personne qui échange avec un agent conversationnel doit savoir qu'elle parle à une machine`,
+        `lis l'article pour savoir qui porte l'obligation : le fournisseur du système, ou l'entreprise qui le déploie`,
+        `la voix et les propos d'une personne sont des données personnelles. Avant de transcrire une réunion, informe les participants : qui enregistre, pourquoi, pour combien de temps`,
+        `une décision prise sans aucun humain, qui pèse fortement sur une personne, est en principe interdite (RGPD, article 22). La CNIL cite l'exemple d'un tarif plus élevé appliqué automatiquement`,
+        `le RGPD protège les personnes, pas les sociétés. Un prix calculé pour un artisan ou un indépendant peut entrer dans l'article 22`,
+        `le règlement sur l'IA interdit certaines pratiques depuis le 2 février 2025 (article 5). La reconnaissance des émotions sur le lieu de travail en fait partie`])
+      + `<p>Les règles sur les systèmes à haut risque sont reportées au 2 décembre 2027 par le règlement (UE) 2026/1744.</p>`, ['ia_ce', 'ia_texte', 'ia_omnibus', 'cnil_profilage', 'cnil_information'])
+    + decision('prix') + decision('reunions')
+    + scene('s_compte', C)
+    + bloc(`Ta trace`, `<div class="champs">${champ('a2_retiens', `Ce que tu retiens pour ton application`, { type: 'zone', large: true, requis: true, sansMention: true })}</div>`)
+},
+
+/* ── 5. Fabrique ── */
+{ id: 'fabrique', nav: '5. Ta fabrique', groupe: 0, seance: 'Séance du 13 octobre – 1 h 45',
+  titre: `Fabrique la première version de ton outil`,
+  chapo: `Tu passes à ton propre projet : un outil d'aide à la vente ou d'aide à la décision. Une application complexe se construit par versions.`,
+  rendu: C => etape('fab_idee', `En équipe : choisis ton idée`, '20 min', `<p>Chacun présente deux idées en une minute. L'équipe cherche ce qui coince : données introuvables, calcul flou, utilité douteuse. Chacun garde une idée.</p>
+      <div class="idees">${IDEES.map(i => `<article class="idee${v('cc_idee') === i.id ? ' choisie' : ''}"><span class="fam">${i.fam}</span><h3>${i.t}</h3>
+        <p><b>Pour :</b> ${i.pour.toLowerCase()}.</p><p><b>Entrées :</b> ${i.in.charAt(0).toLowerCase() + i.in.slice(1)}.</p><p><b>Résultat :</b> ${i.out.charAt(0).toLowerCase() + i.out.slice(1)}.</p><p class="note">${i.vig}</p>
+        <span class="niv" aria-label="Difficulté ${i.niv} sur 3">${[1, 2, 3].map(n => `<i${n <= i.niv ? ' class="on"' : ''}></i>`).join('')}&nbsp;difficulté ${i.niv} sur 3</span>
+        <button type="button" class="btn${v('cc_idee') === i.id ? ' ok' : ''}" data-idee="${i.id}">${v('cc_idee') === i.id ? 'Idée choisie' : 'Choisir cette idée'}</button></article>`).join('')}</div>
+      <p class="note" style="margin-top:14px">Tu as ta propre idée ? Passe directement au cahier de commande.</p>`)
+    + etape('fab_cahier', `Rédige ton cahier de commande`, '20 min', `<p>Ce document dit à Claude ce que tu veux, et ce que tu ne veux pas. Un cahier sans « ce que l'outil ne fait pas » donne une application trop large.</p>
+      <div class="champs">${champ('cc_nom', `Nom de l'outil`, { requis: true, sansMention: true })}${champ('cc_utilisateur', `Utilisateur`, { requis: true, sansMention: true, ex: `Les quatre commerciaux de l'agence` })}
+      ${champ('cc_probleme', `Problème à résoudre`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Aujourd'hui, les commerciaux perdent une heure par jour à choisir qui relancer.` })}
+      ${champ('cc_entrees', `Données en entrée`, { type: 'zone', requis: true, sansMention: true, ex: `Liste des devis : date, montant, étape, dernier contact` })}
+      ${champ('cc_resultat', `Résultat attendu`, { type: 'zone', requis: true, sansMention: true, ex: `Les dix devis à relancer aujourd'hui, classés, avec la raison` })}
+      ${champ('cc_regles', `Règles de calcul`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Score = montant × probabilité de l'étape, moins 5 points par semaine sans contact.` })}
+      ${champ('cc_hors', `Ce que l'outil ne fait pas`, { type: 'zone', requis: true, sansMention: true, ex: `Il n'envoie aucun message. Il ne modifie pas le fichier d'origine.` })}
+      ${champ('cc_humain', `Place de l'humain`, { type: 'zone', requis: true, sansMention: true, ex: `Le commercial valide la liste et peut écarter un devis.` })}</div>`)
+    + decision('perimetre') + decision('technique') + decision('prevision')
+    + etape('fab_cadrage', `Cadre le projet avec Claude`, '10 min', consigne('cadrage', `Consigne de cadrage`)
+      + `<div class="champs">${champ('cc_corrections', `Tes corrections au plan de Claude`, { type: 'zone', large: true, aide: `Elles s'ajoutent à la consigne suivante.` })}</div>`)
+    + etape('fab_construire', `Fais construire la version 1`, '20 min', consigne('construction', `Consigne de construction`) + schema('artefact')
+      + pas([`Teste l'outil dans l'aperçu.`, `Télécharge le fichier, ou copie le code.`, `Range le fichier dans un dossier « Atelier vente » sur ton ordinateur.`, `Ouvre-le d'un double-clic : il s'affiche dans ton navigateur.`])
+      + `<p class="note">Pas d'aperçu ? Ouvre « Paramètres », puis « Capacités », et active l'exécution de code et la création de fichiers. Sinon, demande le code complet dans un seul bloc. Colle-le dans un fichier texte et enregistre-le avec l'extension .html.</p>`)
+    + etape('fab_tests', `Teste avec trois cas`, '15 min', `<p>Écris le résultat attendu avant de lancer l'outil. Calcule-le à la main.</p>`
+      + tableau(['Cas de test', 'Résultat attendu, calculé à la main', `Résultat de l'outil`, 'Conforme'], [1, 2, 3].map(n => [
+        cel('t' + n + '_cas', { l: 'Cas de test ' + n, requis: true }), cel('t' + n + '_attendu', { l: 'Résultat attendu ' + n }), cel('t' + n + '_obtenu', { l: `Résultat de l'outil ` + n }),
+        cel('t' + n + '_ok', { l: 'Conforme ' + n, liste: [['oui', 'Oui'], ['non', 'Non']] })]), 'large-mobile')
+      + consigne('controle', `Consigne de contrôle`))
+    + etape('fab_versions', `Corrige, une modification à la fois`, '20 min', consigne('modification', `Modèle de consigne de modification`)
+      + `<h3>Journal des versions</h3>` + tableau(['Version', 'Date', 'Ce qui a changé', 'Pourquoi'], [1, 2, 3, 4].map(n => [
+        'v' + n, cel('v' + n + '_date', { l: 'Date de la version ' + n, court: true }), cel('v' + n + '_quoi', { l: 'Changement de la version ' + n }), cel('v' + n + '_pourquoi', { l: 'Raison de la version ' + n })]), 'large-mobile')
+      + `<p class="note">Après cinq ou six modifications, ouvre une nouvelle conversation dans ton projet et joins ton fichier.</p>`)
+    + bloc(`Pour les plus rapides : relie ton outil à Google Sheets`, `<p>Avec Google Apps Script, ton outil lit et écrit dans une feuille partagée. Utilise ton compte Google personnel.</p>`
+      + pas([`Crée une feuille Google Sheets avec tes colonnes et dix lignes fictives.`, `Ouvre « Extensions », puis « Apps Script ».`, `Envoie la consigne ci-dessous dans ton projet Claude.`,
+        `Colle Code.gs et Index.html dans l'éditeur, puis enregistre.`, `Déploie en application web et accepte les autorisations.`, `Après chaque modification, crée une nouvelle version du déploiement.`])
+      + schema('sheets') + schema('appsscript') + consigne('apps_script', `Consigne Apps Script`)
+      + `<p class="note">L'écran « Google n'a pas validé cette application » est normal pour ton propre script. Clique sur « Paramètres avancés », puis sur le lien vers ton projet.</p>`)
+    + scene('s_j10', C)
+},
+
+/* ── 6. Mini-dossier ── */
+{ id: 'dossier', nav: '6. Ton mini-dossier', groupe: 1, seance: 'Entre les deux séances',
+  titre: `Prouve ce que ton application apporte`,
+  chapo: `Ton dossier répond à une question : cet outil vaut-il la peine ? Tu le complètes entre les deux séances, avec de vrais retours et de vrais chiffres.`,
+  rendu: C => bloc(`Ce que le dossier doit montrer`, tirets([`ce que l'outil fait, et pour qui`, `ce que disent ceux qui l'ont essayé`, `ce qu'il rapporte, chiffres à l'appui`, `ce qu'il risque : éthique et cadre légal`, `ce que tu ferais ensuite`])
+      + `<p>Les parties « contexte », « application » et « tests » se remplissent seules, à partir des étapes précédentes.</p>`)
+    + etape('do_retours', `Retour d'usage : fais tester ton outil`, '', `<p>Fais essayer ton outil par deux personnes : un coéquipier, puis ton tuteur ou un collègue. Regarde-les faire sans les aider.</p>`
+      + [1, 2].map(n => `<h3>Testeur ${n}</h3><div class="champs">${champ('r' + n + '_qui', `Son rôle, sans son nom`, { requis: true, sansMention: true, ex: n === 1 ? 'Coéquipier' : 'Tuteur, responsable commercial' })}
+        ${champ('r' + n + '_note', `Utilité, de 1 à 5`, { type: 'liste', options: [['1', '1 – inutile'], ['2', '2'], ['3', '3 – utile parfois'], ['4', '4'], ['5', '5 – je l\'utiliserais demain']], requis: true, sansMention: true })}
+        ${champ('r' + n + '_aide', `Ce qui l'a aidé`, { type: 'zone', requis: true, sansMention: true })}${champ('r' + n + '_gene', `Ce qui l'a gêné ou trompé`, { type: 'zone', requis: true, sansMention: true })}</div>`).join('')
+      + `<div class="champs">${champ('ru_bilan', `Ce que tu changes après ces retours`, { type: 'zone', large: true, requis: true, sansMention: true })}</div>`)
+    + etape('do_roi', `Retour sur investissement`, '', `<p>Mesure une tâche précise, avant et après ton outil. Un gain estimé se présente avec une hypothèse basse.</p>
+      <div class="champs">${champ('roi_avant', `Durée de la tâche avant, en minutes`, { type: 'nombre', requis: true, sansMention: true })}${champ('roi_apres', `Durée avec l'outil, en minutes`, { type: 'nombre', requis: true, sansMention: true })}
+      ${champ('roi_occ', `Fois par semaine, par utilisateur`, { type: 'nombre', requis: true, sansMention: true })}${champ('roi_users', `Nombre d'utilisateurs`, { type: 'nombre', requis: true, sansMention: true })}
+      ${champ('roi_semaines', `Semaines travaillées par an`, { type: 'nombre', defaut: '44', sansMention: true })}${champ('roi_cout', `Coût horaire chargé, en euros`, { type: 'nombre', requis: true, sansMention: true, aide: `Demande à ton tuteur, ou pose une hypothèse et écris-la.` })}
+      ${champ('roi_conception', `Temps de conception, en heures`, { type: 'nombre', requis: true, sansMention: true })}${champ('roi_maintenance', `Maintenance par an, en heures`, { type: 'nombre', requis: true, sansMention: true })}
+      ${champ('roi_abos', `Abonnements par an, en euros`, { type: 'nombre', defaut: '0', sansMention: true })}${champ('roi_reutil', `Part du temps gagné réellement réutilisée, en %`, { type: 'nombre', defaut: '50', sansMention: true, aide: `Dix minutes gagnées ne deviennent pas toujours dix minutes de vente.` })}</div>
+      <dl class="resultats" id="roi-sortie"></dl><p class="note" id="roi-basse"></p>
+      <div class="champs">${champ('roi_hypotheses', `Tes hypothèses, et ce qui pourrait les fausser`, { type: 'zone', large: true, requis: true, sansMention: true })}
+      ${champ('roi_nonchiffre', `Les gains que tu ne sais pas chiffrer`, { type: 'zone', large: true, ex: `Moins d'oublis de relance. Des nouveaux formés plus vite.` })}</div>`)
+    + decision('preuve')
+    + etape('do_ethique', `Éthique : qui peut y perdre ?`, '', `<div class="champs">${champ('e1', `Qui ton outil peut-il désavantager ?`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Les petits clients, toujours classés derniers.` })}
+      ${champ('e2', `Quel déséquilibre dans tes données ou dans tes règles ?`, { type: 'zone', large: true, requis: true, sansMention: true })}
+      ${champ('e3', `Que sait le client de ton outil ?`, { type: 'zone', requis: true, sansMention: true })}${champ('e4', `Que décide encore une personne ?`, { type: 'zone', requis: true, sansMention: true })}</div>`)
+    + etape('do_legal', `Cadre légal : qualifie ton outil`, '', `<p>Réponds aux sept questions. Chaque « oui » demande une justification, appuyée sur un texte.</p>` + QUALIF.map(blocQualif).join('')
+      + `<p class="note" style="margin-top:18px">Cette page donne des repères, pas un avis juridique. En entreprise, adresse-toi au délégué à la protection des données.</p>`)
+    + etape('do_sobriete', `Sobriété : l'IA est-elle nécessaire partout ?`, '', `<div class="champs">${champ('s1', `Les étapes où l'IA est indispensable`, { type: 'zone', large: true, requis: true, sansMention: true })}
+      ${champ('s2', `Les étapes qu'une règle ou une formule traite aussi bien`, { type: 'zone', large: true, requis: true, sansMention: true })}
+      ${champ('s3', `Nombre d'appels à l'IA par jour, en usage réel`, { requis: true, sansMention: true, ex: `Aucun : l'outil suit des règles` })}</div>`)
+    + etape('do_limites', `Limites et suite`, '', `<div class="champs">${champ('l1', `Ce que ton outil ne sait pas faire aujourd'hui`, { type: 'zone', large: true, requis: true, sansMention: true })}
+      ${champ('l2', `Ce que tu ferais avec trois mois de plus`, { type: 'zone', large: true, requis: true, sansMention: true })}
+      ${champ('l3', `Ce que ce projet change dans ta vision du métier de vendeur`, { type: 'zone', large: true, requis: true, sansMention: true })}</div>`)
+    + `<section class="bloc scene"><p class="genre">La question du jury, tirée de l'état de ton projet</p><h2>« ${QUESTIONS_JURY[C.faible]} »</h2>
+      <div class="champs">${champ('jury_reponse', `Ta réponse, en cinq lignes`, { type: 'zone', lignes: 5, large: true, requis: true, sansMention: true })}</div>
+      <p class="verrou" style="margin-top:10px">La question change si l'état de ton projet change.</p></section>`
+},
+
+/* ── 7. Diagnostic et export ── */
+{ id: 'diagnostic', nav: '7. Diagnostic et export', groupe: 1, seance: 'À chaque fin de séance',
+  titre: `Lis ton diagnostic, puis exporte`,
+  chapo: `Voici l'état de ton projet, tel que tes choix l'ont construit. Corrige ce qui doit l'être, puis enregistre et exporte.`,
+  rendu: C => { const D = diagnostic(C), M = manques(C);
+    return bloc(D.titre, D.phrases.map(p => `<p>${p}</p>`).join('') + (D.alertes.length ? `<h3>Alertes</h3>` + tirets(D.alertes.map(a => (a.charAt(0).toLowerCase() + a.slice(1)).replace(/\.$/, ''))) : ''))
+    + bloc(`Ton plan d'action, en trois temps`, D.temps.map(x => `<h3>${x.t}</h3>` + pas(x.a)).join(''))
+    + bloc(`Ce qui manque à ton dossier`, M.liste.length ? `<p>Ton dossier est rempli à ${M.taux} %. Voici où il reste du travail :</p><ul class="tirets">${CHAPITRES.filter(c => M.parChapitre[c.id]).map(c => `<li><a href="#${c.id}">${c.nav.replace(/^\d\. /, '')}</a> : ${M.parChapitre[c.id] === 1 ? 'un élément' : M.parChapitre[c.id] + ' éléments'}</li>`).join('')}</ul>` : `<p>Ton dossier est complet. Relis-le avant de l'exporter.</p>`)
+    + etape('dg_fichier', `Enregistre ton fichier de projet`, '', `<p>Ce fichier contient tout ton travail. Garde-le dans ton dossier « Atelier vente » et sur un espace en ligne.</p>
+      <div class="actions"><button type="button" class="btn plein" data-action="enregistrer">Enregistrer le fichier de projet</button></div>`)
+    + etape('dg_pdf', `Exporte ton dossier en PDF`, '', pas([`Clique sur « Exporter le dossier ».`, `Dans la fenêtre d'impression, choisis « Enregistrer au format PDF ».`, `Dépose le fichier sur le LMS, avant la date donnée par ton formateur.`])
+      + `<div class="actions"><button type="button" class="btn plein" data-action="exporter">Exporter le dossier</button></div>`)
+    + bloc(`Avant le 27 novembre`, `<div class="coches" style="margin-top:0">${coche('i1', `Terminer la version 1 et ses trois tests`, false)}${coche('i2', `Faire tester l'outil par deux personnes`, false)}
+      ${coche('i3', `Chronométrer la tâche, avant et après`, false)}${coche('i4', `Compléter le mini-dossier`, false)}${coche('i5', `Apporter un historique de ventes sur 24 mois, fictif ou anonymisé`, false)}</div>
+      <h3>Le jour de la présentation</h3>` + pas([`Le problème, en une phrase.`, `L'outil, sur un cas réel ou simulé.`, `Un calcul, vérifié devant le groupe.`, `Les risques, et ce que tu as prévu.`, `Le retour sur investissement, avec son hypothèse basse.`, `La suite.`]))
+    + bloc(`Entraîne-toi face à un jury`, `<p>Cette consigne contient ton dossier. Claude te pose cinq questions difficiles, sans donner les réponses.</p>` + consigne('jury', `Consigne d'entraînement`))
+    + bloc(`Aperçu de ton dossier`, `<div class="dossier" id="apercu" style="margin-top:14px;border-top:1px solid var(--trait);padding-top:16px">${dossierHtml(C)}</div>`);
+  }
+},
+
+/* ── Séance 2 ── */
+{ id: 'seance2', nav: 'Ce qui t\'attend', groupe: 2, seance: 'Séance du 27 novembre 2026',
+  titre: `La suite, le 27 novembre`,
+  chapo: `Ces étapes s'ouvriront à la deuxième séance. Voici ce qui t'attend, et ce que tu peux préparer.`,
+  rendu: () => bloc(`Atelier 3 : prévoir les ventes`, `<p>Tu feras prévoir des ventes à partir d'un historique. Tu apprendras à lire une fourchette et à repérer une prévision trop sûre d'elle.</p>
+      <p><b>À préparer :</b> un historique mensuel de ventes sur 24 mois, fictif ou anonymisé.</p>`)
+    + bloc(`Atelier 4 : le métier de vendeur demain`, `<p>Tu dresseras la carte de ton poste : ce que l'IA prend, ce qu'elle transforme, ce qui reste humain. Tu en tireras ton plan de compétences.</p>`)
+    + bloc(`Version finale et présentation`, `<p>Tu ajouteras une deuxième fonction à ton outil. Tu le présenteras ensuite au groupe, dossier à l'appui.</p>
+      <p><b>À apporter :</b> ton fichier de projet, ton outil, tes mesures de temps.</p>`)
+}
+];
+const GROUPES = ['Séance du 13 octobre', 'Entre les deux séances', 'Séance du 27 novembre'];
+
+/* ───────── Retour sur investissement, diagnostic, dossier ───────── */
+function roi() {
+  const avant = num('roi_avant'), apres = num('roi_apres'), occ = num('roi_occ'), users = num('roi_users');
+  const sem = num('roi_semaines', '44'), cout = num('roi_cout'), conc = num('roi_conception'), maint = num('roi_maintenance');
+  const abos = isNaN(num('roi_abos', '0')) ? 0 : num('roi_abos', '0'), reutil = isNaN(num('roi_reutil', '50')) ? 50 : num('roi_reutil', '50');
+  const r = { ok: false };
+  if ([avant, apres, occ, users, sem].some(isNaN)) return r;
+  r.heures = (avant - apres) * occ * users * sem / 60;
+  if ([cout, conc, maint].some(isNaN)) return r;
+  r.valeur = r.heures * cout * reutil / 100;
+  r.cout = (conc + maint) * cout + abos;
+  r.net = r.valeur - r.cout;
+  r.taux = r.cout > 0 ? r.net / r.cout * 100 : NaN;
+  r.mois = r.valeur > 0 ? r.cout / (r.valeur / 12) : NaN;
+  r.netBas = r.valeur / 2 - r.cout;
+  r.ok = true;
+  return r;
+}
+function majRoi() {
+  const z = document.getElementById('roi-sortie'); if (!z) return;
+  const r = roi(), e = x => nb(x) + ' €';
+  const c = (t, val, neg) => `<div><dt>${t}</dt><dd${neg ? ' class="neg"' : ''}>${val}</dd></div>`;
+  z.innerHTML = c('Heures gagnées par an', r.heures === undefined ? '–' : nb(r.heures) + ' h', r.heures < 0)
+    + c('Valeur du temps réutilisé', r.ok ? e(r.valeur) : '–') + c('Coût la première année', r.ok ? e(r.cout) : '–')
+    + c('Gain net la première année', r.ok ? e(r.net) : '–', r.ok && r.net < 0)
+    + c('Retour sur investissement', r.ok && isFinite(r.taux) ? nb(r.taux) + ' %' : '–', r.ok && r.taux < 0)
+    + c('Délai de retour', r.ok && isFinite(r.mois) && r.mois > 0 ? nb(r.mois, 1) + ' mois' : '–');
+  const b = document.getElementById('roi-basse');
+  b.textContent = r.ok ? typo(`Hypothèse basse, avec un gain divisé par deux : ${r.netBas >= 0 ? 'gain net de' : 'perte de'} ${nb(Math.abs(r.netBas))} € la première année.`) : typo(`Remplis les huit premières cases : le calcul s'affiche ici.`);
+}
+function majTaux() {
+  const z = document.getElementById('a2-taux'); if (!z) return;
+  const n = num('a2_verifies'), d = num('a2_desaccords');
+  if (isNaN(n) || isNaN(d) || n <= 0 || d > n || d < 0) { z.textContent = typo(`Saisis les deux nombres : ton taux d'accord s'affiche ici.`); return; }
+  const t = (n - d) / n * 100;
+  z.textContent = typo(`Taux d'accord : ${nb(t)} %. Sur 500 messages par mois, cela ferait environ ${nb(500 * d / n)} clients mal orientés.`);
+}
+
+function diagnostic(C) {
+  const j = C.j, d = C.drap, faibles = [];
+  if (j.risque >= 65) faibles.push('le risque juridique');
+  if (j.charge >= 65) faibles.push('la charge de travail');
+  if (j.confiance <= 35) faibles.push('la confiance');
+  if (j.sobriete <= 35) faibles.push('la sobriété');
+  const nbChoix = Object.keys(DECISIONS).filter(k => S.choix[k]).length;
+  let titre;
+  if (nbChoix < 3) titre = `Diagnostic provisoire : fais d'abord tes choix`;
+  else if (!faibles.length) titre = `Projet maîtrisé`;
+  else if (faibles.length === 1) titre = `Projet solide, avec un point faible : ${faibles[0]}`;
+  else titre = `Projet à reprendre sur ${faibles.length} points`;
+  const ph = [];
+  ph.push(j.risque <= 30 ? `Risque juridique : ton projet reste dans un cadre que tu sais expliquer.` : j.risque < 65 ? `Risque juridique : des points restent à sécuriser avant un usage réel.` : `Risque juridique : ton projet expose l'entreprise. Un usage réel demanderait l'avis du délégué à la protection des données.`);
+  ph.push(j.charge <= 50 ? `Charge de travail : le périmètre tient dans le temps disponible.` : j.charge < 65 ? `Charge de travail : le périmètre est tendu. Chaque ajout se paie.` : `Charge de travail : le périmètre dépasse le temps disponible.`);
+  ph.push(j.confiance >= 70 ? `Confiance : clients et équipe savent ce que fait l'outil et gardent un recours.` : j.confiance > 35 ? `Confiance : elle tient, mais certains choix peuvent surprendre un client.` : `Confiance : plusieurs choix mettent le client devant le fait accompli.`);
+  ph.push(j.sobriete >= 70 ? `Sobriété : l'outil utilise peu de données et sollicite l'IA quand elle sert.` : j.sobriete > 35 ? `Sobriété : l'outil pourrait se passer de certaines données ou de certains appels à l'IA.` : `Sobriété : l'outil collecte et calcule plus que nécessaire.`);
+  if (nbChoix < 3) { ph.length = 0; ph.push(`Tu n'as pas encore fait assez de choix pour un diagnostic. Avance dans les étapes 2 à 5, puis reviens ici.`); }
+  const testsFaits = [1, 2, 3].filter(n => rempli('t' + n + '_cas') && v('t' + n + '_ok')).length;
+  const retours = [1, 2].filter(n => rempli('r' + n + '_qui')).length;
+  const R = roi();
+  /* Plan d'action séquencé : 0 = cette semaine, 1 = avant le 27 novembre, 2 = après le module */
+  const pool = [
+    [0, d.donneesReelles, `Supprimer les données réelles de tes conversations et repartir sur un jeu fictif.`],
+    [0, d.cdcColle, `Retirer le cahier des charges du client de tes conversations et prévenir ton tuteur.`],
+    [0, d.reunionCachee, `Annoncer la transcription au début de chaque réunion, ou la couper.`],
+    [0, d.decideursFiches, `Supprimer les données privées des décideurs et ne garder que leur fonction.`],
+    [0, d.prixAuto || d.scoreSeul, `Remettre une validation humaine sur les prix et sur les affaires écartées.`],
+    [0, testsFaits < 3, `Terminer les trois tests et corriger les écarts.`],
+    [0, true, `Enregistrer ton fichier de projet et ranger ton outil dans ton dossier « Atelier vente ».`],
+    [1, j.charge >= 60, `Réduire le périmètre à la fonction qui marche, et la terminer.`],
+    [1, retours < 2, `Faire tester l'outil par deux personnes et noter leurs retours.`],
+    [1, d.preuveFaible || !R.ok, `Chronométrer la tâche avant et après, sur cinq cas au moins.`],
+    [1, d.chiffreSeul, `Ajouter une fourchette et tes hypothèses à chaque chiffre produit par l'outil.`],
+    [1, true, `Préparer la démonstration sur un cas, avec le calcul refait à la main.`],
+    [2, j.risque >= 51, `Faire relire l'outil par le délégué à la protection des données, avant tout usage réel.`],
+    [2, j.sobriete <= 45, `Remplacer par une règle simple chaque étape où l'IA n'apporte rien.`],
+    [2, j.confiance <= 45, `Écrire en trois lignes ce que le client doit savoir, et où il le lira.`],
+    [2, true, `Rédiger un mode d'emploi d'une page : usage, limites, personne qui vérifie.`],
+    [2, true, `Décider avec ton tuteur qui fait vivre l'outil après ton départ.`]
+  ];
+  const temps = [`Cette semaine`, `Avant le 27 novembre`, `Après le module`].map((t, i) => ({ t, a: pool.filter(x => x[0] === i && x[1]).slice(0, 3).map(x => x[2]) }));
+  return { titre, phrases: ph, alertes: alertes(C).filter(a => a[0] !== 'info').map(a => a[1]), temps };
+}
+
+function manques(C) {
+  const m = [];
+  Object.keys(REG.champs).forEach(k => {
+    const c = REG.champs[k]; if (!c.requis || k.indexOf('j_') === 0) return;
+    if (!rempli(k)) m.push({ l: c.l.replace(/<[^>]+>/g, ''), ch: c.ch });
+  });
+  Object.keys(DECISIONS).forEach(id => {
+    if (!S.choix[id]) { m.push({ l: 'Choix : ' + DECISIONS[id].q, ch: REG.decisions[id] }); m.push({ l: 'Justification : ' + DECISIONS[id].q, ch: REG.decisions[id] }); }
+    else if (!rempli('j_' + id)) m.push({ l: 'Justification : ' + DECISIONS[id].q, ch: REG.decisions[id] });
+  });
+  Object.keys(SCENES).forEach(id => { const va = C.variantes[id]; if (!va || !(S.scenes[id] && S.scenes[id][va.id])) m.push({ l: 'Scène : ' + SCENES[id].titre, ch: REG.scenes[id] }); });
+  QUALIF.forEach(q => { if (v('q_' + q.id) === 'oui' && !rempli('qj_' + q.id)) m.push({ l: 'Justification : ' + q.q, ch: 'dossier' }); });
+  const parChapitre = {}; m.forEach(x => { parChapitre[x.ch] = (parChapitre[x.ch] || 0) + 1; });
+  const total = Object.keys(REG.champs).filter(k => REG.champs[k].requis && k.indexOf('j_') !== 0).length + 2 * Object.keys(DECISIONS).length + Object.keys(SCENES).length;
+  return { liste: m, parChapitre, taux: Math.max(0, Math.min(100, Math.round((total - m.length) / total * 100))) };
+}
+
+/* Le dossier : même contenu à l'écran, à l'impression et en texte */
+function dossierHtml(C) {
+  const t = cle => rempli(cle) ? esc(String(v(cle)).trim()) : `<span class="vide">à compléter</span>`;
+  const ligne = (l, cle) => `<dt>${l}</dt><dd>${t(cle)}</dd>`;
+  const qr = (l, cle) => `<h3>${l}</h3><p>${t(cle)}</p>`;
+  const D = diagnostic(C), r = roi(), e = x => nb(x) + ' €';
+  const choix = Object.keys(DECISIONS).map(id => { const o = DECISIONS[id].options.find(x => x.id === S.choix[id]);
+    return `<tr><td>${DECISIONS[id].q}</td><td>${o ? o.l : '<span class="vide">à choisir</span>'}</td><td>${t('j_' + id)}</td></tr>`; }).join('');
+  const scenes = Object.keys(SCENES).map(id => { const va = C.variantes[id]; if (!va) return '';
+    const rep = va.reps.find(x => x.id === (S.scenes[id] && S.scenes[id][va.id]));
+    return `<tr><td>${SCENES[id].titre}</td><td>${va.texte}</td><td>${rep ? rep.l : '<span class="vide">sans réponse</span>'}</td></tr>`; }).join('');
+  const jauges = Object.keys(JAUGES).map(k => { const n = niveau(k, C.j[k]); const on = Math.round(C.j[k] / 10);
+    return `<div class="jg"><span>${JAUGES[k].l}</span><span class="seg ${n[0]}">${Array.from({ length: 10 }, (_, i) => `<i${i < on ? ' class="on"' : ''}></i>`).join('')}</span><span>${C.j[k]} sur 100, ${n[1]}</span></div>`; }).join('');
+  const LQ = { oui: 'Oui', non: 'Non', nsp: 'Je ne sais pas' };
+  return `<div class="couv"><p>Mini-dossier – Stratégies avancées d'utilisation de l'IA dans les métiers de la vente</p>
+      <h1>${rempli('cc_nom') ? esc(v('cc_nom')) : `Mon outil d'aide à la vente`}</h1>
+      <p><b>${t('id_nom')}</b> – équipe ${t('id_equipe')} (${t('id_coequipiers')})</p><p>${t('id_poste')}, ${t('id_entreprise')}, ${t('id_secteur')}</p>
+      <p>Dossier exporté le ${dateFr(new Date())}</p></div>
+    <h2>1. Contexte commercial</h2><dl>${ligne('Offre principale', 'fr_offre')}<dt>Clients</dt><dd>${LIB_CLIENTS[v('fr_clients')] || '<span class="vide">à compléter</span>'}</dd>${ligne('Cycle de vente', 'fr_cycle')}${ligne('Canaux de contact', 'fr_canaux')}${ligne('Données disponibles', 'fr_donnees')}${ligne('Problème commercial n° 1', 'fr_probleme')}${ligne('Indicateur à améliorer', 'fr_indicateur')}</dl>
+    <h2>2. L'application</h2><dl>${ligne('Utilisateur', 'cc_utilisateur')}${ligne('Problème à résoudre', 'cc_probleme')}${ligne('Données en entrée', 'cc_entrees')}${ligne('Résultat attendu', 'cc_resultat')}${ligne('Règles de calcul', 'cc_regles')}${ligne(`Ce que l'outil ne fait pas`, 'cc_hors')}${ligne(`Place de l'humain`, 'cc_humain')}</dl>
+    <h3>Journal des versions</h3><table><tr><th>Version</th><th>Date</th><th>Ce qui a changé</th><th>Pourquoi</th></tr>${[1, 2, 3, 4].filter(n => rempli('v' + n + '_quoi') || n === 1).map(n => `<tr><td>v${n}</td><td>${t('v' + n + '_date')}</td><td>${t('v' + n + '_quoi')}</td><td>${t('v' + n + '_pourquoi')}</td></tr>`).join('')}</table>
+    <h2>3. Tests</h2><table><tr><th>Cas de test</th><th>Résultat attendu</th><th>Résultat de l'outil</th><th>Conforme</th></tr>${[1, 2, 3].map(n => `<tr><td>${t('t' + n + '_cas')}</td><td>${t('t' + n + '_attendu')}</td><td>${t('t' + n + '_obtenu')}</td><td>${v('t' + n + '_ok') === 'oui' ? 'Oui' : v('t' + n + '_ok') === 'non' ? 'Non' : '–'}</td></tr>`).join('')}</table>
+    <h2>4. Retour d'usage</h2><table><tr><th>Testeur</th><th>Utilité sur 5</th><th>Ce qui l'a aidé</th><th>Ce qui l'a gêné ou trompé</th></tr>${[1, 2].map(n => `<tr><td>${t('r' + n + '_qui')}</td><td>${t('r' + n + '_note')}</td><td>${t('r' + n + '_aide')}</td><td>${t('r' + n + '_gene')}</td></tr>`).join('')}</table>${qr('Ce que je change après ces retours', 'ru_bilan')}
+    <h2>5. Retour sur investissement</h2><dl><dt>Durée de la tâche</dt><dd>${t('roi_avant')} min avant, ${t('roi_apres')} min avec l'outil</dd><dt>Fréquence</dt><dd>${t('roi_occ')} fois par semaine, ${t('roi_users')} utilisateur(s), ${esc(v('roi_semaines', '44'))} semaines par an</dd>
+      <dt>Coûts</dt><dd>${t('roi_cout')} € de l'heure, ${t('roi_conception')} h de conception, ${t('roi_maintenance')} h de maintenance par an, ${esc(v('roi_abos', '0'))} € d'abonnements</dd><dt>Temps réutilisé</dt><dd>${esc(v('roi_reutil', '50'))} %</dd>
+      <dt>Heures gagnées par an</dt><dd>${r.heures === undefined ? '–' : nb(r.heures) + ' h'}</dd><dt>Valeur du temps réutilisé</dt><dd>${r.ok ? e(r.valeur) : '–'}</dd><dt>Coût la première année</dt><dd>${r.ok ? e(r.cout) : '–'}</dd>
+      <dt>Gain net la première année</dt><dd>${r.ok ? e(r.net) : '–'}</dd><dt>Retour sur investissement</dt><dd>${r.ok && isFinite(r.taux) ? nb(r.taux) + ' %' : '–'}</dd><dt>Délai de retour</dt><dd>${r.ok && isFinite(r.mois) && r.mois > 0 ? nb(r.mois, 1) + ' mois' : '–'}</dd>
+      <dt>Hypothèse basse</dt><dd>${r.ok ? 'gain net de ' + e(r.netBas) + ' avec un gain divisé par deux' : '–'}</dd></dl>${qr('Hypothèses et limites du calcul', 'roi_hypotheses')}${rempli('roi_nonchiffre') ? qr('Gains non chiffrés', 'roi_nonchiffre') : ''}
+    <h2>6. Éthique</h2>${qr('Qui l\'outil peut-il désavantager ?', 'e1')}${qr('Déséquilibres dans les données ou les règles', 'e2')}${qr('Ce que sait le client', 'e3')}${qr('Ce que décide encore une personne', 'e4')}
+    <h2>7. Cadre légal</h2><table><tr><th>Question</th><th>Réponse</th><th>Justification</th></tr>${QUALIF.map(q => `<tr><td>${q.q}</td><td>${LQ[v('q_' + q.id)] || '<span class="vide">sans réponse</span>'}</td><td>${rempli('qj_' + q.id) ? esc(v('qj_' + q.id)) : (v('q_' + q.id) === 'oui' ? '<span class="vide">à compléter</span>' : '–')}</td></tr>`).join('')}</table>
+    <h2>8. Sobriété</h2>${qr('Étapes où l\'IA est indispensable', 's1')}${qr('Étapes qu\'une règle traite aussi bien', 's2')}${qr('Appels à l\'IA par jour, en usage réel', 's3')}
+    <h2>9. Mes choix et leurs justifications</h2><table><tr><th>Question</th><th>Mon choix</th><th>Ma justification</th></tr>${choix}</table>
+    ${scenes ? `<h3>Les scènes rencontrées</h3><table><tr><th>Scène</th><th>Situation</th><th>Ma réponse</th></tr>${scenes}</table>` : ''}
+    <h2>10. État du projet et diagnostic</h2><div class="jauges">${jauges}</div><h3>${D.titre}</h3>${D.phrases.map(p => `<p>${p}</p>`).join('')}
+    ${D.alertes.length ? `<h3>Alertes</h3><ul>${D.alertes.map(a => `<li>${a}</li>`).join('')}</ul>` : ''}<h3>Plan d'action, en trois temps</h3>${D.temps.map(x => `<p><b>${x.t}</b></p><ul>${x.a.map(a => `<li>${a}</li>`).join('')}</ul>`).join('')}
+    <h3>La question du jury</h3><p>« ${QUESTIONS_JURY[C.faible]} »</p><p>${t('jury_reponse')}</p>
+    <h2>11. Limites et suite</h2>${qr('Ce que l\'outil ne sait pas faire aujourd\'hui', 'l1')}${qr('Avec trois mois de plus', 'l2')}${qr('Ce que ce projet change dans ma vision du métier', 'l3')}
+    <h2>Annexes</h2>${qr('Ce que je retiens de l\'atelier « Cibler et personnaliser »', 'a1_retiens')}${qr('Ce que je retiens de l\'atelier « Soigner l\'expérience client »', 'a2_retiens')}
+    <h3>Mesure de l'erreur de l'IA</h3><p>${rempli('a2_verifies') && rempli('a2_desaccords') ? esc(v('a2_verifies')) + ' messages vérifiés, ' + esc(v('a2_desaccords')) + ' désaccords. ' : ''}${t('a2_erreurs')}</p>
+    <h3>Instructions de mon projet Claude</h3><pre>${esc(texteConsigne('instructions'))}</pre>
+    <h3>Mes préférences personnelles</h3><pre>${t('c_prefs')}</pre>`;
+}
+function texteDossier() {
+  const C = calcul(), b = document.createElement('div');
+  b.innerHTML = dossierHtml(C).split('<h2>Annexes</h2>')[0].replace(/<\/(p|h1|h2|h3|dd|tr|li|div)>/g, '\n</$1>').replace(/<\/(td|th|dt)>/g, ' | </$1>');
+  return typo(b.textContent.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim());
+}
+
+/* ───────── Interface ───────── */
+const $ = id => document.getElementById(id);
+const chapitre = id => CHAPITRES.find(c => c.id === id) || CHAPITRES[0];
+
+function majNav(C) {
+  let html = '', tf = 0, tt = 0;
+  GROUPES.forEach((g, gi) => {
+    html += `<h2>${g}</h2>`;
+    CHAPITRES.filter(c => c.groupe === gi).forEach(c => {
+      const [f, t] = progression(c.id, C); tf += f; tt += t;
+      html += `<a href="#${c.id}"${c.id === S.chapitre ? ' aria-current="page"' : ''}${t && f === t ? ' class="complet"' : ''}><span>${c.nav}</span>${t ? `<small>${f === t ? 'fait' : f + '/' + t}</small>` : ''}</a>`;
+    });
+  });
+  const pc = tt ? Math.round(tf / tt * 100) : 0;
+  html += `<div class="nav-global"><b>${pc} %</b> du parcours<div class="filet"><i style="width:${pc}%"></i></div></div>`;
+  $('nav').innerHTML = html; typoNoeuds($('nav'));
+}
+function majEtat(C) {
+  const a = alertes(C);
+  let html = `<h2>État du projet<button type="button" class="btn" data-action="volet-etat">Fermer</button></h2>`, past = '';
+  Object.keys(JAUGES).forEach(k => {
+    const x = C.j[k], n = niveau(k, x), on = Math.round(x / 10);
+    past += `<i class="${n[0]}"></i>`;
+    html += `<div class="jauge"><div class="jauge-l"><b>${JAUGES[k].l}</b><span>${x} sur 100, ${n[1]}</span></div>
+      <div class="seg ${n[0]}" role="img" aria-label="${JAUGES[k].l} : ${x} sur 100">${Array.from({ length: 10 }, (_, i) => `<i${i < on ? ' class="on"' : ''}></i>`).join('')}</div><small>${JAUGES[k].aide}</small></div>`;
+  });
+  html += `<h3>Alertes</h3>` + (a.length ? `<div class="alertes">${a.map(x => x[2] ? `<a class="alerte ${x[0]}" href="#${x[2]}">${x[1]}</a>` : `<span class="alerte ${x[0]}">${x[1]}</span>`).join('')}</div>` : `<p class="calme">Aucune alerte. Tes choix feront bouger ces jauges.</p>`);
+  $('etat').innerHTML = html; typoNoeuds($('etat'));
+  $('pastilles').innerHTML = past;
+}
+function majBarre() {
+  const z = $('barre-etat'); if (!z) return;
+  let t, alerte = false;
+  if (!stockageOk) { t = `Sauvegarde automatique impossible ici : enregistre ton fichier.`; alerte = true; }
+  else if (!S.maj) t = `Prêt. Ton travail s'enregistre seul sur cet appareil.`;
+  else { t = `Enregistré sur cet appareil à ${heure(S.maj)}.`; if (!S.exportLe) { t += ` Fichier de projet : jamais enregistré.`; alerte = S.modifs > 15; } else t += ` Fichier : ${dateFr(new Date(S.exportLe))} à ${heure(S.exportLe)}.`; }
+  z.className = 'barre-etat' + (alerte ? ' alerte' : '');
+  z.querySelector('span').textContent = typo(t);
+}
+function majConsignes() {
+  document.querySelectorAll('pre[data-consigne]').forEach(p => {
+    const t = texteConsigne(p.getAttribute('data-consigne'));
+    p.innerHTML = esc(t).split(VIDE).join(`<span class="vide">${VIDE}</span>`);
+  });
+}
+function majLeger() { const C = calcul(); majNav(C); majEtat(C); majConsignes(); majRoi(); majTaux(); majBarre(); verifierRappel(); }
+
+function rendre(haut) {
+  const C = calcul(), ch = chapitre(S.chapitre), i = CHAPITRES.indexOf(ch), y = window.scrollY;
+  CH = ch.id;
+  const prec = CHAPITRES[i - 1], suiv = CHAPITRES[i + 1];
+  $('page').innerHTML = `<header class="tete"><p class="seance">${ch.seance}</p><h1>${ch.titre}</h1><p class="chapo">${ch.chapo}</p></header>${ch.rendu(C)}
+    <div class="pied">${prec ? `<a class="btn" href="#${prec.id}">Étape précédente</a>` : '<span></span>'}${suiv ? `<a class="btn plein" href="#${suiv.id}">Étape suivante</a>` : ''}</div>`;
+  typoNoeuds($('page'));
+  chargerCaptures($('page'));
+  document.title = typo(ch.nav.replace(/^\d\. /, '') + ' – Atelier IA et vente');
+  majLeger();
+  if (haut) { window.scrollTo(0, 0); } else window.scrollTo(0, y);
+}
+function allerA(id, depuisHash) {
+  const cible = chapitre(id).id;
+  S.chapitre = cible; sauver();
+  fermerVolets();
+  rendre(true);
+  if (!depuisHash && location.hash !== '#' + cible) history.replaceState(null, '', '#' + cible);
+}
+
+/* Messages brefs, dialogue, volets */
+let minuteurBref = null;
+function bref(t) { const z = $('bref'); z.textContent = typo(t); z.hidden = false; clearTimeout(minuteurBref); minuteurBref = setTimeout(() => { z.hidden = true; }, 2600); }
+function demander(titre, texte, oui) {
+  return new Promise(res => {
+    const d = $('dlg'); $('dlg-t').textContent = typo(titre); $('dlg-p').textContent = typo(texte); $('dlg-oui').textContent = oui || 'Continuer';
+    if (!d.showModal) { res(window.confirm(titre + '\n\n' + texte)); return; }
+    d.returnValue = 'non';
+    d.onclose = () => res(d.returnValue === 'oui');
+    d.showModal();
+  });
+}
+function fermerVolets() {
+  $('nav').classList.remove('ouvert'); $('etat').classList.remove('ouvert');
+  document.querySelectorAll('[data-action^="volet-"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+function basculer(id) {
+  const autre = id === 'nav' ? 'etat' : 'nav';
+  $(autre).classList.remove('ouvert');
+  const ouvert = $(id).classList.toggle('ouvert');
+  document.querySelectorAll('[data-action="volet-' + id + '"]').forEach(b => b.setAttribute('aria-expanded', String(ouvert)));
+}
+
+/* Fichiers */
+function telecharger(nom, contenu, type) {
+  const b = new Blob([contenu], { type: type }), u = URL.createObjectURL(b), a = document.createElement('a');
+  a.href = u; a.download = nom; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 2000);
+}
+const cheminNom = () => (rempli('id_nom') ? String(v('id_nom')) : 'etudiant').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'etudiant';
+function copier(texte, message) {
+  const fin = () => bref(message || 'Copié.');
+  const secours = () => { const z = document.createElement('textarea'); z.value = texte; z.style.position = 'fixed'; z.style.opacity = '0'; document.body.appendChild(z); z.select(); try { document.execCommand('copy'); fin(); } catch (e) { bref('Copie impossible : sélectionne le texte à la main.'); } z.remove(); };
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(texte).then(fin, secours); else secours();
+}
+function enregistrer() {
+  S.exportLe = new Date().toISOString(); S.modifsExport = S.modifs;
+  telecharger('atelier-ia-vente_' + cheminNom() + '_' + S.exportLe.slice(0, 10) + '.json', JSON.stringify(S, null, 1), 'application/json');
+  sauver(); $('rappel').hidden = true; majBarre(); bref('Fichier de projet enregistré dans tes téléchargements.');
+}
+function preparerImpression() {
+  const C = calcul(); $('impression').innerHTML = dossierHtml(C); typoNoeuds($('impression'));
+}
+function exporter() {
+  preparerImpression();
+  const ancien = document.title; document.title = 'Mini-dossier_IA-vente_' + cheminNom();
+  window.print();
+  setTimeout(() => { document.title = ancien; }, 1500);
+}
+async function nouveau() {
+  if (!(await demander('Repartir de zéro ?', 'Tout le travail affiché sera effacé de cet appareil. Enregistre d\'abord ton fichier de projet si tu veux le garder.', 'Tout effacer'))) return;
+  S = nouvelEtat(); try { localStorage.removeItem(CLE); } catch (e) {}
+  history.replaceState(null, '', '#depart'); rendre(true); bref('Nouveau projet.');
+}
+function ouvrir() { $('fichier').value = ''; $('fichier').click(); }
+function lireFichier(f) {
+  const l = new FileReader();
+  l.onload = async () => {
+    let d; try { d = JSON.parse(l.result); } catch (e) { d = null; }
+    if (!d || d.app !== APP.id || typeof d.champs !== 'object') { bref('Ce fichier n\'est pas un fichier de projet de cet atelier.'); return; }
+    if (S.maj && !(await demander('Ouvrir ce fichier ?', 'Il remplace le travail affiché sur cet appareil.', 'Ouvrir'))) return;
+    S = Object.assign(nouvelEtat(), d); sauver();
+    history.replaceState(null, '', '#' + chapitre(S.chapitre).id); rendre(true); bref('Projet rouvert.');
+  };
+  l.readAsText(f);
+}
+
+/* Rappel d'enregistrement : après beaucoup de modifications, et en fin de demi-journée */
+let rappelRepousse = 0;
+function verifierRappel() {
+  const depuis = (S.modifs || 0) - (S.modifsExport || 0);
+  const h = new Date(), m = h.getHours() * 60 + h.getMinutes();
+  const finDeSeance = (m >= 705 && m <= 725) || (m >= 975 && m <= 995);
+  const montrer = depuis > 0 && Date.now() > rappelRepousse && (depuis >= 60 || finDeSeance);
+  $('rappel').hidden = !montrer;
+}
+
+async function choisirIdee(id) {
+  const i = IDEES.find(x => x.id === id), cibles = { cc_nom: i.t, cc_utilisateur: i.pour, cc_entrees: i.in, cc_resultat: i.out };
+  const deja = Object.keys(cibles).some(k => rempli(k) && String(v(k)).trim() !== cibles[k]);
+  if (deja && !(await demander('Remplacer ton cahier de commande ?', 'Le nom, l\'utilisateur, les données et le résultat déjà saisis seront remplacés par ceux de cette idée.', 'Remplacer'))) return;
+  S.champs.cc_idee = id; Object.assign(S.champs, cibles); S.faits.fab_idee = true; toucher(); rendre(false);
+  bref('Idée choisie : ton cahier de commande est prérempli.');
+}
+
+/* ───────── Événements ───────── */
+let minuteurLeger = null;
+document.addEventListener('input', e => {
+  const c = e.target.getAttribute && e.target.getAttribute('data-champ');
+  if (!c) return;
+  S.champs[c] = e.target.value; toucher();
+  clearTimeout(minuteurLeger); minuteurLeger = setTimeout(majLeger, 180);
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'fichier') { if (t.files[0]) lireFichier(t.files[0]); return; }
+  if (t.hasAttribute('data-decision')) {
+    const id = t.getAttribute('data-decision'); S.choix[id] = t.value; toucher(); rendre(false);
+    const r = document.querySelector('[data-decision="' + id + '"][value="' + t.value + '"]'); if (r) r.focus({ preventScroll: true });
+    return;
+  }
+  if (t.hasAttribute('data-fait')) { const id = t.getAttribute('data-fait'); S.faits[id] = t.checked; toucher(); t.closest('.etape').classList.toggle('faite', t.checked); majLeger(); return; }
+  if (t.hasAttribute('data-coche')) { S.champs[t.getAttribute('data-coche')] = t.checked ? 'oui' : 'non'; toucher(); majLeger(); return; }
+  if (t.tagName === 'SELECT' && t.hasAttribute('data-champ')) {
+    const c = t.getAttribute('data-champ'); S.champs[c] = t.value; toucher();
+    if (c === 'fr_clients') rendre(false); else majLeger();
+  }
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('button,[data-action]'); if (!b) return;
+  const a = b.getAttribute('data-action');
+  if (a === 'nouveau') return nouveau();
+  if (a === 'ouvrir') return ouvrir();
+  if (a === 'enregistrer') return enregistrer();
+  if (a === 'exporter') return exporter();
+  if (a === 'volet-nav') return basculer('nav');
+  if (a === 'volet-etat') return basculer('etat');
+  if (a === 'plus-tard') { rappelRepousse = Date.now() + 20 * 60000; $('rappel').hidden = true; return; }
+  if (b.hasAttribute('data-copier')) {
+    const t = texteConsigne(b.getAttribute('data-copier'));
+    return copier(t, t.indexOf(VIDE) >= 0 ? 'Copié. Attention : il reste des passages à compléter.' : 'Consigne copiée. Colle-la dans Claude.');
+  }
+  if (b.hasAttribute('data-copier-jeu')) { const k = b.getAttribute('data-copier-jeu'); return copier((k === 'clients' ? jeuClients(v('id_nom'), particuliers()) : jeuMessages(v('id_nom'))).csv, 'Données copiées.'); }
+  if (b.hasAttribute('data-telecharger-jeu')) { const k = b.getAttribute('data-telecharger-jeu'); return telecharger(k === 'clients' ? 'clients-fictifs.csv' : 'messages-fictifs.csv', '﻿' + (k === 'clients' ? jeuClients(v('id_nom'), particuliers()) : jeuMessages(v('id_nom'))).csv, 'text/csv;charset=utf-8'); }
+  if (b.hasAttribute('data-scene')) {
+    const id = b.getAttribute('data-scene'), va = b.getAttribute('data-variante'), rep = b.getAttribute('data-rep');
+    S.scenes[id] = S.scenes[id] || {}; S.scenes[id][va] = rep; toucher(); rendre(false);
+    const r = document.querySelector('[data-scene="' + id + '"][data-rep="' + rep + '"]'); if (r) r.focus({ preventScroll: true });
+    return;
+  }
+  if (b.hasAttribute('data-radio')) {
+    const c = b.getAttribute('data-radio'), val = b.getAttribute('data-valeur'); S.champs[c] = val; toucher(); rendre(false);
+    const r = document.querySelector('[data-radio="' + c + '"][data-valeur="' + val + '"]'); if (r) r.focus({ preventScroll: true });
+    return;
+  }
+  if (b.hasAttribute('data-idee')) return choisirIdee(b.getAttribute('data-idee'));
+});
+document.addEventListener('keydown', e => {
+  const mod = e.ctrlKey || e.metaKey;
+  if (mod && !e.altKey && e.code === 'KeyS') { e.preventDefault(); enregistrer(); }
+  else if (mod && !e.altKey && e.code === 'KeyE') { e.preventDefault(); exporter(); }
+  else if (e.altKey && !mod && e.code === 'KeyN') { e.preventDefault(); nouveau(); }
+  else if (e.altKey && !mod && e.code === 'KeyO') { e.preventDefault(); ouvrir(); }
+  else if (e.key === 'Escape') fermerVolets();
+});
+window.addEventListener('hashchange', () => { const id = location.hash.slice(1); if (CHAPITRES.some(c => c.id === id)) { if (id !== S.chapitre) allerA(id, true); } });
+window.addEventListener('beforeprint', preparerImpression);
+setInterval(verifierRappel, 60000);
+
+/* ───────── Démarrage ───────── */
+charger();
+/* Premier passage : chaque chapitre déclare ses étapes, ses champs et ses choix */
+(function () { const C = calcul(); CHAPITRES.forEach(c => { CH = c.id; c.rendu(C); }); })();
+(function () { const id = location.hash.slice(1); if (CHAPITRES.some(c => c.id === id)) S.chapitre = id; })();
+typoNoeuds(document.querySelector('.barre')); typoNoeuds($('rappel'));
+document.querySelectorAll('[title]').forEach(e => e.setAttribute('title', typo(e.getAttribute('title'))));
+rendre(true);
+
+})();
+</script>
+</body>
+</html>

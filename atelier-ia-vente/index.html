@@ -1873,7 +1873,14 @@ const CHAPITRES = [
       ${champ('cc_probleme', `Problème à résoudre`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Aujourd'hui, les commerciaux perdent une heure par jour à choisir qui relancer.` })}
       ${champ('cc_entrees', `Données en entrée`, { type: 'zone', requis: true, sansMention: true, ex: `Liste des devis : date, montant, étape, dernier contact` })}
       ${champ('cc_resultat', `Résultat attendu`, { type: 'zone', requis: true, sansMention: true, ex: `Les dix devis à relancer aujourd'hui, classés, avec la raison` })}
-      ${champ('cc_regles', `Règles de calcul`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Score = montant × probabilité de l'étape, moins 5 points par semaine sans contact.` })}
+      ${champ('cc_regles', `Règles de calcul`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Score = montant × probabilité de l'étape, moins 5 points par semaine sans contact.` })}</div>
+      ${aide(`Règles de calcul : que mettre dans ce champ ?`, `<p>Tu ne calcules rien toi-même. Tu expliques en français comment l'outil passe des données au résultat. Claude écrira le code.</p>
+        <p>Réponds à trois questions :</p>`
+        + tirets([`Quelles colonnes l'outil utilise-t-il ?`, `Quelle formule ou quel seuil applique-t-il ?`, `Dans quel ordre classe-t-il le résultat ?`])
+        + `<p><b>Exemples.</b> « Un devis est à relancer s'il n'a pas de réponse depuis plus de 10 jours. Classer du plus gros montant au plus petit. » Ou : « Score = montant × probabilité de l'étape. »</p>
+        <p><b>Pas de calcul ?</b> Écris « Aucun calcul : l'outil trie par date. » Un champ vide compte comme non rempli.</p>
+        <p><b>Tu ne sais pas encore ?</b> Propose une première règle, même approximative, et ajoute « à valider ». Tu la vérifieras à la main sur trois lignes.</p>`, 'aide_regles_calcul')}
+      <div class="champs">
       ${champ('cc_hors', `Ce que l'outil ne fait pas`, { type: 'zone', requis: true, sansMention: true, ex: `Il n'envoie aucun message. Il ne modifie pas le fichier d'origine.` })}
       ${champ('cc_humain', `Place de l'humain`, { type: 'zone', requis: true, sansMention: true, ex: `Le commercial valide la liste et peut écarter un devis.` })}</div>
       <div class="actions"><button type="button" class="btn" data-action="cahier-md">Télécharger le cahier (.md)</button><button type="button" class="btn" data-action="cahier-effacer">Effacer tous les champs</button></div>

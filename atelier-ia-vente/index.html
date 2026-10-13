@@ -342,6 +342,19 @@ dialog .actions{justify-content:flex-end;margin-top:20px}
 .idee .actions .btn{margin-top:0}
 .idee .btn[disabled]{opacity:1;cursor:default}
 
+/* Obligatoire et facultatif */
+.statut{display:inline-block;margin-left:10px;padding:2px 8px;border:1px solid;font-size:12px;font-weight:700;letter-spacing:.01em;white-space:nowrap;vertical-align:middle}
+.statut.obligatoire{background:var(--accent-pale);border-color:var(--accent-trait);color:var(--accent-nuit)}
+.statut.facultatif{background:var(--creux);border-color:var(--trait-fort);color:var(--discret)}
+.partie{margin-top:22px;padding:12px 16px;border-left:4px solid}
+.partie h2{margin:6px 0 4px;font-size:19px}
+.partie p{margin:0}
+.partie .statut{margin-left:0}
+.partie.obligatoire{border-color:var(--accent);background:var(--accent-pale)}
+.partie.facultatif{border-color:var(--trait-fort);background:var(--creux)}
+.bloc.entrainement{border-style:dashed}
+@media print{.statut,.partie{display:none!important}}
+
 </style>
 </head>
 <body>
@@ -938,7 +951,10 @@ function alertes(C) {
 }
 
 /* ───────── Registre et aides de rendu ───────── */
-const REG = { etapes: {}, champs: {}, decisions: {}, scenes: {} };
+const REG = { etapes: {}, champs: {}, decisions: {}, scenes: {}, facultatives: {} };
+/* Étapes d'entraînement : facultatives, hors taux de remplissage et hors progression */
+const ENTRAINEMENT = ['a1_jeu', 'a1_analyse', 'a1_verif', 'a1_outil', 'a1_messages', 'a2_jeu', 'a2_classer', 'a2_mesure', 'a2_outil'];
+const CHAPITRES_MIXTES = ['atelier1', 'atelier2'];
 let CH = null; /* chapitre en cours de rendu */
 
 function champ(cle, libelle, o) {
@@ -961,11 +977,16 @@ const estCoche = (cle, defaut) => v(cle, defaut ? 'oui' : 'non') === 'oui';
 
 function etape(id, titre, duree, corps) {
   REG.etapes[id] = CH;
+  const fac = ENTRAINEMENT.indexOf(id) >= 0; if (fac) REG.facultatives[id] = true;
+  const statut = CHAPITRES_MIXTES.indexOf(CH) >= 0 ? (fac ? `<span class="statut facultatif">Entraînement · facultatif</span>` : `<span class="statut obligatoire">Obligatoire</span>`) : '';
   const fait = !!S.faits[id];
-  return `<section class="bloc etape${fait ? ' faite' : ''}" id="e-${id}">
-    <div class="etape-tete"><h2>${titre}${duree ? `<span class="duree">${duree}</span>` : ''}</h2>
+  return `<section class="bloc etape${fait ? ' faite' : ''}${fac ? ' entrainement' : ''}" id="e-${id}">
+    <div class="etape-tete"><h2>${titre}${duree ? `<span class="duree">${duree}</span>` : ''}${statut}</h2>
     <label class="fait"><input type="checkbox" data-fait="${id}"${fait ? ' checked' : ''}>Fait</label></div>
     ${corps}</section>`;
+}
+function partie(obligatoire, titre, texte) {
+  return `<div class="partie ${obligatoire ? 'obligatoire' : 'facultatif'}"><span class="statut ${obligatoire ? 'obligatoire' : 'facultatif'}">${obligatoire ? 'Obligatoire' : 'Facultatif'}</span><h2>${titre}</h2><p>${texte}</p></div>`;
 }
 function bloc(titre, corps, classe) { return `<section class="bloc${classe ? ' ' + classe : ''}">${titre ? `<h2>${titre}</h2>` : ''}${corps}</section>`; }
 function liens(ids) { return `<ul class="sources">${ids.map(i => `<li><a href="${SOURCES[i].u}" target="_blank" rel="noopener">${SOURCES[i].t}</a></li>`).join('')}</ul>`; }
@@ -1011,7 +1032,7 @@ function scene(id, C) {
 /* Progression */
 function progression(ch, C) {
   let total = 0, fait = 0;
-  Object.keys(REG.etapes).forEach(id => { if (REG.etapes[id] === ch) { total++; if (S.faits[id]) fait++; } });
+  Object.keys(REG.etapes).forEach(id => { if (REG.etapes[id] === ch && !REG.facultatives[id]) { total++; if (S.faits[id]) fait++; } });
   Object.keys(REG.decisions).forEach(id => { if (REG.decisions[id] === ch) { total++; if (S.choix[id]) fait++; } });
   Object.keys(REG.scenes).forEach(id => { if (REG.scenes[id] === ch) { total++; const va = C.variantes[id]; if (va && S.scenes[id] && S.scenes[id][va.id]) fait++; } });
   return [fait, total];
@@ -1535,6 +1556,7 @@ const CHAPITRES = [
         `chaque choix modifie l'état de ton projet : risque juridique, charge de travail, confiance, sobriété`,
         `tes choix sont ceux d'un ingénieur d'affaires : cibler, qualifier, répondre, chiffrer, suivre, prévoir`,
         `ils déclenchent des scènes : deux étudiants ne vivront pas la même histoire`,
+        `les étapes marquées « Entraînement · facultatif » sont à sauter si tu maîtrises déjà le geste : tout le reste est obligatoire`,
         `ton travail s'enregistre seul sur cet appareil`]) + `
       <h3>Le fichier de projet, ta vraie sauvegarde</h3>
       <p><b>Ce que c'est.</b> Un petit fichier, de type .json, qui contient tout ce que tu as saisi : réponses, choix, scènes. Tu ne l'ouvres pas toi-même : seule cette page sait le lire.</p>
@@ -1633,23 +1655,25 @@ const CHAPITRES = [
       <p>Utilise le jeu fourni à l'étape suivante. Ses anomalies sont connues : ta vérification est fiable, et ses colonnes correspondent à l'outil que tu vas construire.</p>
       <p>Tu préfères un jeu proche de ton activité ? Fais-en fabriquer un par Claude avec l'option du chapitre « Ton fil rouge ». Ses anomalies seront celles de Claude : colle ensuite ton jeu à la place des données dans les consignes.</p>
       <p><b>Jamais de donnée réelle de ton entreprise dans Claude</b> : ni client, ni prospect, ni collègue.</p>
-      <h3>Ce que tu rends dans ton dossier</h3>` + tirets([
-        `la segmentation retenue, avec sa règle de calcul`, `le résultat de ta vérification à la main`, `les anomalies trouvées, et ce que Claude a supposé`,
-        `trois choix justifiés et une scène d'appel d'offres`, `ce que tu en retiens pour ton application`])
-      + `<p>Le dernier point relie l'atelier à ton projet : dis ce que tu reprends, et ce que tu changes.</p>`)
+      <h3>Ce qui est obligatoire</h3>` + tirets([
+        `trois choix justifiés : comptes, qualification, offre`, `une scène d'appel d'offres`, `ce que tu retiens pour ton application`])
+      + `<p>Le dernier point relie l'atelier à ton projet : dis ce que tu reprends, et ce que tu changes.</p>
+      <h3>Ce qui est facultatif</h3><p>La segmentation, la vérification, le « Segmenteur » et les messages sont de l'entraînement. Ils t'aident à mieux décider, mais le dossier ne les exige pas.</p>`)
+    + partie(false, `Partie 1 : entraînement`, `Ces exercices t'apprennent les gestes. Si tu les maîtrises déjà, saute-les et passe à la partie 2. Ils ne comptent pas dans le taux de remplissage du dossier.`)
     + repere(`Ce que l'IA fait bien, ce qu'elle fait mal`, `<p>Elle fait bien trois choses :</p>` + tirets([
         `segmenter : regrouper des clients qui se ressemblent`, `personnaliser : adapter un message à un segment`, `lire des avis : classer des textes par thème et par ton`])
       + `<p>Elle a trois faiblesses :</p>` + tirets([`elle invente des raisons quand les données manquent`, `elle lit mal l'ironie`, `elle reproduit les déséquilibres de tes données`]))
     + etape('a1_jeu', `Récupère ton jeu de données`, '5 min', `<p>Ce jeu de 36 clients est fictif. Il contient au moins trois anomalies, glissées exprès.</p>` + jeu('clients'))
     + etape('a1_analyse', `Fais parler les données`, '15 min', `<p>Les données sont déjà dans la consigne : un seul message suffit.</p>` + consigne('a1_analyse', `Consigne d'analyse`)
-      + `<div class="champs">${champ('a1_segmentation', `La segmentation que tu retiens, avec sa règle de calcul`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Fidèles : commande depuis moins de 60 jours et au moins 4 commandes. Endormis : aucune commande depuis 150 jours.` })}</div>`)
+      + `<div class="champs">${champ('a1_segmentation', `La segmentation que tu retiens, avec sa règle de calcul`, { type: 'zone', large: true, requis: false, sansMention: true, ex: `Fidèles : commande depuis moins de 60 jours et au moins 4 commandes. Endormis : aucune commande depuis 150 jours.` })}</div>`)
     + etape('a1_verif', `Vérifie à la main`, '10 min', `<p>Choisis deux clients dans ton jeu. Applique la règle toi-même, puis compare avec la réponse de Claude.</p>
-      <div class="champs">${champ('a1_verif', `Résultat de ta vérification`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `C012 : Claude le classe « fidèle ». La règle donne « endormi » : il a ignoré la date.` })}
-      ${champ('a1_anomalies', `Les anomalies trouvées, par toi ou par Claude`, { type: 'zone', large: true, requis: true, sansMention: true })}</div>`)
+      <div class="champs">${champ('a1_verif', `Résultat de ta vérification`, { type: 'zone', large: true, requis: false, sansMention: true, ex: `C012 : Claude le classe « fidèle ». La règle donne « endormi » : il a ignoré la date.` })}
+      ${champ('a1_anomalies', `Les anomalies trouvées, par toi ou par Claude`, { type: 'zone', large: true, requis: false, sansMention: true })}</div>`)
     + etape('a1_outil', `Construis ton « Segmenteur »`, '20 min', consigne('a1_outil', `Consigne de construction`)
       + `<p>Teste l'outil avec ton jeu de données. Si un calcul est faux, demande une correction ciblée, pas une réécriture.</p>`)
     + etape('a1_messages', `Personnalise les messages`, '10 min', consigne('a1_messages', `Consigne de rédaction`)
-      + `<div class="champs">${champ('a1_inventions', `Ce que Claude avait supposé ou inventé`, { type: 'zone', large: true, requis: true, sansMention: true })}</div>`)
+      + `<div class="champs">${champ('a1_inventions', `Ce que Claude avait supposé ou inventé`, { type: 'zone', large: true, requis: false, sansMention: true })}</div>`)
+    + partie(true, `Partie 2 : pour ton dossier et ton outil`, `Les choix, la scène et ta trace alimentent ton dossier noté, tes jauges et ton diagnostic. Remplis cette partie en entier.`)
     + repere(`Cibler, prospecter, répondre : les règles`, tirets([
         `un compte est une entreprise : ses données ne sont pas des données personnelles. Le nom, la fonction et l'e-mail d'un décideur en sont`,
         `par e-mail, auprès de professionnels : la personne est informée et peut s'opposer. L'objet du message doit concerner sa profession`,
@@ -1667,16 +1691,18 @@ const CHAPITRES = [
 { id: 'atelier2', nav: '4. Soigner l\'expérience client', groupe: 0, seance: 'Séance du 13 octobre – atelier de 75 min',
   titre: `Soigne l'expérience client`,
   chapo: `Un client mécontent veut une réponse rapide et juste, et une personne quand il la demande. Tu vas voir où l'IA aide, et où elle abîme la relation.`,
-  rendu: C => etape('a2_jeu', `Récupère tes messages de clients`, '5 min', `<p>Ces 24 messages sont fictifs. Certains sont ironiques. D'autres contiennent une donnée personnelle ou une situation sensible.</p>` + jeu('messages'))
+  rendu: C => partie(false, `Partie 1 : entraînement`, `Ces exercices t'apprennent à mesurer l'erreur de l'IA sur des messages de clients. Si tu les maîtrises déjà, saute-les et passe à la partie 2.`)
+    + etape('a2_jeu', `Récupère tes messages de clients`, '5 min', `<p>Ces 24 messages sont fictifs. Certains sont ironiques. D'autres contiennent une donnée personnelle ou une situation sensible.</p>` + jeu('messages'))
     + etape('a2_classer', `Fais classer les messages`, '15 min', consigne('a2_classer', `Consigne de classement`))
     + etape('a2_mesure', `Mesure l'erreur de l'IA`, '15 min', `<p>Relis huit messages au moins. Pour chacun, décide du ton et de l'urgence avant de lire la réponse de Claude.</p>
-      <div class="champs">${champ('a2_verifies', `Messages vérifiés`, { type: 'nombre', requis: true, sansMention: true, ex: '8' })}${champ('a2_desaccords', `Désaccords avec Claude`, { type: 'nombre', requis: true, sansMention: true, ex: '2' })}</div>
+      <div class="champs">${champ('a2_verifies', `Messages vérifiés`, { type: 'nombre', requis: false, sansMention: true, ex: '8' })}${champ('a2_desaccords', `Désaccords avec Claude`, { type: 'nombre', requis: false, sansMention: true, ex: '2' })}</div>
       <div class="suite" id="a2-taux"></div>
-      <div class="champs">${champ('a2_erreurs', `Les erreurs typiques de Claude sur tes messages`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Il classe l'ironie en « positif ». Il rate l'urgence quand le ton reste poli.` })}</div>`)
+      <div class="champs">${champ('a2_erreurs', `Les erreurs typiques de Claude sur tes messages`, { type: 'zone', large: true, requis: false, sansMention: true, ex: `Il classe l'ironie en « positif ». Il rate l'urgence quand le ton reste poli.` })}</div>`)
     + etape('a2_outil', `Construis l'un des deux outils`, '25 min', `<p>Choisis celui qui sert le mieux ton fil rouge. Aucun des deux n'appelle une IA : ils suivent des règles que tu peux lire.</p>`
       + consigne('a2_tri', `Outil A : tri des réclamations`) + consigne('a2_agent', `Outil B : maquette d'agent conversationnel`)
-      + `<div class="champs">${champ('a2_choix', `L'outil que tu as construit`, { type: 'liste', options: [['tri', 'Tri des réclamations'], ['agent', 'Agent conversationnel']], requis: true, sansMention: true })}
-      ${champ('a2_pieges', `Les trois cas qui trompent ton outil`, { type: 'zone', large: true, requis: true, sansMention: true })}</div>`)
+      + `<div class="champs">${champ('a2_choix', `L'outil que tu as construit`, { type: 'liste', options: [['tri', 'Tri des réclamations'], ['agent', 'Agent conversationnel']], requis: false, sansMention: true })}
+      ${champ('a2_pieges', `Les trois cas qui trompent ton outil`, { type: 'zone', large: true, requis: false, sansMention: true })}</div>`)
+    + partie(true, `Partie 2 : pour ton dossier et ton outil`, `Les choix, la scène et ta trace alimentent ton dossier noté, tes jauges et ton diagnostic. Remplis cette partie en entier.`)
     + repere(`Transparence, enregistrement, décision automatique : les règles`, tirets([
         `depuis le 2 août 2026, les règles de transparence du règlement européen sur l'IA s'appliquent (article 50). Une personne qui échange avec un agent conversationnel doit savoir qu'elle parle à une machine`,
         `lis l'article pour savoir qui porte l'obligation : le fournisseur du système, ou l'entreprise qui le déploie`,
@@ -1946,7 +1972,7 @@ function dossierHtml(C) {
     <h3>La question du jury</h3><p>« ${QUESTIONS_JURY[C.faible]} »</p><p>${t('jury_reponse')}</p>
     <h2>11. Limites et suite</h2>${qr('Ce que l\'outil ne sait pas faire aujourd\'hui', 'l1')}${qr('Avec trois mois de plus', 'l2')}${qr('Ce que ce projet change dans ma vision du métier', 'l3')}
     <h2>Annexes</h2>${qr('Ce que je retiens de l\'atelier « Cibler et personnaliser »', 'a1_retiens')}${qr('Ce que je retiens de l\'atelier « Soigner l\'expérience client »', 'a2_retiens')}
-    <h3>Mesure de l'erreur de l'IA</h3><p>${rempli('a2_verifies') && rempli('a2_desaccords') ? esc(v('a2_verifies')) + ' messages vérifiés, ' + esc(v('a2_desaccords')) + ' désaccords. ' : ''}${t('a2_erreurs')}</p>
+    ${rempli('a2_verifies') || rempli('a2_desaccords') || rempli('a2_erreurs') ? `<h3>Mesure de l'erreur de l'IA</h3><p>${rempli('a2_verifies') && rempli('a2_desaccords') ? esc(v('a2_verifies')) + ' messages vérifiés, ' + esc(v('a2_desaccords')) + ' désaccords. ' : ''}${t('a2_erreurs')}</p>` : ''}
     <h3>Instructions de mon projet Claude</h3><pre>${esc(texteConsigne('instructions'))}</pre>
     <h3>Mes préférences personnelles</h3><pre>${t('c_prefs')}</pre>`;
 }

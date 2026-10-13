@@ -338,6 +338,9 @@ dialog .actions{justify-content:flex-end;margin-top:20px}
 #depose b{font-size:20px;color:var(--accent-nuit)}
 #depose span{color:var(--texte)}
 @media print{#depose,.depot,.depot-resultat{display:none!important}}
+.idee .actions{margin-top:auto}
+.idee .actions .btn{margin-top:0}
+.idee .btn[disabled]{opacity:1;cursor:default}
 
 </style>
 </head>
@@ -1670,8 +1673,8 @@ const CHAPITRES = [
       <div class="idees">${IDEES.map(i => `<article class="idee${v('cc_idee') === i.id ? ' choisie' : ''}"><span class="fam">${i.fam}</span><h3>${i.t}</h3>
         <p><b>Pour :</b> ${i.pour.toLowerCase()}.</p><p><b>Entrées :</b> ${i.in.charAt(0).toLowerCase() + i.in.slice(1)}.</p><p><b>Résultat :</b> ${i.out.charAt(0).toLowerCase() + i.out.slice(1)}.</p><p class="note">${i.vig}</p>
         <span class="niv" aria-label="Difficulté ${i.niv} sur 3">${[1, 2, 3].map(n => `<i${n <= i.niv ? ' class="on"' : ''}></i>`).join('')}&nbsp;difficulté ${i.niv} sur 3</span>
-        <button type="button" class="btn${v('cc_idee') === i.id ? ' ok' : ''}" data-idee="${i.id}">${v('cc_idee') === i.id ? 'Idée choisie' : 'Choisir cette idée'}</button></article>`).join('')}</div>
-      <p class="note" style="margin-top:14px">Tu as ta propre idée ? Passe directement au cahier de commande.</p>`)
+        ${v('cc_idee') === i.id ? `<div class="actions"><button type="button" class="btn ok" data-idee="${i.id}" aria-pressed="true" disabled>Idée choisie</button><button type="button" class="btn" data-retirer-idee>Retirer cette idée</button></div>` : `<button type="button" class="btn" data-idee="${i.id}">Choisir cette idée</button>`}</article>`).join('')}</div>
+      <p class="note" style="margin-top:14px">Tu as ta propre idée ? Passe directement au cahier de commande. Tu as choisi trop vite ? Utilise « Retirer cette idée » pour repartir d'un cahier vide.</p>`)
     + etape('fab_cahier', `Rédige ton cahier de commande`, '20 min', `<p>Ce document dit à Claude ce que tu veux, et ce que tu ne veux pas. Un cahier sans « ce que l'outil ne fait pas » donne une application trop large.</p>
       <div class="champs">${champ('cc_nom', `Nom de l'outil`, { requis: true, sansMention: true })}${champ('cc_utilisateur', `Utilisateur`, { requis: true, sansMention: true, ex: `Les quatre commerciaux de l'agence` })}
       ${champ('cc_probleme', `Problème à résoudre`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Aujourd'hui, les commerciaux perdent une heure par jour à choisir qui relancer.` })}
@@ -2156,6 +2159,19 @@ async function choisirIdee(id) {
   bref('Idée choisie : ton cahier de commande est prérempli.');
 }
 
+async function retirerIdee() {
+  const id = S.champs.cc_idee, i = IDEES.find(x => x.id === id); if (!i) return;
+  const cibles = { cc_nom: [i.t, `Nom de l'outil`], cc_utilisateur: [i.pour, 'Utilisateur'], cc_entrees: [i.in, 'Données en entrée'], cc_resultat: [i.out, 'Résultat attendu'] };
+  const gardes = Object.keys(cibles).filter(k => rempli(k) && String(v(k)).trim() !== cibles[k][0]).map(k => cibles[k][1]);
+  const texte = gardes.length
+    ? 'Les champs encore identiques à l\'idée sont vidés. Tu as modifié : ' + gardes.join(', ').toLowerCase() + '. ' + (gardes.length > 1 ? 'Ces champs sont conservés.' : 'Ce champ est conservé.')
+    : 'Les champs préremplis par l\'idée sont vidés. Tu repars d\'un cahier de commande vide.';
+  if (!(await demander('Retirer cette idée ?', texte, 'Retirer'))) return;
+  Object.keys(cibles).forEach(k => { if (!rempli(k) || String(v(k)).trim() === cibles[k][0]) delete S.champs[k]; });
+  delete S.champs.cc_idee; S.faits.fab_idee = false; toucher(); rendre(false);
+  bref(gardes.length ? 'Idée retirée. Tes modifications sont conservées.' : 'Idée retirée. Le cahier de commande est vide.');
+}
+
 /* ───────── Événements ───────── */
 let minuteurLeger = null;
 document.addEventListener('input', e => {
@@ -2212,6 +2228,7 @@ document.addEventListener('click', e => {
     const r = document.querySelector('[data-radio="' + c + '"][data-valeur="' + val + '"]'); if (r) r.focus({ preventScroll: true });
     return;
   }
+  if (b.hasAttribute('data-retirer-idee')) return retirerIdee();
   if (b.hasAttribute('data-idee')) return choisirIdee(b.getAttribute('data-idee'));
 });
 document.addEventListener('keydown', e => {

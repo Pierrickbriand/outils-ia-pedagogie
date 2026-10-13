@@ -814,11 +814,12 @@ function charger() {
     if (brut) { const d = JSON.parse(brut); if (d && d.app === APP.id) S = Object.assign(nouvelEtat(), d); }
   } catch (e) { stockageOk = false; }
 }
-let minuteur = null;
+let minuteur = null, aSauver = false;
 function sauver() {
-  clearTimeout(minuteur);
+  clearTimeout(minuteur); aSauver = true;
   minuteur = setTimeout(() => {
     try { localStorage.setItem(CLE, JSON.stringify(S)); stockageOk = true; } catch (e) { stockageOk = false; }
+    aSauver = false;
     majBarre();
   }, 250);
 }
@@ -1121,6 +1122,18 @@ function chargerCaptures(racine) {
 /* ───────── Consignes à copier dans Claude ───────── */
 const prenom = () => rempli('id_nom') ? String(v('id_nom')).trim().split(/\s+/)[0] : VIDE;
 const particuliers = () => v('fr_clients') === 'part';
+/* Jeux de données figés : une fois utilisés, ils ne dépendent plus du nom ni du type de clients saisis */
+const nomJeu = () => (S.jeu ? S.jeu.nom : v('id_nom'));
+const partJeu = () => (S.jeu ? !!S.jeu.part : particuliers());
+function figerJeu(memeSansNom) {
+  if (S.jeu || (!memeSansNom && !rempli('id_nom'))) return false;
+  S.jeu = { nom: String(v('id_nom')), part: particuliers() };
+  sauver(); return true;
+}
+function jeuDejaUtilise() {
+  return Object.keys(S.champs).some(k => /^a[12]_/.test(k) && rempli(k)) || Object.keys(S.faits).some(k => /^a[12]_/.test(k) && S.faits[k])
+    || ['comptes', 'qualif', 'offre', 'prix', 'reunions'].some(k => S.choix[k]);
+}
 const LIB_CLIENTS = { pro: 'des professionnels', part: 'des particuliers', mixte: 'des professionnels et des particuliers' };
 const libChoix = id => { const o = DECISIONS[id].options.find(x => x.id === S.choix[id]); return o ? o.l : VIDE; };
 
@@ -1186,7 +1199,7 @@ Donne d'abord la liste des colonnes, avec leur définition.`],
 4. Montre le calcul détaillé pour deux clients de ton choix.
 Ne code rien pour l'instant. Si une donnée manque, dis-le au lieu de supposer.
 
-[DONNÉES]`, jeuClients(v('id_nom'), particuliers()).csv],
+[DONNÉES]`, jeuClients(nomJeu(), partJeu()).csv],
   a1_outil: () => [`Construis un outil nommé « Segmenteur ».
 Il tient dans un seul fichier HTML, avec le CSS et le JavaScript, sans bibliothèque externe. Il fonctionne hors connexion.
 
@@ -1214,7 +1227,7 @@ Ajoute une colonne « doute » : écris « oui » quand le ton est ambigu ou iro
 Signale à part les messages qui contiennent une donnée personnelle ou une situation sensible.
 Ne réponds pas aux clients. Ne déduis rien sur leur vie privée.
 
-[MESSAGES]`, jeuMessages(v('id_nom')).csv],
+[MESSAGES]`, jeuMessages(nomJeu()).csv],
   a2_tri: () => [`Construis un outil nommé « Tri des réclamations ».
 Il tient dans un seul fichier HTML, sans bibliothèque externe et sans appel à une IA. Il fonctionne hors connexion.
 
@@ -1321,10 +1334,10 @@ function texteConsigne(id) {
 
 /* ───────── Contenu des chapitres ───────── */
 function jeu(type) {
-  const d = type === 'clients' ? jeuClients(v('id_nom'), particuliers()) : jeuMessages(v('id_nom'));
+  const d = type === 'clients' ? jeuClients(nomJeu(), partJeu()) : jeuMessages(nomJeu());
   return `<div class="defile"><table class="tab donnees" data-brut><thead><tr>${d.entete.map(h => `<th>${h}</th>`).join('')}</tr></thead>
     <tbody>${d.corps.slice(0, 5).map(l => `<tr>${l.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
-    <p class="note">Aperçu : 5 lignes sur ${d.corps.length}. Ton jeu est calculé à partir de ton nom : il diffère de celui de tes coéquipiers.</p>
+    <p class="note">Aperçu : 5 lignes sur ${d.corps.length}. ${S.jeu ? `Ton jeu t'est propre. Il est fixé : il ne change plus, même si tu corriges ton nom.` : `Ton jeu se calcule à partir de ton nom. Remplis d'abord ton identité à la page « Départ ».`}</p>
     <div class="actions"><button type="button" class="btn" data-copier-jeu="${type}">Copier les données</button><button type="button" class="btn" data-telecharger-jeu="${type}">Télécharger le fichier .csv</button></div>`;
 }
 function tableau(entetes, lignes, classe) {
@@ -1353,7 +1366,7 @@ const CHAPITRES = [
 { id: 'depart', nav: 'Départ', groupe: 0, seance: 'Module de 14 heures – 13 octobre et 27 novembre 2026',
   titre: `Conçois ton outil d'aide à la vente`,
   chapo: `En deux séances, tu règles Claude, tu explores l'IA dans la vente, puis tu construis ta propre application. Tu réfléchis en équipe. Tu construis seul.`,
-  rendu: () => bloc(`Les deux séances`, `<ul class="parcours">
+  rendu: () => blocSecours() + bloc(`Les deux séances`, `<ul class="parcours">
       <li><b>13 octobre 2026, de 8 h 30 à 16 h 30</b>Tu règles Claude, tu choisis ton fil rouge, tu suis deux ateliers. Tu repars avec la première version de ton application.</li>
       <li class="entre"><b>Entre les deux séances</b>Tu fais tester ton outil, tu mesures le temps gagné, tu complètes ton dossier.</li>
       <li><b>27 novembre 2026, de 8 h 30 à 16 h 30</b>Tu suis deux nouveaux ateliers, tu termines ton outil, tu le présentes au groupe.</li></ul>`)
@@ -1810,6 +1823,7 @@ function majConsignes() {
 function majLeger() { const C = calcul(); majNav(C); majEtat(C); majConsignes(); majRoi(); majTaux(); majBarre(); verifierRappel(); }
 
 function rendre(haut) {
+  if (S.chapitre === 'atelier1' || S.chapitre === 'atelier2') figerJeu(false);
   const C = calcul(), ch = chapitre(S.chapitre), i = CHAPITRES.indexOf(ch), y = window.scrollY;
   CH = ch.id;
   const prec = CHAPITRES[i - 1], suiv = CHAPITRES[i + 1];
@@ -1832,9 +1846,9 @@ function allerA(id, depuisHash) {
 /* Messages brefs, dialogue, volets */
 let minuteurBref = null;
 function bref(t) { const z = $('bref'); z.textContent = typo(t); z.hidden = false; clearTimeout(minuteurBref); minuteurBref = setTimeout(() => { z.hidden = true; }, 2600); }
-function demander(titre, texte, oui) {
+function demander(titre, texte, oui, non) {
   return new Promise(res => {
-    const d = $('dlg'); $('dlg-t').textContent = typo(titre); $('dlg-p').textContent = typo(texte); $('dlg-oui').textContent = oui || 'Continuer';
+    const d = $('dlg'); $('dlg-t').textContent = typo(titre); $('dlg-p').textContent = typo(texte); $('dlg-oui').textContent = oui || 'Continuer'; $('dlg-non').textContent = typo(non || 'Annuler');
     if (!d.showModal) { res(window.confirm(titre + '\n\n' + texte)); return; }
     d.returnValue = 'non';
     d.onclose = () => res(d.returnValue === 'oui');
@@ -1870,17 +1884,49 @@ function enregistrer() {
 }
 function preparerImpression() {
   const C = calcul(); $('impression').innerHTML = dossierHtml(C); typoNoeuds($('impression'));
+  /* Pied de page du PDF : nom de l'étudiant et numéro de page (navigateurs qui gèrent les marges de page) */
+  let st = $('style-impression');
+  if (!st) { st = document.createElement('style'); st.id = 'style-impression'; document.head.appendChild(st); }
+  const nom = (rempli('id_nom') ? String(v('id_nom')).trim() : 'Nom à compléter').replace(/[\\"\n\r]/g, ' ');
+  const police = 'font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;font-size:8.5pt;color:#64748B;';
+  st.textContent = '@page{@bottom-left{content:"' + nom + ' \u2013 mini-dossier IA et vente";' + police + '}@bottom-right{content:counter(page) " / " counter(pages);' + police + '}}';
 }
-function exporter() {
+async function exporter() {
+  const C = calcul(), M = manques(C), n = M.liste.length;
+  if (n) {
+    const ou = CHAPITRES.filter(c => M.parChapitre[c.id]).map(c => c.nav.replace(/^\d\. /, '') + ' (' + M.parChapitre[c.id] + ')').join(', ');
+    const ok = await demander('Ton dossier est rempli à ' + M.taux + ' %', 'Il manque ' + (n === 1 ? 'un élément' : n + ' éléments') + ' : ' + ou + '. Le PDF affichera « à compléter » à ces endroits.', 'Exporter quand même', 'Voir ce qui manque');
+    if (!ok) { if (S.chapitre !== 'diagnostic') location.hash = '#diagnostic'; return; }
+  }
   preparerImpression();
   const ancien = document.title; document.title = 'Mini-dossier_IA-vente_' + cheminNom();
   window.print();
   setTimeout(() => { document.title = ancien; }, 1500);
 }
+/* Filet de sécurité : un projet effacé reste récupérable sur l'appareil, et son fichier part dans les téléchargements */
+const CLE_SECOURS = CLE + '-secours';
+function secours() { try { const b = localStorage.getItem(CLE_SECOURS); const d = b ? JSON.parse(b) : null; return d && d.etat && d.etat.app === APP.id ? d : null; } catch (e) { return null; } }
+function blocSecours() {
+  const d = secours(); if (!d || S.maj) return '';
+  const quand = new Date(d.le);
+  return `<section class="bloc repere"><h2>Un projet effacé peut être récupéré</h2><p>Un projet a été effacé le ${dateFr(quand)} à ${heure(d.le)}. Il reste disponible sur cet appareil.</p><div class="actions"><button type="button" class="btn plein" data-action="recuperer">Récupérer ce projet</button></div></section>`;
+}
+function recuperer() {
+  const d = secours(); if (!d) return;
+  S = Object.assign(nouvelEtat(), d.etat); if (jeuDejaUtilise()) figerJeu(false); sauver();
+  history.replaceState(null, '', '#' + chapitre(S.chapitre).id); rendre(true); bref('Projet récupéré.');
+}
 async function nouveau() {
-  if (!(await demander('Repartir de zéro ?', 'Tout le travail affiché sera effacé de cet appareil. Enregistre d\'abord ton fichier de projet si tu veux le garder.', 'Tout effacer'))) return;
+  const travail = !!S.maj;
+  const texte = travail ? 'Ton fichier de projet part d\'abord dans tes téléchargements. Tout le travail affiché est ensuite effacé de cet appareil.' : 'La page repart d\'un projet vide.';
+  if (!(await demander('Repartir de zéro ?', texte, 'Tout effacer'))) return;
+  if (travail) {
+    const le = new Date().toISOString();
+    try { localStorage.setItem(CLE_SECOURS, JSON.stringify({ le: le, etat: S })); } catch (e) {}
+    telecharger('atelier-ia-vente_' + cheminNom() + '_avant-effacement_' + le.slice(0, 10) + '.json', JSON.stringify(S, null, 1), 'application/json');
+  }
   S = nouvelEtat(); try { localStorage.removeItem(CLE); } catch (e) {}
-  history.replaceState(null, '', '#depart'); rendre(true); bref('Nouveau projet.');
+  history.replaceState(null, '', '#depart'); rendre(true); bref(travail ? 'Nouveau projet. L\'ancien est dans tes téléchargements.' : 'Nouveau projet.');
 }
 function ouvrir() { $('fichier').value = ''; $('fichier').click(); }
 function lireFichier(f) {
@@ -1889,7 +1935,7 @@ function lireFichier(f) {
     let d; try { d = JSON.parse(l.result); } catch (e) { d = null; }
     if (!d || d.app !== APP.id || typeof d.champs !== 'object') { bref('Ce fichier n\'est pas un fichier de projet de cet atelier.'); return; }
     if (S.maj && !(await demander('Ouvrir ce fichier ?', 'Il remplace le travail affiché sur cet appareil.', 'Ouvrir'))) return;
-    S = Object.assign(nouvelEtat(), d); sauver();
+    S = Object.assign(nouvelEtat(), d); if (jeuDejaUtilise()) figerJeu(false); sauver();
     history.replaceState(null, '', '#' + chapitre(S.chapitre).id); rendre(true); bref('Projet rouvert.');
   };
   l.readAsText(f);
@@ -1943,15 +1989,18 @@ document.addEventListener('click', e => {
   if (a === 'ouvrir') return ouvrir();
   if (a === 'enregistrer') return enregistrer();
   if (a === 'exporter') return exporter();
+  if (a === 'recuperer') return recuperer();
   if (a === 'volet-nav') return basculer('nav');
   if (a === 'volet-etat') return basculer('etat');
   if (a === 'plus-tard') { rappelRepousse = Date.now() + 20 * 60000; $('rappel').hidden = true; return; }
   if (b.hasAttribute('data-copier')) {
-    const t = texteConsigne(b.getAttribute('data-copier'));
+    const idc = b.getAttribute('data-copier');
+    if (idc === 'a1_analyse' || idc === 'a2_classer') figerJeu(true);
+    const t = texteConsigne(idc);
     return copier(t, t.indexOf(VIDE) >= 0 ? 'Copié. Attention : il reste des passages à compléter.' : 'Consigne copiée. Colle-la dans Claude.');
   }
-  if (b.hasAttribute('data-copier-jeu')) { const k = b.getAttribute('data-copier-jeu'); return copier((k === 'clients' ? jeuClients(v('id_nom'), particuliers()) : jeuMessages(v('id_nom'))).csv, 'Données copiées.'); }
-  if (b.hasAttribute('data-telecharger-jeu')) { const k = b.getAttribute('data-telecharger-jeu'); return telecharger(k === 'clients' ? 'clients-fictifs.csv' : 'messages-fictifs.csv', '﻿' + (k === 'clients' ? jeuClients(v('id_nom'), particuliers()) : jeuMessages(v('id_nom'))).csv, 'text/csv;charset=utf-8'); }
+  if (b.hasAttribute('data-copier-jeu')) { const k = b.getAttribute('data-copier-jeu'); figerJeu(true); return copier((k === 'clients' ? jeuClients(nomJeu(), partJeu()) : jeuMessages(nomJeu())).csv, 'Données copiées.'); }
+  if (b.hasAttribute('data-telecharger-jeu')) { const k = b.getAttribute('data-telecharger-jeu'); figerJeu(true); return telecharger(k === 'clients' ? 'clients-fictifs.csv' : 'messages-fictifs.csv', '﻿' + (k === 'clients' ? jeuClients(nomJeu(), partJeu()) : jeuMessages(nomJeu())).csv, 'text/csv;charset=utf-8'); }
   if (b.hasAttribute('data-scene')) {
     const id = b.getAttribute('data-scene'), va = b.getAttribute('data-variante'), rep = b.getAttribute('data-rep');
     S.scenes[id] = S.scenes[id] || {}; S.scenes[id][va] = rep; toucher(); rendre(false);
@@ -1975,10 +2024,18 @@ document.addEventListener('keydown', e => {
 });
 window.addEventListener('hashchange', () => { const id = location.hash.slice(1); if (CHAPITRES.some(c => c.id === id)) { if (id !== S.chapitre) allerA(id, true); } });
 window.addEventListener('beforeprint', preparerImpression);
+/* À la fermeture : dernières saisies écrites tout de suite, et avertissement si le fichier de projet a du retard */
+function sauverMaintenant() { if (!aSauver) return; clearTimeout(minuteur); aSauver = false; try { localStorage.setItem(CLE, JSON.stringify(S)); } catch (e) {} }
+window.addEventListener('pagehide', sauverMaintenant);
+window.addEventListener('beforeunload', e => {
+  sauverMaintenant();
+  if ((S.modifs || 0) - (S.modifsExport || 0) >= 10) { e.preventDefault(); e.returnValue = ''; }
+});
 setInterval(verifierRappel, 60000);
 
 /* ───────── Démarrage ───────── */
 charger();
+if (jeuDejaUtilise()) figerJeu(false);
 /* Premier passage : chaque chapitre déclare ses étapes, ses champs et ses choix */
 (function () { const C = calcul(); CHAPITRES.forEach(c => { CH = c.id; c.rendu(C); }); })();
 (function () { const id = location.hash.slice(1); if (CHAPITRES.some(c => c.id === id)) S.chapitre = id; })();

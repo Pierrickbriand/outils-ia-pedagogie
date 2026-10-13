@@ -95,6 +95,12 @@ Page HTML unique (`index.html`, environ 160 Ko) pour le module « Stratégies av
 - Glisser-déposer : Safari ne renseigne pas `relatedTarget` à la sortie ; le masque de dépôt attend désormais 150 ms sans survol.
 - Reste à faire à la main sur un Mac : test de la liste ci-dessous.
 
+## Livraison 2 bis (13 octobre 2026) : correcteur pour le formateur
+- Page `atelier-ia-vente/correcteur/index.html`, construite avec le même code que l'application (`build_correcteur.py`, sources 01 à 06 et `08-correcteur.js`). Les fichiers .json glissés restent dans le navigateur, rien n'est envoyé.
+- Tableau triable : dossier rempli, éléments manquants, choix, tests, retours d'usage, auto-évaluation (A, R, P), gain en heures, alertes, date d'enregistrement. Doublons fusionnés (le plus récent est gardé), fichiers invalides signalés.
+- Détail par étudiant : ce qui manque par chapitre, alertes, auto-évaluation, dossier complet, notes de correction (gardées dans le navigateur du formateur) et export CSV du tableau avec les notes.
+- Les calculs reprennent ceux de l'application : si un champ obligatoire change dans l'application, le correcteur doit être reconstruit.
+
 ## Repères juridiques vérifiés le 12 octobre 2026
 - Règlement sur l'IA : pratiques interdites depuis le 2 février 2025, transparence (article 50) depuis le 2 août 2026, haut risque reporté au 2 décembre 2027 par le règlement (UE) 2026/1744. Source : Commission européenne.
 - RGPD : profilage et article 22, droit d'opposition. Source : CNIL.
@@ -109,7 +115,6 @@ Page HTML unique (`index.html`, environ 160 Ko) pour le module « Stratégies av
 - Le barème : la page renvoie au formateur.
 
 ## Backlog
-- Page « correcteur » pour le formateur : glisser les .json des étudiants, tableau de remplissage et des auto-évaluations (idée du 13 octobre).
 - Bouton « Je suis bloqué » : e-mail prérempli avec l'étape en cours.
 - Aide repliable « Clé API » dans la Fabrique (si validée).
 - Livraison 2 avant le 27 novembre : atelier 3 (prévision des ventes, jeu de 24 mois), atelier 4 (évolution du métier, plan de compétences), deuxième fonction de l'application, déroulé de la présentation.

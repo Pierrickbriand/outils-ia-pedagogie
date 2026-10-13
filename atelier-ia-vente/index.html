@@ -369,9 +369,10 @@ dialog .actions{justify-content:flex-end;margin-top:20px}
 <aside class="etat flottant" id="etat" aria-label="État du projet"></aside>
 
 <div class="rappel flottant" id="rappel" hidden role="status">
-  <span>Enregistre ton fichier de projet avant de fermer. Le navigateur peut tout perdre.</span>
+  <span id="rappel-texte">Enregistre ton fichier de projet avant de fermer. Le navigateur peut tout perdre.</span>
   <div>
     <button type="button" class="btn plein" data-action="enregistrer">Enregistrer</button>
+    <button type="button" class="btn" data-action="copie-faite" id="rappel-fait" hidden>Copie faite</button>
     <button type="button" class="btn" data-action="plus-tard">Plus tard</button>
   </div>
 </div>
@@ -1995,7 +1996,7 @@ function allerA(id, depuisHash) {
 
 /* Messages brefs, dialogue, volets */
 let minuteurBref = null;
-function bref(t) { const z = $('bref'); z.textContent = typo(t); z.hidden = false; clearTimeout(minuteurBref); minuteurBref = setTimeout(() => { z.hidden = true; }, 2600); }
+function bref(t) { const z = $('bref'); z.textContent = typo(t); z.hidden = false; clearTimeout(minuteurBref); minuteurBref = setTimeout(() => { z.hidden = true; }, Math.max(2600, t.length * 60)); }
 function demander(titre, texte, oui, non) {
   return new Promise(res => {
     const d = $('dlg'); $('dlg-t').textContent = typo(titre); $('dlg-p').textContent = typo(texte); $('dlg-oui').textContent = oui || 'Continuer'; $('dlg-non').textContent = typo(non || 'Annuler');
@@ -2030,7 +2031,7 @@ function copier(texte, message) {
 function enregistrer() {
   S.exportLe = new Date().toISOString(); S.modifsExport = S.modifs;
   telecharger('atelier-ia-vente_' + cheminNom() + '_' + S.exportLe.slice(0, 10) + '.json', JSON.stringify(S, null, 1), 'application/json');
-  sauver(); $('rappel').hidden = true; majBarre(); bref('Fichier de projet enregistré dans tes téléchargements.');
+  sauver(); $('rappel').hidden = true; majBarre(); bref('Fichier enregistré dans tes téléchargements. Envoie-le aussi à ta propre adresse ou mets-le dans ton Drive.');
 }
 function preparerImpression() {
   const C = calcul(); $('impression').innerHTML = dossierHtml(C); typoNoeuds($('impression'));
@@ -2140,7 +2141,10 @@ function verifierRappel() {
   const depuis = (S.modifs || 0) - (S.modifsExport || 0);
   const h = new Date(), m = h.getHours() * 60 + h.getMinutes();
   const finDeSeance = (m >= 705 && m <= 725) || (m >= 975 && m <= 995);
-  const montrer = depuis > 0 && Date.now() > rappelRepousse && (depuis >= 60 || finDeSeance);
+  const montrer = Date.now() > rappelRepousse && ((depuis > 0 && (depuis >= 60 || finDeSeance)) || (finDeSeance && (S.modifs || 0) > 0));
+  const fin = montrer && finDeSeance;
+  $('rappel-texte').textContent = typo(fin ? 'Fin de séance : enregistre ton fichier, puis envoie-le à ta propre adresse e-mail ou mets-le dans ton Drive. Sans lui, tu ne retrouves pas ton travail le 27 novembre.' : 'Enregistre ton fichier de projet avant de fermer. Le navigateur peut tout perdre.');
+  $('rappel-fait').hidden = !fin;
   $('rappel').hidden = !montrer;
 }
 
@@ -2187,6 +2191,7 @@ document.addEventListener('click', e => {
   if (a === 'recuperer') return recuperer();
   if (a === 'volet-nav') return basculer('nav');
   if (a === 'volet-etat') return basculer('etat');
+  if (a === 'copie-faite') { rappelRepousse = Date.now() + 90 * 60000; $('rappel').hidden = true; return bref('Parfait. Ton travail est en sécurité.'); }
   if (a === 'plus-tard') { rappelRepousse = Date.now() + 20 * 60000; $('rappel').hidden = true; return; }
   if (b.hasAttribute('data-copier')) {
     const idc = b.getAttribute('data-copier');

@@ -1469,6 +1469,20 @@ Ne donne pas les réponses. Signale chaque affirmation de mon dossier qui manque
 [MINI-DOSSIER]`, texteDossier()]
 });
 
+/* Cahier de commande au format Markdown, à ajouter aux fichiers de contexte du projet Claude */
+function cahierMd() {
+  const champs = [['Utilisateur', 'cc_utilisateur'], ['Problème à résoudre', 'cc_probleme'], ['Données en entrée', 'cc_entrees'], ['Résultat attendu', 'cc_resultat'],
+    ['Règles de calcul', 'cc_regles'], ['Ce que l\'outil ne fait pas', 'cc_hors'], ['Place de l\'humain', 'cc_humain']];
+  const txt = x => String(x).split(VIDE).join('à compléter');
+  let manque = 0; const val = c => { if (!rempli(c)) { manque++; return 'à compléter'; } return String(v(c)).trim(); };
+  const nom = rempli('cc_nom') ? String(v('cc_nom')).trim() : 'Mon outil'; if (!rempli('cc_nom')) manque++;
+  const jour = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const choix = id => (S.choix[id] ? libChoix(id) : (manque++, 'à compléter'));
+  const corps = '# Cahier de commande : ' + nom + '\n\nMis à jour le ' + jour + '. Ce fichier décrit l\'outil à construire. Lis-le avant chaque réponse de ce projet.\n\n'
+    + champs.map(c => '## ' + c[0] + '\n' + val(c[1]) + '\n').join('\n')
+    + '\n## Ambition de la version 1\n' + txt(choix('perimetre')) + '\n\n## Base technique\n' + txt(choix('technique')) + '\n';
+  return { nom, manque, texte: typo(corps) };
+}
 function texteConsigne(id) {
   const r = CONSIGNES[id]();
   return typo(r[0]) + (r[1] ? '\n' + r[1] : '');
@@ -1682,7 +1696,9 @@ const CHAPITRES = [
       ${champ('cc_resultat', `Résultat attendu`, { type: 'zone', requis: true, sansMention: true, ex: `Les dix devis à relancer aujourd'hui, classés, avec la raison` })}
       ${champ('cc_regles', `Règles de calcul`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Score = montant × probabilité de l'étape, moins 5 points par semaine sans contact.` })}
       ${champ('cc_hors', `Ce que l'outil ne fait pas`, { type: 'zone', requis: true, sansMention: true, ex: `Il n'envoie aucun message. Il ne modifie pas le fichier d'origine.` })}
-      ${champ('cc_humain', `Place de l'humain`, { type: 'zone', requis: true, sansMention: true, ex: `Le commercial valide la liste et peut écarter un devis.` })}</div>`)
+      ${champ('cc_humain', `Place de l'humain`, { type: 'zone', requis: true, sansMention: true, ex: `Le commercial valide la liste et peut écarter un devis.` })}</div>
+      <div class="actions"><button type="button" class="btn" data-action="cahier-md">Télécharger le cahier (.md)</button></div>
+      <p class="note">Ajoute ce fichier aux fichiers de ton projet Claude : il reste disponible dans toutes tes conversations du projet. Après une modification du cahier, télécharge-le de nouveau et remplace l'ancien.</p>`)
     + bloc(`Teste un fichier de données`, `<p>Ton outil lira peut-être un fichier Excel ou CSV, comme une base de fournisseurs ou de clients. Glisse un fichier ici pour voir ce que ton outil recevra : colonnes, lignes, cellules vides. Le fichier reste sur ton appareil et n'est pas enregistré dans ton projet.</p>
       <div class="depot" tabindex="0" role="button" aria-label="Zone de dépôt : glisse un fichier Excel ou CSV, ou appuie sur Entrée pour en choisir un" data-action="choisir-donnees">
         <b>Glisse un fichier .xlsx ou .csv ici</b><span>ou clique pour le choisir</span></div>
@@ -2200,6 +2216,11 @@ document.addEventListener('click', e => {
   const b = e.target.closest('button,[data-action]'); if (!b) return;
   const a = b.getAttribute('data-action');
   if (a === 'nouveau') return nouveau();
+  if (a === 'cahier-md') {
+    const c = cahierMd(), slug = c.nom.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'outil';
+    telecharger('cahier-de-commande_' + slug + '.md', c.texte, 'text/markdown;charset=utf-8');
+    return bref(c.manque ? 'Cahier téléchargé. ' + c.manque + (c.manque > 1 ? ' passages restent' : ' passage reste') + ' « à compléter ».' : 'Cahier téléchargé. Ajoute-le aux fichiers de ton projet Claude.');
+  }
   if (a === 'ouvrir') return ouvrir();
   if (a === 'choisir-donnees') { $('fichier-donnees').value = ''; return $('fichier-donnees').click(); }
   if (a === 'enregistrer') return enregistrer();

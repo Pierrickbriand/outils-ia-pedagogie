@@ -369,6 +369,9 @@ details.aide-schema{margin-top:14px;border:1px solid var(--trait-fort);backgroun
 details.aide-schema>summary{font-size:15px}
 details.aide-schema .schema{margin:0;padding:0 16px 16px}
 
+details.aide .picto{flex:none;color:var(--accent-fonce)}
+@media print{details.aide .picto{display:none}}
+
 </style>
 </head>
 <body>
@@ -1001,9 +1004,10 @@ function etape(id, titre, duree, corps) {
 }
 /* Aide contextuelle repliable : l'état ouvert ou fermé est gardé en mémoire pendant la visite, pas dans le projet */
 const AIDES = {};
+const PICTO_AIDE = '<svg class="picto" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="8.2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="6.2" r="1.1" fill="currentColor"/><path d="M10 9v5.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>';
 function aide(titre, corps, id) {
   id = id || titre;
-  return `<details class="bloc aide" data-aide="${esc(id)}"${AIDES[id] ? ' open' : ''}><summary><span>${titre}</span></summary><div class="aide-corps">${corps}</div></details>`;
+  return `<details class="bloc aide" data-aide="${esc(id)}"${AIDES[id] ? ' open' : ''}><summary>${PICTO_AIDE}<span>${titre}</span></summary><div class="aide-corps">${corps}</div></details>`;
 }
 function partie(obligatoire, titre, texte) {
   return `<div class="partie ${obligatoire ? 'obligatoire' : 'facultatif'}"><span class="statut ${obligatoire ? 'obligatoire' : 'facultatif'}">${obligatoire ? 'Obligatoire' : 'Facultatif'}</span><h2>${titre}</h2><p>${texte}</p></div>`;
@@ -1163,7 +1167,7 @@ const SCHEMAS = {
 function schema(id) {
   const s = SCHEMAS[id];
   const h = id === 'sheets' ? 300 : id === 'appsscript' ? 320 : 340;
-  return `<details class="aide aide-schema" data-aide="schema_${id}"${AIDES['schema_' + id] ? ' open' : ''}><summary><span>Voir le schéma : ${esc(s.titre)}</span></summary><figure class="schema" data-capture="captures/${s.capture}"><svg viewBox="0 0 640 ${h}" role="img" aria-label="${esc(s.titre)}"><rect width="640" height="${h}" fill="#fff"/>${s.svg()}<rect x=".5" y=".5" width="639" height="${h - 1}" fill="none" stroke="#CBD5E1"/></svg>
+  return `<details class="aide aide-schema" data-aide="schema_${id}"${AIDES['schema_' + id] ? ' open' : ''}><summary>${PICTO_AIDE}<span>Voir le schéma : ${esc(s.titre)}</span></summary><figure class="schema" data-capture="captures/${s.capture}"><svg viewBox="0 0 640 ${h}" role="img" aria-label="${esc(s.titre)}"><rect width="640" height="${h}" fill="#fff"/>${s.svg()}<rect x=".5" y=".5" width="639" height="${h - 1}" fill="none" stroke="#CBD5E1"/></svg>
     <figcaption><ol>${s.legende.map(x => `<li>${x}</li>`).join('')}</ol><p class="note">Schéma simplifié : la disposition peut différer sur ton écran.</p></figcaption></figure></details>`;
 }
 const capturesVues = {};

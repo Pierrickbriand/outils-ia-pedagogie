@@ -325,6 +325,20 @@ dialog .actions{justify-content:flex-end;margin-top:20px}
   .seg i,.dossier th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 
+/* Dépôt de fichiers */
+.depot{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;margin-top:14px;padding:26px 16px;border:2px dashed var(--accent-trait);background:var(--accent-pale);color:var(--accent-nuit);text-align:center;cursor:pointer}
+.depot span{font-size:14px;color:var(--texte)}
+.depot:hover,.depot:focus-visible,.depot.survol{border-color:var(--accent);background:#D1FAE5;outline:none}
+.depot-resultat{margin-top:12px}
+.depot-bilan{margin:0 0 8px}
+.alerte-depot{margin:8px 0;padding:9px 12px;border:1px solid var(--ambre-trait);background:var(--ambre-pale);color:var(--ambre);font-weight:600;font-size:14px}
+#depose{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:rgba(248,250,252,.78);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);pointer-events:none}
+#depose[hidden]{display:none}
+#depose>div{display:flex;flex-direction:column;gap:6px;text-align:center;padding:34px 40px;border:2px dashed var(--accent);background:#fff;box-shadow:0 12px 36px rgba(15,23,42,.14);max-width:90vw}
+#depose b{font-size:20px;color:var(--accent-nuit)}
+#depose span{color:var(--texte)}
+@media print{#depose,.depot,.depot-resultat{display:none!important}}
+
 </style>
 </head>
 <body>
@@ -375,6 +389,8 @@ dialog .actions{justify-content:flex-end;margin-top:20px}
 </dialog>
 
 <input type="file" id="fichier" accept=".json,application/json" hidden>
+<input type="file" id="fichier-donnees" accept=".csv,.txt,.xlsx,.xls" hidden>
+<div id="depose" hidden aria-hidden="true"><div><b>Dépose ton fichier de projet</b><span>Il remplace le travail affiché, après confirmation.</span></div></div>
 <div id="impression" class="dossier"></div>
 
 <script>
@@ -682,7 +698,8 @@ const IDEES = [
   { id: 'tri', fam: 'Expérience client', t: `Tri des réclamations`, pour: `Service client`, in: `Messages de clients`, out: `Thème, urgence, réponse proposée, validation par un conseiller`, niv: 2, vig: `L'ironie et les cas sensibles trompent les règles.` },
   { id: 'agent', fam: 'Expérience client', t: `Scénario d'agent conversationnel`, pour: `Service client, site marchand`, in: `Quinze questions fréquentes et leurs réponses`, out: `Arbre de dialogue et passage à un conseiller`, niv: 2, vig: `L'agent annonce qu'il est une machine.` },
   { id: 'activite', fam: 'Pilotage', t: `Tableau de bord d'activité`, pour: `Commercial, responsable d'équipe`, in: `Appels, rendez-vous, devis, ventes par semaine`, out: `Taux de transformation par étape et point faible`, niv: 2, vig: `Mesurer une personne n'est pas neutre : qui voit quoi ?` },
-  { id: 'appel', fam: 'Aide à la décision', t: `Grille de décision d'appel d'offres`, pour: `Ingénieur d'affaires`, in: `Critères de l'appel d'offres, atouts, concurrence, charge de réponse`, out: `Note pondérée, décision argumentée d'y aller ou non, points à lever`, niv: 2, vig: `La pondération traduit une stratégie : qui la fixe ?` }
+  { id: 'appel', fam: 'Aide à la décision', t: `Grille de décision d'appel d'offres`, pour: `Ingénieur d'affaires`, in: `Critères de l'appel d'offres, atouts, concurrence, charge de réponse`, out: `Note pondérée, décision argumentée d'y aller ou non, points à lever`, niv: 2, vig: `La pondération traduit une stratégie : qui la fixe ?` },
+  { id: 'negoce', fam: 'Aide à la décision', t: `Préparateur de négociation sur fichier`, pour: `Ingénieur d'affaires, acheteur`, in: `Fichier Excel glissé dans l'outil : prix, volumes, délais, note de qualité par fournisseur ou par client`, out: `Fiche de négociation par ligne : arguments, prix cible, point de repli, questions à poser`, niv: 2, vig: `Les prix sont confidentiels : travaille sur un fichier fictif ou anonymisé.` }
 ];
 
 /* ───────── Jeux de données fictifs, différents pour chaque étudiant ───────── */
@@ -1119,6 +1136,109 @@ function chargerCaptures(racine) {
   });
 }
 
+/* ───────── Lecteur de fichier tableur : CSV et Excel (.xlsx), sans bibliothèque, tout reste dans le navigateur ───────── */
+/* Cette fonction est aussi copiée telle quelle dans la consigne de construction : elle doit rester autonome. */
+async function lireTableur(fichier) {
+  const nom = (fichier.name || '').toLowerCase();
+  const erreur = m => { const e = new Error(m); e.lisible = true; return e; };
+  if (fichier.size > 15 * 1024 * 1024) throw erreur('Fichier trop lourd (plus de 15 Mo).');
+  if (/\.xls$/.test(nom)) throw erreur('Ancien format .xls non lu. Dans Excel : Fichier, Enregistrer sous, puis « Classeur Excel (.xlsx) » ou « CSV ».');
+  const octets = new Uint8Array(await fichier.arrayBuffer());
+  const estZip = octets[0] === 0x50 && octets[1] === 0x4B;
+  if (!estZip && /\.xlsx$/.test(nom)) throw erreur('Ce fichier .xlsx ne s\'ouvre pas : il est peut-être protégé par un mot de passe.');
+  if (!estZip) return lireCsv(new TextDecoder('utf-8').decode(octets));
+  return lireXlsx(octets);
+
+  function lireCsv(texte) {
+    texte = texte.replace(/^﻿/, '');
+    const essai = texte.split(/\r?\n/).slice(0, 5).join('\n');
+    const sep = [';', '\t', ','].map(s => [s, essai.split(s).length]).sort((a, b) => b[1] - a[1])[0][0];
+    const lignes = []; let ligne = [], cell = '', guillemets = false;
+    for (let i = 0; i < texte.length; i++) {
+      const c = texte[i];
+      if (guillemets) { if (c === '"') { if (texte[i + 1] === '"') { cell += '"'; i++; } else guillemets = false; } else cell += c; }
+      else if (c === '"') guillemets = true;
+      else if (c === sep) { ligne.push(cell); cell = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && texte[i + 1] === '\n') i++; ligne.push(cell); lignes.push(ligne); ligne = []; cell = ''; }
+      else cell += c;
+    }
+    if (cell !== '' || ligne.length) { ligne.push(cell); lignes.push(ligne); }
+    return mettreEnForme(lignes, 'CSV');
+  }
+
+  async function lireXlsx(o) {
+    const vue = new DataView(o.buffer, o.byteOffset, o.byteLength);
+    let fin = -1;
+    for (let i = o.length - 22; i >= Math.max(0, o.length - 65558); i--) { if (vue.getUint32(i, true) === 0x06054B50) { fin = i; break; } }
+    if (fin < 0) throw erreur('Ce fichier n\'est pas un classeur Excel valide.');
+    const nb = vue.getUint16(fin + 10, true); let p = vue.getUint32(fin + 16, true);
+    const dec = new TextDecoder('utf-8'), entrees = {};
+    for (let k = 0; k < nb; k++) {
+      if (vue.getUint32(p, true) !== 0x02014B50) break;
+      const methode = vue.getUint16(p + 10, true), taille = vue.getUint32(p + 20, true);
+      const ln = vue.getUint16(p + 28, true), le = vue.getUint16(p + 30, true), lc = vue.getUint16(p + 32, true), local = vue.getUint32(p + 42, true);
+      entrees[dec.decode(o.subarray(p + 46, p + 46 + ln))] = { methode, taille, local };
+      p += 46 + ln + le + lc;
+    }
+    async function lire(chemin) {
+      const e = entrees[chemin]; if (!e) return null;
+      const debut = e.local + 30 + vue.getUint16(e.local + 26, true) + vue.getUint16(e.local + 28, true);
+      const brut = o.subarray(debut, debut + e.taille);
+      if (e.methode === 0) return dec.decode(brut);
+      if (e.methode !== 8 || typeof DecompressionStream === 'undefined') throw erreur('Ce navigateur ne sait pas décompresser le fichier. Utilise un navigateur récent ou un export CSV.');
+      const flux = new Blob([brut]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+      return dec.decode(await new Response(flux).arrayBuffer());
+    }
+    const entite = t => t.replace(/&#x([0-9a-f]+);/gi, (m, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (m, d) => String.fromCodePoint(+d))
+      .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, '\'').replace(/&amp;/g, '&');
+    const textes = x => { let s = ''; x.replace(/<rPh[\s\S]*?<\/rPh>/g, '').replace(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g, (m, t) => { s += t; return m; }); return entite(s); };
+    const feuilles = Object.keys(entrees).filter(n => /^xl\/worksheets\/sheet\d+\.xml$/.test(n)).sort((a, b) => parseInt(a.replace(/\D/g, ''), 10) - parseInt(b.replace(/\D/g, ''), 10));
+    if (!feuilles.length) throw erreur('Aucune feuille trouvée dans ce classeur.');
+    const partages = [], xs = await lire('xl/sharedStrings.xml');
+    if (xs) xs.replace(/<si(?:\s[^>]*)?>([\s\S]*?)<\/si>/g, (m, c) => { partages.push(textes(c)); return m; });
+    const formats = {}, styles = [], xst = await lire('xl/styles.xml');
+    if (xst) {
+      xst.replace(/<numFmt\s[^>]*numFmtId="(\d+)"[^>]*formatCode="([^"]*)"/g, (m, i, c) => { formats[i] = entite(c); return m; });
+      const bloc = (xst.match(/<cellXfs[\s\S]*?<\/cellXfs>/) || [''])[0];
+      bloc.replace(/<xf\s[^>]*?numFmtId="(\d+)"/g, (m, i) => { styles.push(+i); return m; });
+    }
+    const estDate = s => {
+      const i = styles[s]; if (i === undefined) return false;
+      if ((i >= 14 && i <= 22) || (i >= 45 && i <= 47)) return true;
+      return !!formats[i] && /[dy]/i.test(formats[i].replace(/"[^"]*"|\[[^\]]*\]|\\./g, ''));
+    };
+    const xml = await lire(feuilles[0]), lignes = [];
+    xml.replace(/<c\s([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g, (m, att, corps) => {
+      const r = (att.match(/\br="([A-Z]+)(\d+)"/) || []); if (!r[1]) return m;
+      let col = 0; for (const c of r[1]) col = col * 26 + c.charCodeAt(0) - 64; col--;
+      const ligne = +r[2] - 1, t = (att.match(/\bt="(\w+)"/) || [])[1], s = (att.match(/\bs="(\d+)"/) || [])[1];
+      const val = ((corps || '').match(/<v>([\s\S]*?)<\/v>/) || [])[1];
+      let res = '';
+      if (t === 's') res = partages[+val] || '';
+      else if (t === 'inlineStr') res = textes(corps);
+      else if (t === 'str') res = entite(val || '');
+      else if (t === 'b') res = val === '1' ? 'oui' : 'non';
+      else if (val !== undefined) {
+        const n = parseFloat(val);
+        res = (s !== undefined && estDate(+s) && n > 0 && n < 2958466) ? new Date(Date.UTC(1899, 11, 30) + Math.round(n * 86400000)).toISOString().slice(0, 10) : val;
+      }
+      (lignes[ligne] = lignes[ligne] || [])[col] = res;
+      return m;
+    });
+    return mettreEnForme(lignes, 'Excel');
+  }
+
+  function mettreEnForme(brut, format) {
+    const vides = l => !l || l.every(c => c === undefined || String(c).trim() === '');
+    const lignes = []; for (let i = 0; i < brut.length; i++) if (!vides(brut[i])) lignes.push(brut[i]);
+    if (!lignes.length) throw erreur('Le fichier est vide.');
+    const largeur = Math.max(...lignes.map(l => l.length));
+    const plein = l => Array.from({ length: largeur }, (x, i) => (l[i] === undefined ? '' : String(l[i]).trim()));
+    const colonnes = plein(lignes[0]).map((c, i) => c || 'Colonne ' + (i + 1));
+    return { format, colonnes, lignes: lignes.slice(1).map(plein) };
+  }
+}
+
 /* ───────── Consignes à copier dans Claude ───────── */
 const prenom = () => rempli('id_nom') ? String(v('id_nom')).trim().split(/\s+/)[0] : VIDE;
 const particuliers = () => v('fr_clients') === 'part';
@@ -1268,6 +1388,24 @@ Place de l'humain : ${ou('cc_humain')}
 Ambition de la version 1 : ${libChoix('perimetre')}
 Base technique : ${libChoix('technique')}`],
   construction: () => {
+    const depot = estCoche('cc_depot', false) && S.choix.technique !== 'sheets';
+    const r = CONSIGNES.constructionBase();
+    if (!depot) return r;
+    return [r[0] + `
+
+Zone de dépôt de fichier, à ajouter à l'outil :
+– une zone « Glisse ton fichier ici » accepte aussi un clic pour choisir le fichier ;
+– elle lit les fichiers .csv et .xlsx directement dans le navigateur, avec la fonction lireTableur ci-dessous, que tu recopies telle quelle, sans bibliothèque ;
+– lireTableur renvoie { format, colonnes, lignes } : colonnes est la liste des titres, lignes une liste de lignes, et chaque cellule est un texte ;
+– après lecture, l'outil affiche le nombre de lignes, les colonnes reconnues et les cellules vides ;
+– si une colonne attendue manque, l'outil le dit et ne calcule rien ;
+– les nombres arrivent en texte : convertis-les avant tout calcul, en gérant la virgule et le point décimal ;
+– les dates Excel arrivent au format AAAA-MM-JJ ;
+– le fichier n'est jamais envoyé sur Internet, et l'outil ne modifie jamais le fichier d'origine.
+
+Voici la fonction lireTableur :`, lireTableur.toString()];
+  },
+  constructionBase: () => {
     const corr = rempli('cc_corrections') ? `, avec ces corrections : ${String(v('cc_corrections')).trim()}` : '';
     const t = S.choix.technique;
     if (t === 'sheets') return [`Ton plan me convient${corr}. Construis la version 1 avec Google Apps Script.
@@ -1380,9 +1518,16 @@ const CHAPITRES = [
         `tes choix sont ceux d'un ingénieur d'affaires : cibler, qualifier, répondre, chiffrer, suivre, prévoir`,
         `ils déclenchent des scènes : deux étudiants ne vivront pas la même histoire`,
         `ton travail s'enregistre seul sur cet appareil`]) + `
-      <h3>Le fichier de projet, ta vraie sauvegarde</h3><p>Le navigateur peut tout perdre : cache vidé, autre ordinateur. Enregistre ton fichier de projet à chaque fin de séance. Tu le rouvres avec « Ouvrir » pour reprendre.</p>`
+      <h3>Le fichier de projet, ta vraie sauvegarde</h3>
+      <p><b>Ce que c'est.</b> Un petit fichier, de type .json, qui contient tout ce que tu as saisi : réponses, choix, scènes. Tu ne l'ouvres pas toi-même : seule cette page sait le lire.</p>
+      <p><b>À quoi il sert.</b> Le navigateur peut tout perdre : cache vidé, autre ordinateur, session de l'école fermée. Avec ce fichier, tu reprends ton travail là où tu l'as laissé, y compris le 27 novembre.</p>
+      <p><b>Ce que tu en fais.</b></p>` + pas([
+        `Clique sur « Enregistrer » à chaque pause et en fin de séance. Le fichier arrive dans tes téléchargements.`,
+        `Range-le dans ton dossier « Atelier vente », puis copie-le sur un espace en ligne ou envoie-le à ta propre adresse.`,
+        `Pour reprendre : clique sur « Ouvrir », ou glisse le fichier n'importe où sur la page.`])
+      + `<p><b>Ce que tu n'en fais pas.</b> Tu ne le déposes pas sur le LMS : le rendu noté est le PDF du dossier. Tu ne le colles pas dans Claude. Il contient ton entreprise et tes réponses : ne le partage pas sans y penser.</p>`
       + tableau(['Action', 'Bouton', 'Raccourci'], [
-        ['Repartir de zéro', '« Nouveau »', 'Alt + N'], ['Reprendre un fichier de projet', '« Ouvrir »', 'Alt + O'],
+        ['Repartir de zéro', '« Nouveau »', 'Alt + N'], ['Reprendre un fichier de projet', '« Ouvrir », ou glisser le fichier sur la page', 'Alt + O'],
         ['Enregistrer le fichier de projet', '« Enregistrer »', 'Ctrl + S, ou ⌘ S sur Mac'], ['Exporter le dossier en PDF', '« Exporter »', 'Ctrl + E, ou ⌘ E sur Mac']]))
     + etape('depart_regles', `Retiens trois règles`, '', pas([
         `<b>Aucune donnée réelle dans Claude.</b> Ni client, ni prospect, ni collègue. Tu travailles avec des données fictives.`,
@@ -1534,10 +1679,15 @@ const CHAPITRES = [
       ${champ('cc_regles', `Règles de calcul`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Score = montant × probabilité de l'étape, moins 5 points par semaine sans contact.` })}
       ${champ('cc_hors', `Ce que l'outil ne fait pas`, { type: 'zone', requis: true, sansMention: true, ex: `Il n'envoie aucun message. Il ne modifie pas le fichier d'origine.` })}
       ${champ('cc_humain', `Place de l'humain`, { type: 'zone', requis: true, sansMention: true, ex: `Le commercial valide la liste et peut écarter un devis.` })}</div>`)
+    + bloc(`Teste un fichier de données`, `<p>Ton outil lira peut-être un fichier Excel ou CSV, comme une base de fournisseurs ou de clients. Glisse un fichier ici pour voir ce que ton outil recevra : colonnes, lignes, cellules vides. Le fichier reste sur ton appareil et n'est pas enregistré dans ton projet.</p>
+      <div class="depot" tabindex="0" role="button" aria-label="Zone de dépôt : glisse un fichier Excel ou CSV, ou appuie sur Entrée pour en choisir un" data-action="choisir-donnees">
+        <b>Glisse un fichier .xlsx ou .csv ici</b><span>ou clique pour le choisir</span></div>
+      <div class="depot-resultat" aria-live="polite"></div>
+      <p class="note">Pas de fichier sous la main ? Utilise le fichier .csv fictif téléchargé à l'atelier 1. Aucune donnée réelle : ni client, ni fournisseur, ni collègue.</p>`)
     + decision('perimetre') + decision('technique') + decision('prevision')
     + etape('fab_cadrage', `Cadre le projet avec Claude`, '10 min', consigne('cadrage', `Consigne de cadrage`)
       + `<div class="champs">${champ('cc_corrections', `Tes corrections au plan de Claude`, { type: 'zone', large: true, aide: `Elles s'ajoutent à la consigne suivante.` })}</div>`)
-    + etape('fab_construire', `Fais construire la version 1`, '20 min', consigne('construction', `Consigne de construction`) + schema('artefact')
+    + etape('fab_construire', `Fais construire la version 1`, '20 min', `<div class="coches">${coche('cc_depot', `Mon outil lit un fichier Excel ou CSV que je glisse dans une zone de dépôt`, false)}</div>` + consigne('construction', `Consigne de construction`) + schema('artefact')
       + pas([`Teste l'outil dans l'aperçu.`, `Télécharge le fichier, ou copie le code.`, `Range le fichier dans un dossier « Atelier vente » sur ton ordinateur.`, `Ouvre-le d'un double-clic : il s'affiche dans ton navigateur.`])
       + `<p class="note">Pas d'aperçu ? Ouvre « Paramètres », puis « Capacités », et active l'exécution de code et la création de fichiers. Sinon, demande le code complet dans un seul bloc. Colle-le dans un fichier texte et enregistre-le avec l'extension .html.</p>`)
     + etape('fab_tests', `Teste avec trois cas`, '15 min', `<p>Écris le résultat attendu avant de lancer l'outil. Calcule-le à la main.</p>`
@@ -1602,7 +1752,7 @@ const CHAPITRES = [
     return bloc(D.titre, D.phrases.map(p => `<p>${p}</p>`).join('') + (D.alertes.length ? `<h3>Alertes</h3>` + tirets(D.alertes.map(a => (a.charAt(0).toLowerCase() + a.slice(1)).replace(/\.$/, ''))) : ''))
     + bloc(`Ton plan d'action, en trois temps`, D.temps.map(x => `<h3>${x.t}</h3>` + pas(x.a)).join(''))
     + bloc(`Ce qui manque à ton dossier`, M.liste.length ? `<p>Ton dossier est rempli à ${M.taux} %. Voici où il reste du travail :</p><ul class="tirets">${CHAPITRES.filter(c => M.parChapitre[c.id]).map(c => `<li><a href="#${c.id}">${c.nav.replace(/^\d\. /, '')}</a> : ${M.parChapitre[c.id] === 1 ? 'un élément' : M.parChapitre[c.id] + ' éléments'}</li>`).join('')}</ul>` : `<p>Ton dossier est complet. Relis-le avant de l'exporter.</p>`)
-    + etape('dg_fichier', `Enregistre ton fichier de projet`, '', `<p>Ce fichier contient tout ton travail. Garde-le dans ton dossier « Atelier vente » et sur un espace en ligne.</p>
+    + etape('dg_fichier', `Enregistre ton fichier de projet`, '', `<p>Ce fichier contient tout ton travail. Il te permet de reprendre le 27 novembre, ou sur un autre ordinateur. Garde-le dans ton dossier « Atelier vente » et sur un espace en ligne. Ce n'est pas ton rendu : le rendu, c'est le PDF de l'étape suivante.</p>
       <div class="actions"><button type="button" class="btn plein" data-action="enregistrer">Enregistrer le fichier de projet</button></div>`)
     + etape('dg_pdf', `Exporte ton dossier en PDF`, '', pas([`Clique sur « Exporter le dossier ».`, `Dans la fenêtre d'impression, choisis « Enregistrer au format PDF ».`, `Dépose le fichier sur le LMS, avant la date donnée par ton formateur.`])
       + `<div class="actions"><button type="button" class="btn plein" data-action="exporter">Exporter le dossier</button></div>`)
@@ -1941,6 +2091,49 @@ function lireFichier(f) {
   l.readAsText(f);
 }
 
+/* Glisser-déposer : le fichier de projet n'importe où sur la page, un fichier de données dans la zone d'essai */
+const porteFichier = e => !!(e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') >= 0);
+const dansDepot = e => (e.target && e.target.closest ? e.target.closest('.depot') : null);
+function finDepose() { $('depose').hidden = true; document.querySelectorAll('.depot.survol').forEach(x => x.classList.remove('survol')); }
+document.addEventListener('dragover', e => {
+  if (!porteFichier(e)) return;
+  e.preventDefault();
+  const z = dansDepot(e);
+  document.querySelectorAll('.depot.survol').forEach(x => { if (x !== z) x.classList.remove('survol'); });
+  if (z) z.classList.add('survol');
+  $('depose').hidden = !!z || !!document.querySelector('dialog[open]');
+});
+document.addEventListener('dragleave', e => { if (!e.relatedTarget) finDepose(); });
+document.addEventListener('drop', e => {
+  if (!porteFichier(e)) return;
+  e.preventDefault(); const z = dansDepot(e); finDepose();
+  const f = e.dataTransfer.files && e.dataTransfer.files[0]; if (!f) return;
+  if (document.querySelector('dialog[open]')) return;
+  if (z) return deposerDonnees(f);
+  if (/\.json$/i.test(f.name)) return lireFichier(f);
+  if (/\.(csv|txt|xlsx|xls)$/i.test(f.name)) return bref('Ce fichier est une base de données, pas un projet. Dépose-le dans la zone d\'essai de l\'étape « Fabrique », ou dans ton outil.');
+  bref('Fichier non reconnu. Pour reprendre ton travail, dépose un fichier de projet .json.');
+});
+const COLONNES_PERSO = /nom|pr[ée]nom|mail|t[ée]l|phone|mobile|iban|adresse|naissance|salaire|sécu|secu/i;
+async function deposerDonnees(f) {
+  const z = document.querySelector('.depot-resultat'); if (!z) return;
+  z.innerHTML = '<p class="note">Lecture du fichier…</p>';
+  try {
+    const r = await lireTableur(f), n = r.lignes.length, c = r.colonnes.length;
+    const vides = r.lignes.reduce((s, l) => s + l.filter(x => x === '').length, 0);
+    const pl = (k, mot) => k + ' ' + mot + (k > 1 ? 's' : '');
+    const perso = r.colonnes.filter(x => COLONNES_PERSO.test(x));
+    const apercu = r.lignes.slice(0, 5);
+    z.innerHTML = `<p class="depot-bilan"><b>${esc(f.name)}</b> : ${r.format}, ${pl(n, 'ligne')} de données, ${pl(c, 'colonne')}, ${pl(vides, 'cellule')} vide${vides > 1 ? 's' : ''}.</p>`
+      + (perso.length ? `<p class="alerte-depot">${esc(typo('À vérifier : ' + (perso.length > 1 ? 'ces colonnes peuvent contenir' : 'cette colonne peut contenir') + ' des données personnelles (' + perso.join(', ') + '). Ne donne pas ce fichier à Claude tel quel : anonymise-le ou travaille sur un fichier fictif.'))}</p>` : '')
+      + (vides ? `<p class="note">${esc(typo('Les cellules vides faussent les calculs : décide ce que fait ton outil quand une donnée manque.'))}</p>` : '')
+      + `<div class="defile"><table class="tab donnees"><thead><tr>${r.colonnes.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${apercu.map(l => `<tr>${l.map(x => `<td>${esc(x)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`
+      + `<p class="note">${esc(typo('Aperçu : ' + apercu.length + ' ligne' + (apercu.length > 1 ? 's' : '') + ' sur ' + n + '.' + (r.format === 'Excel' ? ' Un fichier Excel est lu sur sa première feuille. Les dates arrivent au format AAAA-MM-JJ.' : '')))}</p>`;
+  } catch (e) {
+    z.innerHTML = `<p class="alerte-depot">${esc(typo(e && e.lisible ? e.message : 'Ce fichier ne peut pas être lu. Essaie de l\'enregistrer en CSV depuis Excel.'))}</p>`;
+  }
+}
+
 /* Rappel d'enregistrement : après beaucoup de modifications, et en fin de demi-journée */
 let rappelRepousse = 0;
 function verifierRappel() {
@@ -1955,7 +2148,7 @@ async function choisirIdee(id) {
   const i = IDEES.find(x => x.id === id), cibles = { cc_nom: i.t, cc_utilisateur: i.pour, cc_entrees: i.in, cc_resultat: i.out };
   const deja = Object.keys(cibles).some(k => rempli(k) && String(v(k)).trim() !== cibles[k]);
   if (deja && !(await demander('Remplacer ton cahier de commande ?', 'Le nom, l\'utilisateur, les données et le résultat déjà saisis seront remplacés par ceux de cette idée.', 'Remplacer'))) return;
-  S.champs.cc_idee = id; Object.assign(S.champs, cibles); S.faits.fab_idee = true; toucher(); rendre(false);
+  S.champs.cc_idee = id; Object.assign(S.champs, cibles); if (id === 'negoce') S.champs.cc_depot = 'oui'; S.faits.fab_idee = true; toucher(); rendre(false);
   bref('Idée choisie : ton cahier de commande est prérempli.');
 }
 
@@ -1970,6 +2163,7 @@ document.addEventListener('input', e => {
 document.addEventListener('change', e => {
   const t = e.target;
   if (t.id === 'fichier') { if (t.files[0]) lireFichier(t.files[0]); return; }
+  if (t.id === 'fichier-donnees') { if (t.files[0]) deposerDonnees(t.files[0]); return; }
   if (t.hasAttribute('data-decision')) {
     const id = t.getAttribute('data-decision'); S.choix[id] = t.value; toucher(); rendre(false);
     const r = document.querySelector('[data-decision="' + id + '"][value="' + t.value + '"]'); if (r) r.focus({ preventScroll: true });
@@ -1987,6 +2181,7 @@ document.addEventListener('click', e => {
   const a = b.getAttribute('data-action');
   if (a === 'nouveau') return nouveau();
   if (a === 'ouvrir') return ouvrir();
+  if (a === 'choisir-donnees') { $('fichier-donnees').value = ''; return $('fichier-donnees').click(); }
   if (a === 'enregistrer') return enregistrer();
   if (a === 'exporter') return exporter();
   if (a === 'recuperer') return recuperer();
@@ -2015,6 +2210,7 @@ document.addEventListener('click', e => {
   if (b.hasAttribute('data-idee')) return choisirIdee(b.getAttribute('data-idee'));
 });
 document.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('depot')) { e.preventDefault(); e.target.click(); return; }
   const mod = e.ctrlKey || e.metaKey;
   if (mod && !e.altKey && e.code === 'KeyS') { e.preventDefault(); enregistrer(); }
   else if (mod && !e.altKey && e.code === 'KeyE') { e.preventDefault(); exporter(); }

@@ -1697,7 +1697,7 @@ const CHAPITRES = [
       ${champ('cc_regles', `Règles de calcul`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Score = montant × probabilité de l'étape, moins 5 points par semaine sans contact.` })}
       ${champ('cc_hors', `Ce que l'outil ne fait pas`, { type: 'zone', requis: true, sansMention: true, ex: `Il n'envoie aucun message. Il ne modifie pas le fichier d'origine.` })}
       ${champ('cc_humain', `Place de l'humain`, { type: 'zone', requis: true, sansMention: true, ex: `Le commercial valide la liste et peut écarter un devis.` })}</div>
-      <div class="actions"><button type="button" class="btn" data-action="cahier-md">Télécharger le cahier (.md)</button></div>
+      <div class="actions"><button type="button" class="btn" data-action="cahier-md">Télécharger le cahier (.md)</button><button type="button" class="btn" data-action="cahier-effacer">Effacer tous les champs</button></div>
       <p class="note">Ajoute ce fichier aux fichiers de ton projet Claude : il reste disponible dans toutes tes conversations du projet. Après une modification du cahier, télécharge-le de nouveau et remplace l'ancien.</p>`)
     + bloc(`Teste un fichier de données`, `<p>Ton outil lira peut-être un fichier Excel ou CSV, comme une base de fournisseurs ou de clients. Glisse un fichier ici pour voir ce que ton outil recevra : colonnes, lignes, cellules vides. Le fichier reste sur ton appareil et n'est pas enregistré dans ton projet.</p>
       <div class="depot" tabindex="0" role="button" aria-label="Zone de dépôt : glisse un fichier Excel ou CSV, ou appuie sur Entrée pour en choisir un" data-action="choisir-donnees">
@@ -2175,6 +2175,14 @@ async function choisirIdee(id) {
   bref('Idée choisie : ton cahier de commande est prérempli.');
 }
 
+const CHAMPS_CAHIER = ['cc_nom', 'cc_utilisateur', 'cc_probleme', 'cc_entrees', 'cc_resultat', 'cc_regles', 'cc_hors', 'cc_humain'];
+async function effacerCahier() {
+  if (!CHAMPS_CAHIER.some(k => rempli(k)) && !S.champs.cc_idee) return bref('Le cahier de commande est déjà vide.');
+  if (!(await demander('Effacer tout le cahier ?', 'Les huit champs du cahier de commande sont vidés, et l\'idée choisie est retirée. Cette action ne s\'annule pas. Tes choix, tes corrections au plan et le reste du projet ne changent pas.', 'Tout effacer'))) return;
+  CHAMPS_CAHIER.forEach(k => { delete S.champs[k]; });
+  delete S.champs.cc_idee; S.faits.fab_idee = false; toucher(); rendre(false);
+  bref('Cahier de commande vidé.');
+}
 async function retirerIdee() {
   const id = S.champs.cc_idee, i = IDEES.find(x => x.id === id); if (!i) return;
   const cibles = { cc_nom: [i.t, `Nom de l'outil`], cc_utilisateur: [i.pour, 'Utilisateur'], cc_entrees: [i.in, 'Données en entrée'], cc_resultat: [i.out, 'Résultat attendu'] };
@@ -2221,6 +2229,7 @@ document.addEventListener('click', e => {
     telecharger('cahier-de-commande_' + slug + '.md', c.texte, 'text/markdown;charset=utf-8');
     return bref(c.manque ? 'Cahier téléchargé. ' + c.manque + (c.manque > 1 ? ' passages restent' : ' passage reste') + ' « à compléter ».' : 'Cahier téléchargé. Ajoute-le aux fichiers de ton projet Claude.');
   }
+  if (a === 'cahier-effacer') return effacerCahier();
   if (a === 'ouvrir') return ouvrir();
   if (a === 'choisir-donnees') { $('fichier-donnees').value = ''; return $('fichier-donnees').click(); }
   if (a === 'enregistrer') return enregistrer();

@@ -455,7 +455,32 @@ details.aide .picto{flex:none;color:var(--accent-fonce)}
 /* ───────── Données du parcours ───────── */
 const APP = { id: 'atelier-ia-vente', version: 1 };
 const CLE = 'atelier-ia-vente-v1';
-const VERIFIE_LE = '12 octobre 2026';
+
+/* ───────── RÉGLAGES DE LA SESSION : seul bloc à modifier chaque année ─────────
+   Dates au format AAAA-MM-JJ. Tous les textes de l'application s'en déduisent.
+   remise : 'e-mail' (bouton qui ouvre la messagerie) ou 'LMS' (l'étudiant dépose le PDF sur la plateforme).
+   Attention : les repères juridiques datés (articles, calendriers, règlements) ne se mettent pas à jour tout seuls.
+   Relis-les, puis change verifieLe. */
+const CONFIG = {
+  seance1: '2026-10-13',
+  seance2: '2026-11-27',
+  horaire: '8 h 30 à 16 h 30',
+  verifieLe: '2026-10-12',
+  formateurMail: 'pierrick.briand@gmail.com',
+  remise: 'e-mail',
+  module: 'Stratégies avancées d\'utilisation de l\'IA dans les métiers de la vente'
+};
+const MOIS_CFG = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+const dCfg = iso => { const [a, m, j] = iso.split('-').map(Number); return { a, m: m - 1, j }; };
+const jourCfg = j => (j === 1 ? '1er' : String(j));
+const dJM = iso => { const d = dCfg(iso); return jourCfg(d.j) + ' ' + MOIS_CFG[d.m]; };
+const dLong = iso => { const d = dCfg(iso); return jourCfg(d.j) + ' ' + MOIS_CFG[d.m] + ' ' + d.a; };
+const decaler = (iso, jours) => { const d = dCfg(iso); return new Date(Date.UTC(d.a, d.m, d.j + jours)); };
+const dJMdepuis = (iso, jours) => { const d = decaler(iso, jours); return jourCfg(d.getUTCDate()) + ' ' + MOIS_CFG[d.getUTCMonth()]; };
+const S1 = dJM(CONFIG.seance1), S2 = dJM(CONFIG.seance2);
+const S1L = dLong(CONFIG.seance1), S2L = dLong(CONFIG.seance2);
+const PAR_MAIL = CONFIG.remise !== 'LMS';
+const VERIFIE_LE = dLong(CONFIG.verifieLe);
 
 const SOURCES = {
   ia_ce: { t: `Commission européenne – Législation sur l'IA et calendrier d'application`, u: 'https://digital-strategy.ec.europa.eu/fr/policies/regulatory-framework-ai' },
@@ -565,7 +590,7 @@ const DECISIONS = {
     q: `Quelle ambition pour ta première version ?`,
     options: [
       { id: 'une', l: `Une seule fonction, qui marche du début à la fin`, e: { charge: -10, sobriete: 5 },
-        suite: `Tu auras un outil qui fonctionne le 27 novembre. La complexité viendra par versions.` },
+        suite: `Tu auras un outil qui fonctionne le ${S2}. La complexité viendra par versions.` },
       { id: 'trois', l: `Trois fonctions liées entre elles`, e: { charge: 15 },
         suite: `C'est faisable si tu livres une fonction à la fois. Décide dès maintenant laquelle passe en premier.` },
       { id: 'plateforme', l: `Une plateforme complète, qui couvre tout le cycle d'une affaire`, e: { risque: 5, charge: 35, sobriete: -10 }, grave: true,
@@ -677,7 +702,7 @@ const SCENES = {
     ]
   },
   s_j10: {
-    titre: `17 novembre : dix jours avant la présentation`,
+    titre: `${dJMdepuis(CONFIG.seance2, -10)} : dix jours avant la présentation`,
     dependDe: ['perimetre', 'technique', 'prevision'],
     variantes: [
       { id: 'reelles', si: c => c.choix.donnees === 'reelles',
@@ -867,7 +892,7 @@ function jeuMessages(nom) {
   const entete = ['id', 'date', 'canal', 'client_depuis_mois', 'message'];
   const corps = choisis.map((m, i) => {
     const jour = entre(r, 0, 25);
-    const d = new Date(Date.UTC(2026, 8, 15 + jour));
+    const d = decaler(CONFIG.seance1, -28 + jour);
     return ['M' + String(i + 1).padStart(2, '0'), d.toISOString().slice(0, 10), pioche(r, canaux), entre(r, 1, 96), m[1]];
   });
   return { entete, corps, csv: [entete].concat(corps).map(l => l.join(';')).join('\n') };
@@ -980,7 +1005,7 @@ function alertes(C) {
   if (d.scoreSeul) a.push(['orange', `Affaires écartées par le score seul : prévois une revue humaine.`, 'atelier1']);
   if (d.prixAuto) a.push(['orange', `Remises accordées sans validation : fixe un seuil.`, 'atelier2']);
   if (d.chiffreSeul) a.push(['orange', `Chiffre présenté sans fourchette ni hypothèses.`, 'fabrique']);
-  if (d.tropLarge || j.charge >= 65) a.push(['orange', `Périmètre trop large pour le 27 novembre.`, 'fabrique']);
+  if (d.tropLarge || j.charge >= 65) a.push(['orange', `Périmètre trop large pour le ${S2}.`, 'fabrique']);
   if (j.sobriete <= 35) a.push(['orange', `Ton outil collecte ou calcule plus que nécessaire.`, 'dossier']);
   if (j.confiance <= 35) a.push(['orange', `Confiance fragile : que sait le client de ton outil ?`, 'dossier']);
   if (d.preuveFaible) a.push(['orange', `Retour sur investissement sans mesure personnelle.`, 'dossier']);
@@ -1655,13 +1680,13 @@ function blocQualif(q) {
 
 const CHAPITRES = [
 /* ── Départ ── */
-{ id: 'depart', nav: 'Départ', groupe: 0, seance: 'Module de 14 heures – 13 octobre et 27 novembre 2026',
+{ id: 'depart', nav: 'Départ', groupe: 0, seance: `Module de 14 heures – ${S1} et ${S2L}`,
   titre: `Conçois ton outil d'aide à la vente`,
   chapo: `En deux séances, tu règles Claude, tu explores l'IA dans la vente, puis tu construis ta propre application. Tu réfléchis en équipe. Tu construis seul.`,
   rendu: () => blocSecours() + bloc(`Les deux séances`, `<ul class="parcours">
-      <li><b>13 octobre 2026, de 8 h 30 à 16 h 30</b>Tu règles Claude, tu choisis ton fil rouge, tu suis deux ateliers. Tu repars avec la première version de ton application.</li>
+      <li><b>${S1L}, de ${CONFIG.horaire}</b>Tu règles Claude, tu choisis ton fil rouge, tu suis deux ateliers. Tu repars avec la première version de ton application.</li>
       <li class="entre"><b>Entre les deux séances</b>Tu fais tester ton outil, tu mesures le temps gagné, tu complètes ton dossier.</li>
-      <li><b>27 novembre 2026, de 8 h 30 à 16 h 30</b>Tu suis deux nouveaux ateliers, tu termines ton outil, tu le présentes au groupe.</li></ul>`)
+      <li><b>${S2L}, de ${CONFIG.horaire}</b>Tu suis deux nouveaux ateliers, tu termines ton outil, tu le présentes au groupe.</li></ul>`)
     + etape('depart_identite', `Dis qui tu es`, '', `<p>Ces informations servent à tes consignes et à ton dossier. Elles restent sur ton appareil : la page n'envoie rien sur Internet.</p>
       <div class="champs">${champ('id_nom', 'Prénom et nom', { requis: true, sansMention: true })}${champ('id_equipe', `Nom de ton équipe`, { requis: true, sansMention: true })}
       ${champ('id_coequipiers', `Tes coéquipiers`, { ex: 'Prénoms', requis: true, sansMention: true })}${champ('id_poste', `Ton poste en alternance`, { ex: 'Chargé de clientèle', requis: true, sansMention: true })}
@@ -1675,12 +1700,12 @@ const CHAPITRES = [
         `ton travail s'enregistre seul sur cet appareil`]) + `
       <h3>Le fichier de projet, ta vraie sauvegarde</h3>
       <p><b>Ce que c'est.</b> Un petit fichier, de type .json, qui contient tout ce que tu as saisi : réponses, choix, scènes. Tu ne l'ouvres pas toi-même : seule cette page sait le lire.</p>
-      <p><b>À quoi il sert.</b> Le navigateur peut tout perdre : cache vidé, autre ordinateur, session de l'école fermée. Avec ce fichier, tu reprends ton travail là où tu l'as laissé, y compris le 27 novembre.</p>
+      <p><b>À quoi il sert.</b> Le navigateur peut tout perdre : cache vidé, autre ordinateur, session de l'école fermée. Avec ce fichier, tu reprends ton travail là où tu l'as laissé, y compris le ${S2}.</p>
       <p><b>Ce que tu en fais.</b></p>` + pas([
         `Clique sur « Enregistrer » à chaque pause et en fin de séance. Le fichier arrive dans tes téléchargements.`,
         `Range-le dans ton dossier « Atelier vente », puis copie-le sur un espace en ligne ou envoie-le à ta propre adresse.`,
         `Pour reprendre : clique sur « Ouvrir », ou glisse le fichier n'importe où sur la page.`])
-      + `<p><b>Ce que tu n'en fais pas.</b> Tu ne le déposes pas sur le LMS : le rendu noté est le PDF du dossier. Tu ne le colles pas dans Claude. Il contient ton entreprise et tes réponses : ne le partage pas sans y penser.</p>`
+      + (PAR_MAIL ? `<p><b>Ce que tu en fais à la fin.</b> Tu l'envoies à ton formateur, avec ton PDF, à la dernière étape du diagnostic. Tu ne le colles pas dans Claude. Il contient ton entreprise et tes réponses : ne le partage pas ailleurs sans y penser.</p>` : `<p><b>Ce que tu n'en fais pas.</b> Tu ne le déposes pas sur le LMS : le rendu noté est le PDF du dossier. Tu ne le colles pas dans Claude. Il contient ton entreprise et tes réponses : ne le partage pas sans y penser.</p>`)
       + tableau(['Action', 'Bouton', 'Raccourci'], [
         ['Repartir de zéro', '« Nouveau »', 'Alt + N'], ['Reprendre un fichier de projet', '« Ouvrir », ou glisser le fichier sur la page', 'Alt + O'],
         ['Enregistrer le fichier de projet', '« Enregistrer »', 'Ctrl + S, ou ⌘ S sur Mac'], ['Exporter le dossier en PDF', '« Exporter »', 'Ctrl + E, ou ⌘ E sur Mac']]))
@@ -1688,9 +1713,9 @@ const CHAPITRES = [
         `<b>Aucune donnée réelle dans Claude.</b> Ni client, ni prospect, ni collègue. Tu travailles avec des données fictives.`,
         `<b>Une version fait une chose, et la fait bien.</b> La complexité vient ensuite, fonction après fonction.`,
         `<b>Tu vérifies chaque calcul à la main, au moins une fois.</b> Un outil qui se trompe avec assurance coûte cher.`]))
-    + aide(`Ce qui est noté`, `<p>Tu rends un mini-dossier en PDF sur le LMS. Il montre ce que ton application apporte : retour d'usage, retour sur investissement, éthique, cadre légal.</p>
-      <p>Le 27 novembre, tu présentes ton application au groupe, avec une simulation si besoin. Ton formateur te donnera le barème.</p>`)
-    + aide(`Déroulé indicatif du 13 octobre`, tableau(['Heure', 'Étape'], [
+    + aide(`Ce qui est noté`, `<p>Tu rends un mini-dossier en PDF, ${PAR_MAIL ? 'envoyé par e-mail à ton formateur' : 'déposé sur le LMS'}. Il montre ce que ton application apporte : retour d'usage, retour sur investissement, éthique, cadre légal.</p>
+      <p>Le ${S2}, tu présentes ton application au groupe, avec une simulation si besoin. Ton formateur te donnera le barème.</p>`)
+    + aide(`Déroulé indicatif du ${S1}`, tableau(['Heure', 'Étape'], [
         ['8 h 30', 'Départ et constitution des équipes'], ['9 h 00', 'Régler Claude'], ['9 h 45', 'Ton fil rouge'],
         ['10 h 45', 'Atelier « Cibler et personnaliser »'], ['13 h 00', 'Atelier « Soigner l\'expérience client »'],
         ['14 h 15', 'Ta fabrique : première version'], ['16 h 00', 'État du projet et enregistrement du fichier']]))
@@ -1698,7 +1723,7 @@ const CHAPITRES = [
 },
 
 /* ── 1. Régler Claude ── */
-{ id: 'claude', nav: '1. Régler Claude', groupe: 0, seance: 'Séance du 13 octobre – 45 min',
+{ id: 'claude', nav: '1. Régler Claude', groupe: 0, seance: `Séance du ${S1} – 45 min`,
   titre: `Règle Claude avant de lui parler`,
   chapo: `Claude travaille mieux quand il sait qui tu es et comment tu veux travailler. Tu règles deux niveaux : tes préférences personnelles, puis les instructions de ton projet.`,
   rendu: () => aideEcran() + etape('c_compte', `Ouvre Claude`, '5 min', `<p>Va sur <a href="https://claude.ai" target="_blank" rel="noopener">claude.ai</a> et connecte-toi. La formule gratuite permet de suivre le module. Elle limite le nombre de messages : chaque message compte.</p>
@@ -1731,7 +1756,7 @@ const CHAPITRES = [
 },
 
 /* ── 2. Fil rouge ── */
-{ id: 'filrouge', nav: '2. Ton fil rouge', groupe: 0, seance: 'Séance du 13 octobre – 45 min',
+{ id: 'filrouge', nav: '2. Ton fil rouge', groupe: 0, seance: `Séance du ${S1} – 45 min`,
   titre: `Choisis ton fil rouge`,
   chapo: `Ton fil rouge est une situation commerciale réelle : celle de ton alternance. Tous tes ateliers s'y rattachent.`,
   rendu: C => etape('f_equipe', `En équipe : trouve ton problème commercial n° 1`, '15 min', pas([
@@ -1761,7 +1786,7 @@ const CHAPITRES = [
 },
 
 /* ── 3. Atelier 1 ── */
-{ id: 'atelier1', nav: '3. Cibler et personnaliser', groupe: 0, seance: 'Séance du 13 octobre – atelier de 75 min',
+{ id: 'atelier1', nav: '3. Cibler et personnaliser', groupe: 0, seance: `Séance du ${S1} – atelier de 75 min`,
   titre: `Cible tes comptes et personnalise tes messages`,
   chapo: `L'IA sait regrouper des comptes et adapter un message. Elle sait aussi se tromper avec assurance. Tu vas mesurer les deux.`,
   rendu: C => aide(`Avant de commencer : à quoi sert cet atelier`, `<p>Cet atelier est un terrain d'entraînement commun à tout le groupe. Tu n'y construis pas encore ton projet. Tu y apprends cinq gestes que tu réutiliseras ensuite :</p>` + tirets([
@@ -1805,7 +1830,7 @@ const CHAPITRES = [
 },
 
 /* ── 4. Atelier 2 ── */
-{ id: 'atelier2', nav: '4. Soigner l\'expérience client', groupe: 0, seance: 'Séance du 13 octobre – atelier de 75 min',
+{ id: 'atelier2', nav: '4. Soigner l\'expérience client', groupe: 0, seance: `Séance du ${S1} – atelier de 75 min`,
   titre: `Soigne l'expérience client`,
   chapo: `Un client mécontent veut une réponse rapide et juste, et une personne quand il la demande. Tu vas voir où l'IA aide, et où elle abîme la relation.`,
   rendu: C => aideGlossaire() + partie(false, `Partie 1 : entraînement`, `Ces exercices t'apprennent à mesurer l'erreur de l'IA sur des messages de clients. Si tu les maîtrises déjà, saute-les et passe à la partie 2.`)
@@ -1834,7 +1859,7 @@ const CHAPITRES = [
 },
 
 /* ── 5. Fabrique ── */
-{ id: 'fabrique', nav: '5. Ta fabrique', groupe: 0, seance: 'Séance du 13 octobre – 1 h 45',
+{ id: 'fabrique', nav: '5. Ta fabrique', groupe: 0, seance: `Séance du ${S1} – 1 h 45`,
   titre: `Fabrique la première version de ton outil`,
   chapo: `Tu passes à ton propre projet : un outil d'aide à la vente ou d'aide à la décision. Une application complexe se construit par versions.`,
   rendu: C => etape('fab_idee', `En équipe : choisis ton idée`, '20 min', `<p><b>Ton idée est déjà claire ? Présente-la à ton équipe pour la mettre à l'épreuve, puis passe au cahier de commande.</b></p><p>Sinon, chacun présente deux idées en une minute. L'équipe cherche ce qui coince : données introuvables, calcul flou, utilité douteuse. Chacun garde une idée.</p>
@@ -1928,11 +1953,18 @@ const CHAPITRES = [
     return bloc(D.titre, D.phrases.map(p => `<p>${p}</p>`).join('') + (D.alertes.length ? `<h3>Alertes</h3>` + tirets(D.alertes.map(a => (a.charAt(0).toLowerCase() + a.slice(1)).replace(/\.$/, ''))) : ''))
     + bloc(`Ton plan d'action, en trois temps`, D.temps.map(x => `<h3>${x.t}</h3>` + pas(x.a)).join(''))
     + bloc(`Ce qui manque à ton dossier`, M.liste.length ? `<p>Ton dossier est rempli à ${M.taux} %. Voici où il reste du travail :</p><ul class="tirets">${CHAPITRES.filter(c => M.parChapitre[c.id]).map(c => `<li><a href="#${c.id}">${c.nav.replace(/^\d\. /, '')}</a> : ${M.parChapitre[c.id] === 1 ? 'un élément' : M.parChapitre[c.id] + ' éléments'}</li>`).join('')}</ul>` : `<p>Ton dossier est complet. Relis-le avant de l'exporter.</p>`)
-    + etape('dg_fichier', `Enregistre ton fichier de projet`, '', `<p>Ce fichier contient tout ton travail. Il te permet de reprendre le 27 novembre, ou sur un autre ordinateur. Garde-le dans ton dossier « Atelier vente » et sur un espace en ligne. Ce n'est pas ton rendu : le rendu, c'est le PDF de l'étape suivante.</p>
+    + etape('dg_fichier', `Enregistre ton fichier de projet`, '', `<p>Ce fichier contient tout ton travail. Il te permet de reprendre le ${S2}, ou sur un autre ordinateur. Garde-le dans ton dossier « Atelier vente » et sur un espace en ligne. Ce n'est pas ton rendu : le rendu, c'est le PDF de l'étape suivante.</p>
       <div class="actions"><button type="button" class="btn plein" data-action="enregistrer">Enregistrer le fichier de projet</button></div>`)
-    + etape('dg_pdf', `Exporte ton dossier en PDF`, '', pas([`Clique sur « Exporter le dossier ».`, `Dans la fenêtre d'impression, choisis « Enregistrer au format PDF ».`, `Dépose le fichier sur le LMS, avant la date donnée par ton formateur.`])
+    + etape('dg_pdf', `Exporte ton dossier en PDF`, '', pas([`Clique sur « Exporter le dossier ».`, `Dans la fenêtre d'impression, choisis « Enregistrer au format PDF ».`, PAR_MAIL ? `Garde le PDF : tu l'ajouteras à ton e-mail à l'étape suivante.` : `Dépose le fichier sur le LMS, avant la date donnée par ton formateur.`])
       + `<div class="actions"><button type="button" class="btn plein" data-action="exporter">Exporter le dossier</button></div>`)
-    + bloc(`Avant le 27 novembre`, `<div class="coches" style="margin-top:0">${coche('i1', `Terminer la version 1 et ses trois tests`, false)}${coche('i2', `Faire tester l'outil par deux personnes`, false)}
+    + (PAR_MAIL ? etape('dg_envoi', `Envoie ton travail à ton formateur`, '', `<p>Ce bouton ouvre ta messagerie avec un message prêt à partir : adresse, objet et texte sont remplis. Il ne peut pas joindre les fichiers lui-même. Tu ajoutes donc deux pièces jointes : ton PDF et ton fichier de projet.</p>`
+      + pas([`Exporte d'abord ton dossier en PDF (étape précédente).`, `Clique sur « Envoyer à mon formateur ». Ton fichier de projet est enregistré dans tes téléchargements.`, `Dans ta messagerie, ajoute les deux fichiers en pièces jointes, puis envoie.`])
+      + `<div class="actions"><button type="button" class="btn plein" data-action="envoyer">Envoyer à mon formateur</button>
+         <button type="button" class="btn" data-action="envoyer-gmail">Ouvrir dans Gmail</button>
+         <button type="button" class="btn" data-action="envoyer-outlook">Ouvrir dans Outlook</button>
+         <button type="button" class="btn" data-action="envoyer-copie">Copier le message</button></div>
+      <p class="note">Rien ne part sans ton clic sur « Envoyer » dans ta messagerie. Adresse du destinataire : ${CONFIG.formateurMail}.</p>`) : '')
+    + bloc(`Avant le ${S2}`, `<div class="coches" style="margin-top:0">${coche('i1', `Terminer la version 1 et ses trois tests`, false)}${coche('i2', `Faire tester l'outil par deux personnes`, false)}
       ${coche('i3', `Chronométrer la tâche, avant et après`, false)}${coche('i4', `Compléter le mini-dossier`, false)}${coche('i5', `Apporter un historique de ventes sur 24 mois, fictif ou anonymisé`, false)}</div>
       <h3>Le jour de la présentation</h3>` + pas([`Le problème, en une phrase.`, `L'outil, sur un cas réel ou simulé.`, `Un calcul, vérifié devant le groupe.`, `Les risques, et ce que tu as prévu.`, `Le retour sur investissement, avec son hypothèse basse.`, `La suite.`]))
     + bloc(`Entraîne-toi face à un jury`, `<p>Cette consigne contient ton dossier. Claude te pose cinq questions difficiles, sans donner les réponses.</p>` + consigne('jury', `Consigne d'entraînement`))
@@ -1941,8 +1973,8 @@ const CHAPITRES = [
 },
 
 /* ── Séance 2 ── */
-{ id: 'seance2', nav: 'Ce qui t\'attend', groupe: 2, seance: 'Séance du 27 novembre 2026',
-  titre: `La suite, le 27 novembre`,
+{ id: 'seance2', nav: 'Ce qui t\'attend', groupe: 2, seance: `Séance du ${S2L}`,
+  titre: `La suite, le ${S2}`,
   chapo: `Ces étapes s'ouvriront à la deuxième séance. Voici ce qui t'attend, et ce que tu peux préparer.`,
   rendu: () => bloc(`Atelier 3 : prévoir les ventes`, `<p>Tu feras prévoir des ventes à partir d'un historique. Tu apprendras à lire une fourchette et à repérer une prévision trop sûre d'elle.</p>
       <p><b>À préparer :</b> un historique mensuel de ventes sur 24 mois, fictif ou anonymisé.</p>`)
@@ -1951,7 +1983,7 @@ const CHAPITRES = [
       <p><b>À apporter :</b> ton fichier de projet, ton outil, tes mesures de temps.</p>`)
 }
 ];
-const GROUPES = ['Séance du 13 octobre', 'Entre les deux séances', 'Séance du 27 novembre'];
+const GROUPES = [`Séance du ${S1}`, 'Entre les deux séances', `Séance du ${S2}`];
 
 /* ───────── Retour sur investissement, diagnostic, dossier ───────── */
 function roi() {
@@ -2012,7 +2044,7 @@ function diagnostic(C) {
   const testsFaits = [1, 2, 3].filter(n => rempli('t' + n + '_cas') && v('t' + n + '_ok')).length;
   const retours = [1, 2].filter(n => rempli('r' + n + '_qui')).length;
   const R = roi();
-  /* Plan d'action séquencé : 0 = cette semaine, 1 = avant le 27 novembre, 2 = après le module */
+  /* Plan d'action séquencé : 0 = cette semaine, 1 = avant la 2e séance, 2 = après le module */
   const pool = [
     [0, d.donneesReelles, `Supprimer les données réelles de tes conversations et repartir sur un jeu fictif.`],
     [0, d.cdcColle, `Retirer le cahier des charges du client de tes conversations et prévenir ton tuteur.`],
@@ -2032,7 +2064,7 @@ function diagnostic(C) {
     [2, true, `Rédiger un mode d'emploi d'une page : usage, limites, personne qui vérifie.`],
     [2, true, `Décider avec ton tuteur qui fait vivre l'outil après ton départ.`]
   ];
-  const temps = [`Cette semaine`, `Avant le 27 novembre`, `Après le module`].map((t, i) => ({ t, a: pool.filter(x => x[0] === i && x[1]).slice(0, 3).map(x => x[2]) }));
+  const temps = [`Cette semaine`, `Avant le ${S2}`, `Après le module`].map((t, i) => ({ t, a: pool.filter(x => x[0] === i && x[1]).slice(0, 3).map(x => x[2]) }));
   return { titre, phrases: ph, alertes: alertes(C).filter(a => a[0] !== 'info').map(a => a[1]), temps };
 }
 
@@ -2228,9 +2260,10 @@ function copier(texte, message) {
   const secours = () => { const z = document.createElement('textarea'); z.value = texte; z.style.position = 'fixed'; z.style.opacity = '0'; document.body.appendChild(z); z.select(); try { document.execCommand('copy'); fin(); } catch (e) { bref('Copie impossible : sélectionne le texte à la main.'); } z.remove(); };
   if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(texte).then(fin, secours); else secours();
 }
+const nomJson = () => 'atelier-ia-vente_' + cheminNom() + '_' + (S.exportLe || new Date().toISOString()).slice(0, 10) + '.json';
 function enregistrer() {
   S.exportLe = new Date().toISOString(); S.modifsExport = S.modifs;
-  telecharger('atelier-ia-vente_' + cheminNom() + '_' + S.exportLe.slice(0, 10) + '.json', JSON.stringify(S, null, 1), 'application/json');
+  telecharger(nomJson(), JSON.stringify(S, null, 1), 'application/json');
   sauver(); $('rappel').hidden = true; majBarre(); bref('Fichier enregistré dans tes téléchargements. Envoie-le aussi à ta propre adresse ou mets-le dans ton Drive.');
 }
 function preparerImpression() {
@@ -2241,6 +2274,30 @@ function preparerImpression() {
   const nom = (rempli('id_nom') ? String(v('id_nom')).trim() : 'Nom à compléter').replace(/[\\"\n\r]/g, ' ');
   const police = 'font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;font-size:8.5pt;color:#64748B;';
   st.textContent = '@page{@bottom-left{content:"' + nom + ' \u2013 mini-dossier IA et vente";' + police + '}@bottom-right{content:counter(page) " / " counter(pages);' + police + '}}';
+}
+/* Envoi au formateur : message prérempli. Une page web ne peut pas joindre de fichier : l'étudiant les ajoute lui-même. */
+function messageEnvoi() {
+  const nom = String(v('id_nom')).trim(), eq = rempli('id_equipe') ? String(v('id_equipe')).trim() : '';
+  const pdf = 'Mini-dossier_IA-vente_' + cheminNom() + '.pdf';
+  const objet = typo('Mini-dossier IA et vente – ' + nom + (eq ? ' – équipe ' + eq : ''));
+  const corps = typo(['Bonjour,', '',
+    'Voici mon travail pour le module « ' + CONFIG.module + ' ».', '',
+    'Nom : ' + nom, eq ? 'Équipe : ' + eq : '', '',
+    'Pièces jointes :', '– ' + pdf + ' (mon mini-dossier)', '– ' + nomJson() + ' (mon fichier de projet)', '',
+    'Cordialement,', nom].filter((l, i, t) => !(l === '' && t[i - 1] === '' )).join('\n'));
+  return { objet, corps, pdf, json: nomJson() };
+}
+async function envoyer(mode) {
+  if (!rempli('id_nom')) { bref('Renseigne d\'abord ton prénom et ton nom, à l\'étape « Dis qui tu es ».'); location.hash = '#depart'; return; }
+  const m = messageEnvoi(), a = CONFIG.formateurMail;
+  if (mode === 'copie') return copier('À : ' + a + '\nObjet : ' + m.objet + '\n\n' + m.corps, 'Message copié. Colle-le dans un nouvel e-mail.');
+  const ok = await demander('Ton message est prêt', 'Ton fichier de projet va être enregistré dans tes téléchargements. Ta messagerie s\'ouvre ensuite. Ajoute en pièces jointes : ' + m.pdf + ' et ' + m.json + '. Une page web ne peut pas les joindre à ta place.', 'Ouvrir ma messagerie', 'Annuler');
+  if (!ok) return;
+  enregistrer();
+  const o = encodeURIComponent(m.objet), c = encodeURIComponent(m.corps.replace(/\n/g, '\r\n'));
+  if (mode === 'gmail') return void window.open('https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(a) + '&su=' + o + '&body=' + c, '_blank', 'noopener');
+  if (mode === 'outlook') return void window.open('https://outlook.office.com/mail/deeplink/compose?to=' + encodeURIComponent(a) + '&subject=' + o + '&body=' + c, '_blank', 'noopener');
+  location.href = 'mailto:' + a + '?subject=' + o + '&body=' + c;
 }
 async function exporter() {
   const C = calcul(), M = manques(C), n = M.liste.length;
@@ -2343,7 +2400,7 @@ function verifierRappel() {
   const finDeSeance = (m >= 705 && m <= 725) || (m >= 975 && m <= 995);
   const montrer = Date.now() > rappelRepousse && ((depuis > 0 && (depuis >= 60 || finDeSeance)) || (finDeSeance && (S.modifs || 0) > 0));
   const fin = montrer && finDeSeance;
-  $('rappel-texte').textContent = typo(fin ? 'Fin de séance : enregistre ton fichier, puis envoie-le à ta propre adresse e-mail ou mets-le dans ton Drive. Sans lui, tu ne retrouves pas ton travail le 27 novembre.' : 'Enregistre ton fichier de projet avant de fermer. Le navigateur peut tout perdre.');
+  $('rappel-texte').textContent = typo(fin ? `Fin de séance : enregistre ton fichier, puis envoie-le à ta propre adresse e-mail ou mets-le dans ton Drive. Sans lui, tu ne retrouves pas ton travail le ${S2}.` : 'Enregistre ton fichier de projet avant de fermer. Le navigateur peut tout perdre.');
   $('rappel-fait').hidden = !fin;
   $('rappel').hidden = !montrer;
 }
@@ -2418,6 +2475,10 @@ document.addEventListener('click', e => {
   if (a === 'choisir-donnees') { $('fichier-donnees').value = ''; return $('fichier-donnees').click(); }
   if (a === 'enregistrer') return enregistrer();
   if (a === 'exporter') return exporter();
+  if (a === 'envoyer') return envoyer('mail');
+  if (a === 'envoyer-gmail') return envoyer('gmail');
+  if (a === 'envoyer-outlook') return envoyer('outlook');
+  if (a === 'envoyer-copie') return envoyer('copie');
   if (a === 'recuperer') return recuperer();
   if (a === 'volet-nav') return basculer('nav');
   if (a === 'volet-etat') return basculer('etat');

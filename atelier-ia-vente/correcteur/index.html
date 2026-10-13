@@ -321,6 +321,8 @@ dialog .actions{justify-content:flex-end;margin-top:20px}
   .dossier h2{break-after:avoid}
   .dossier h3{break-after:avoid}
   .dossier table,.dossier .jg,.dossier dl>*{break-inside:avoid}
+  .dossier tr,.dossier li{break-inside:avoid}
+  .dossier .tt{break-after:avoid}
   .seg i,.dossier th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 
@@ -1675,6 +1677,12 @@ function aideEcran() {
     <p>Cherche le fichier de projet dans tes téléchargements : son nom commence par « atelier-ia-vente » et finit par .json. Clique sur « Ouvrir », ou glisse-le sur la page. Si tu as cliqué sur « Nouveau », la page « Départ » propose « Récupérer ce projet ». Sans fichier ni copie sur l'appareil, le travail saisi ne revient pas.</p>
     <p class="note">Rien ne marche ? Fais une capture de ton écran et montre-la à ton formateur.</p>`);
 }
+function aideLimite() {
+  return aide(`Claude me dit que j'ai atteint ma limite`, `<p>Les comptes gratuits ont une limite d'usage par session. Elle se remet à zéro toutes les cinq heures. Le nombre de messages possibles varie selon l'affluence.</p>
+    <p>Claude t'indique quand tu pourras reprendre. En attendant, ton travail n'est pas perdu.</p>`
+    + pas([`Enregistre ton fichier de projet, avec le bouton « Enregistrer ».`, `Note où tu en étais : la consigne collée et la réponse attendue.`, `Avance sur ce qui ne demande pas Claude : tes choix, ton cahier de commande, tes tests faits à la main, ton dossier.`, `Reprends quand la limite est levée, là où tu t'étais arrêté.`])
+    + `<p class="note">Pour consommer moins : regroupe tes demandes en un seul message, évite de recoller un long texte, et ouvre une nouvelle conversation par tâche. Un abonnement payant donne plus d'usage, mais ce n'est pas nécessaire pour cet atelier.</p>`, 'aide_limite');
+}
 function aideGlossaire() {
   const t = [
     ['Artefact', `Petite application ou page que Claude fabrique et affiche à côté de la conversation.`],
@@ -1778,14 +1786,14 @@ const CHAPITRES = [
         ['8 h 30', 'Départ et constitution des équipes'], ['9 h 00', 'Régler Claude'], ['9 h 45', 'Ton fil rouge'],
         ['10 h 45', 'Atelier « Cibler et personnaliser »'], ['13 h 00', 'Atelier « Soigner l\'expérience client »'],
         ['14 h 15', 'Ta fabrique : première version'], ['16 h 00', 'État du projet et enregistrement du fichier']]))
-    + aideGlossaire()
+    + aideLimite() + aideGlossaire()
 },
 
 /* ── 1. Régler Claude ── */
 { id: 'claude', nav: '1. Régler Claude', groupe: 0, seance: `Séance du ${S1} – 45 min`,
   titre: `Règle Claude avant de lui parler`,
   chapo: `Claude travaille mieux quand il sait qui tu es et comment tu veux travailler. Tu règles deux niveaux : tes préférences personnelles, puis les instructions de ton projet.`,
-  rendu: () => aideEcran() + etape('c_compte', `Ouvre Claude`, '5 min', `<p>Va sur <a href="https://claude.ai" target="_blank" rel="noopener">claude.ai</a> et connecte-toi. La formule gratuite permet de suivre le module. Elle limite le nombre de messages : chaque message compte.</p>
+  rendu: () => aideEcran() + aideLimite() + etape('c_compte', `Ouvre Claude`, '5 min', `<p>Va sur <a href="https://claude.ai" target="_blank" rel="noopener">claude.ai</a> et connecte-toi. La formule gratuite permet de suivre le module. Elle limite le nombre de messages : chaque message compte.</p>
       <h3>Formule gratuite : fais durer tes messages</h3>` + tirets([
         `regroupe tes demandes dans un seul message`, `donne tout le contexte dès le début`,
         `range tes textes dans ton projet, pour ne pas les recoller`, `ouvre une nouvelle conversation quand la précédente devient longue`,
@@ -1859,7 +1867,7 @@ const CHAPITRES = [
         `trois choix justifiés : comptes, qualification, offre`, `une scène d'appel d'offres`, `ce que tu retiens pour ton application`])
       + `<p>Le dernier point relie l'atelier à ton projet : dis ce que tu reprends, et ce que tu changes.</p>
       <h3>Ce qui est facultatif</h3><p>La segmentation, la vérification, le « Segmenteur » et les messages sont de l'entraînement. Ils t'aident à mieux décider, mais le dossier ne les exige pas.</p>`)
-    + aideGlossaire()
+    + aideLimite() + aideGlossaire()
     + partie(false, `Partie 1 : entraînement`, `Ces exercices t'apprennent les gestes. Si tu les maîtrises déjà, saute-les et passe à la partie 2. Ils ne comptent pas dans le taux de remplissage du dossier.`)
     + aide(`Ce que l'IA fait bien, ce qu'elle fait mal`, `<p>Elle fait bien trois choses :</p>` + tirets([
         `segmenter : regrouper des clients qui se ressemblent`, `personnaliser : adapter un message à un segment`, `lire des avis : classer des textes par thème et par ton`])
@@ -1892,7 +1900,7 @@ const CHAPITRES = [
 { id: 'atelier2', nav: '4. Soigner l\'expérience client', groupe: 0, seance: `Séance du ${S1} – atelier de 75 min`,
   titre: `Soigne l'expérience client`,
   chapo: `Un client mécontent veut une réponse rapide et juste, et une personne quand il la demande. Tu vas voir où l'IA aide, et où elle abîme la relation.`,
-  rendu: C => aideGlossaire() + partie(false, `Partie 1 : entraînement`, `Ces exercices t'apprennent à mesurer l'erreur de l'IA sur des messages de clients. Si tu les maîtrises déjà, saute-les et passe à la partie 2.`)
+  rendu: C => aideLimite() + aideGlossaire() + partie(false, `Partie 1 : entraînement`, `Ces exercices t'apprennent à mesurer l'erreur de l'IA sur des messages de clients. Si tu les maîtrises déjà, saute-les et passe à la partie 2.`)
     + etape('a2_jeu', `Récupère tes messages de clients`, '5 min', `<p>Ces 24 messages sont fictifs. Certains sont ironiques. D'autres contiennent une donnée personnelle ou une situation sensible.</p>` + jeu('messages'))
     + etape('a2_classer', `Fais classer les messages`, '15 min', consigne('a2_classer', `Consigne de classement`))
     + etape('a2_mesure', `Mesure l'erreur de l'IA`, '15 min', `<p>Relis huit messages au moins. Pour chacun, décide du ton et de l'urgence avant de lire la réponse de Claude.</p>
@@ -1952,7 +1960,7 @@ const CHAPITRES = [
     + decision('perimetre') + decision('technique') + decision('prevision')
     + etape('fab_cadrage', `Cadre le projet avec Claude`, '10 min', consigne('cadrage', `Consigne de cadrage`)
       + `<div class="champs">${champ('cc_corrections', `Tes corrections au plan de Claude`, { type: 'zone', large: true, aide: `Elles s'ajoutent à la consigne suivante.` })}</div>`)
-    + aideEcran()
+    + aideEcran() + aideLimite()
     + etape('fab_construire', `Fais construire la version 1`, '20 min', `<div class="coches">${coche('cc_depot', `Mon outil lit un fichier Excel ou CSV que je glisse dans une zone de dépôt`, false)}</div>` + consigne('construction', `Consigne de construction`) + schema('artefact')
       + pas([`Teste l'outil dans l'aperçu.`, `Télécharge le fichier, ou copie le code.`, `Range le fichier dans un dossier « Atelier vente » sur ton ordinateur.`, `Ouvre-le d'un double-clic : il s'affiche dans ton navigateur.`])
       + `<p class="note">Pas d'aperçu ? Ouvre « Paramètres », puis « Capacités », et active l'exécution de code et la création de fichiers. Sinon, demande le code complet dans un seul bloc. Colle-le dans un fichier texte et enregistre-le avec l'extension .html.</p>`)
@@ -1979,7 +1987,7 @@ const CHAPITRES = [
   chapo: `Ton dossier répond à une question : cet outil vaut-il la peine ? Tu le complètes entre les deux séances, avec de vrais retours et de vrais chiffres.`,
   rendu: C => bloc(`Ce que le dossier doit montrer`, tirets([`ce que l'outil fait, et pour qui`, `ce que disent ceux qui l'ont essayé`, `ce qu'il rapporte, chiffres à l'appui`, `ce qu'il risque : éthique et cadre légal`, `ce que tu ferais ensuite`])
       + `<p>Les parties « contexte », « application » et « tests » se remplissent seules, à partir des étapes précédentes.</p>`)
-    + aideGlossaire()
+    + aideLimite() + aideGlossaire()
     + etape('do_retours', `Retour d'usage : fais tester ton outil`, '', `<p>Fais essayer ton outil par deux personnes : un coéquipier, puis ton tuteur ou un collègue. Regarde-les faire sans les aider.</p>`
       + [1, 2].map(n => `<h3>Testeur ${n}</h3><div class="champs">${champ('r' + n + '_qui', `Son rôle, sans son nom`, { requis: true, sansMention: true, ex: n === 1 ? 'Coéquipier' : 'Tuteur, responsable commercial' })}
         ${champ('r' + n + '_note', `Utilité, de 1 à 5`, { type: 'liste', options: [['1', '1 – inutile'], ['2', '2'], ['3', '3 – utile parfois'], ['4', '4'], ['5', '5 – je l\'utiliserais demain']], requis: true, sansMention: true })}
@@ -2186,7 +2194,7 @@ function dossierHtml(C) {
     <h2>9. Mes choix et leurs justifications</h2><table><tr><th>Question</th><th>Mon choix</th><th>Ma justification</th></tr>${choix}</table>
     ${scenes ? `<h3>Les scènes rencontrées</h3><table><tr><th>Scène</th><th>Situation</th><th>Ma réponse</th></tr>${scenes}</table>` : ''}
     <h2>10. État du projet et diagnostic</h2><div class="jauges">${jauges}</div><h3>${D.titre}</h3>${D.phrases.map(p => `<p>${p}</p>`).join('')}
-    ${D.alertes.length ? `<h3>Alertes</h3><ul>${D.alertes.map(a => `<li>${a}</li>`).join('')}</ul>` : ''}<h3>Plan d'action, en trois temps</h3>${D.temps.map(x => `<p><b>${x.t}</b></p><ul>${x.a.map(a => `<li>${a}</li>`).join('')}</ul>`).join('')}
+    ${D.alertes.length ? `<h3>Alertes</h3><ul>${D.alertes.map(a => `<li>${a}</li>`).join('')}</ul>` : ''}<h3>Plan d'action, en trois temps</h3>${D.temps.map(x => `<p class="tt"><b>${x.t}</b></p><ul>${x.a.map(a => `<li>${a}</li>`).join('')}</ul>`).join('')}
     <h3>La question du jury</h3><p>« ${QUESTIONS_JURY[C.faible]} »</p><p>${t('jury_reponse')}</p>
     <h2>11. Limites et suite</h2>${qr('Ce que l\'outil ne sait pas faire aujourd\'hui', 'l1')}${qr('Avec trois mois de plus', 'l2')}${qr('Ce que ce projet change dans ma vision du métier', 'l3')}
     <h2>Annexes</h2>${qr('Ce que je retiens de l\'atelier « Cibler et personnaliser »', 'a1_retiens')}${qr('Ce que je retiens de l\'atelier « Soigner l\'expérience client »', 'a2_retiens')}

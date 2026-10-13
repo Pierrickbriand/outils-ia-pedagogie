@@ -107,6 +107,11 @@ Page HTML unique (`index.html`, environ 160 Ko) pour le module « Stratégies av
 - Le fichier n'est toujours pas conservé : il n'y a donc pas de bouton d'enregistrement.
 - Limites : détection par règles simples sur toutes les lignes, première feuille seulement ; une colonne d'identifiants numériques peut être classée « nombre ».
 
+## Livraison 2 quater (13 octobre 2026) : aide sur la limite d'usage, vérification du PDF
+- Aide repliable « Claude me dit que j'ai atteint ma limite » sur les pages Régler Claude, Départ, ateliers 1 et 2, Fabrique et mini-dossier. Source : page d'aide de Claude sur l'usage gratuit (limite par session, remise à zéro toutes les cinq heures, nombre de messages variable selon l'affluence). À relire si Anthropic change ces règles.
+- PDF d'export vérifié sur un dossier vide (6 pages) et un dossier saturé de texte (19 pages) : un titre de section restait seul en bas de page, corrigé ; les lignes de tableau et les éléments de liste ne se coupent plus entre deux pages.
+- Reste : une cellule de tableau très longue peut encore occuper plusieurs pages ; le texte du pied de page (nom et numéro de page) dépend du navigateur.
+
 ## Repères juridiques vérifiés le 12 octobre 2026
 - Règlement sur l'IA : pratiques interdites depuis le 2 février 2025, transparence (article 50) depuis le 2 août 2026, haut risque reporté au 2 décembre 2027 par le règlement (UE) 2026/1744. Source : Commission européenne.
 - RGPD : profilage et article 22, droit d'opposition. Source : CNIL.

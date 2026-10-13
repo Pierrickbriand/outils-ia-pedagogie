@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TNBIM – journal de bord IA et projet de groupe</title>
+<meta name="description" content="Module de 8 heures, Manager de projets BTP, ESCT Nantes : un chantier fictif commun, un projet de groupe parmi quatre et un journal de bord IA tracé.">
+<meta name="robots" content="noindex">
+<style>
+/*__CSS__*/
+</style>
+</head>
+<body>
+
+<div class="colonne">
+<div class="barre flottant" role="toolbar" aria-label="Fichier de projet">
+  <div class="barre-actions">
+    <button type="button" data-action="nouveau" title="Nouveau projet (Alt + N)">Nouveau</button>
+    <button type="button" data-action="ouvrir" title="Ouvrir un fichier de projet (Alt + O)">Ouvrir</button>
+    <button type="button" data-action="enregistrer" class="plein" title="Enregistrer le fichier de projet (Ctrl + S ou ⌘ S)">Enregistrer</button>
+    <button type="button" data-action="exporter" title="Exporter le dossier en PDF (Ctrl + E ou ⌘ E)">Exporter</button>
+  </div>
+  <div class="barre-etat" id="barre-etat" aria-live="polite"><i></i><span>Prêt</span></div>
+  <div class="barre-mobile">
+    <button type="button" data-action="volet-nav" aria-controls="nav" aria-expanded="false">Étapes</button>
+    <button type="button" data-action="volet-etat" aria-controls="etat" aria-expanded="false">État du projet</button>
+  </div>
+</div>
+
+<nav class="nav flottant" id="nav" aria-label="Étapes du parcours"></nav>
+</div>
+
+<main id="main" tabindex="-1"><div class="page" id="page"></div></main>
+
+<button type="button" class="bouton-etat flottant" data-action="volet-etat" aria-controls="etat" aria-expanded="false">
+  <span class="pastilles" id="pastilles"></span>État du projet
+</button>
+<aside class="etat flottant" id="etat" aria-label="État du projet"></aside>
+
+<div class="rappel flottant" id="rappel" hidden role="status">
+  <span id="rappel-texte">Enregistrez le fichier de projet avant de fermer. Le navigateur peut tout perdre.</span>
+  <div>
+    <button type="button" class="btn plein" data-action="enregistrer">Enregistrer</button>
+    <button type="button" class="btn" data-action="copie-faite" id="rappel-fait" hidden>Copie faite</button>
+    <button type="button" class="btn" data-action="plus-tard">Plus tard</button>
+  </div>
+</div>
+<div class="bref" id="bref" hidden role="status"></div>
+
+<dialog id="dlg" aria-labelledby="dlg-t">
+  <form method="dialog">
+    <h2 id="dlg-t"></h2>
+    <p id="dlg-p"></p>
+    <div class="actions">
+      <button class="btn" value="non" id="dlg-non">Annuler</button>
+      <button class="btn plein" value="oui" id="dlg-oui">Continuer</button>
+    </div>
+  </form>
+</dialog>
+
+<input type="file" id="fichier" accept=".json,application/json" hidden>
+<div id="depose" hidden aria-hidden="true"><div><b>Déposez le fichier de projet</b><span>Il remplace le travail affiché, après confirmation.</span></div></div>
+<div id="impression" class="dossier"></div>
+
+<script>
+/*__JS__*/
+</script>
+</body>
+</html>

@@ -1,0 +1,2030 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TNBIM – journal de bord IA et projet de groupe</title>
+<meta name="description" content="Module de 8 heures, Manager de projets BTP, ESCT Nantes : un chantier fictif commun, un projet de groupe parmi quatre et un journal de bord IA tracé.">
+<meta name="robots" content="noindex">
+<style>
+:root{
+  --fond:#F8FAFC; --carte:#FFFFFF; --encre:#0F172A; --texte:#334155; --discret:#64748B;
+  --trait:#E2E8F0; --trait-fort:#CBD5E1; --creux:#F1F5F9;
+  --accent:#059669; --accent-fonce:#047857; --accent-nuit:#065F46; --accent-pale:#ECFDF5; --accent-trait:#A7F3D0;
+  --rouge:#B91C1C; --rouge-pale:#FEF2F2; --rouge-trait:#FECACA;
+  --ambre:#B45309; --ambre-pale:#FFFBEB; --ambre-trait:#FDE68A;
+  --sans:"Avenir Next","Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --nav:280px; --etat:300px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:auto}
+body{margin:0;background:var(--fond);color:var(--texte);font-family:var(--sans);font-size:16px;line-height:1.55}
+h1,h2,h3,h4,p,ul,ol,figure{margin:0}
+ul,ol{padding:0;list-style:none}
+a{color:var(--accent-fonce);text-underline-offset:3px}
+a:hover{color:var(--accent-nuit)}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--encre);outline-offset:2px}
+[hidden]{display:none!important}
+
+/* Panneaux flottants */
+.flottant{background:rgba(255,255,255,.78);-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);border:1px solid var(--trait-fort)}
+
+/* Barre d'actions, en haut à gauche */
+.colonne{position:fixed;z-index:40;top:12px;left:12px;bottom:12px;width:var(--nav);display:flex;flex-direction:column;gap:8px}
+.barre{padding:8px}
+.barre-actions{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.barre-actions button{height:32px;padding:0 6px;font-size:12.5px;font-weight:600;background:var(--carte);border:1px solid var(--trait-fort);cursor:pointer;white-space:nowrap}
+.barre-actions button:hover{border-color:var(--accent);color:var(--accent-nuit)}
+.barre-actions button.plein{background:var(--accent-fonce);border-color:var(--accent-fonce);color:#fff}
+.barre-actions button.plein:hover{background:var(--accent-nuit);color:#fff}
+.barre-etat{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:12px;color:var(--discret);line-height:1.3}
+.barre-etat i{flex:none;width:8px;height:8px;background:var(--accent)}
+.barre-etat.alerte i{background:var(--ambre)}
+.barre-mobile{display:none}
+
+/* Navigation */
+.nav{flex:1;min-height:0;overflow:auto;padding:6px 0 12px}
+.nav h2{font-size:12.5px;font-weight:600;color:var(--discret);padding:14px 14px 6px}
+.nav a{display:flex;align-items:baseline;gap:8px;padding:8px 14px;color:var(--texte);text-decoration:none;font-size:14.5px;line-height:1.3;border-left:3px solid transparent}
+.nav a:hover{background:rgba(255,255,255,.9)}
+.nav a[aria-current="page"]{background:var(--carte);border-left-color:var(--accent);color:var(--encre);font-weight:600}
+.nav a span{flex:1}
+.nav a small{flex:none;font-size:12px;color:var(--discret);font-weight:400;font-variant-numeric:tabular-nums}
+.nav a.complet small{color:var(--accent-fonce);font-weight:600}
+.nav-global{margin:14px 14px 0;font-size:12.5px;color:var(--discret)}
+.nav-global b{color:var(--encre)}
+.filet{height:6px;background:var(--trait);margin-top:6px}
+.filet i{display:block;height:100%;background:var(--accent)}
+
+/* Zone principale */
+main{margin:0 calc(var(--etat) + 36px) 0 calc(var(--nav) + 36px);padding:28px 0 120px;min-height:100vh}
+.page{max-width:760px;margin:0 auto}
+.tete{padding:8px 0 22px}
+.tete .seance{font-size:14px;color:var(--discret)}
+.tete h1{font-size:clamp(28px,3.4vw,38px);line-height:1.08;letter-spacing:-.022em;font-weight:700;color:var(--encre);margin:6px 0 12px;text-wrap:balance}
+.tete .chapo{font-size:18px;line-height:1.5;color:var(--texte);max-width:62ch}
+
+.bloc{background:var(--carte);border:1px solid var(--trait);padding:20px 22px;margin-bottom:14px}
+.bloc h2{font-size:19px;line-height:1.25;color:var(--encre);font-weight:650;letter-spacing:-.01em}
+.bloc h3{font-size:15.5px;color:var(--encre);font-weight:650;margin-top:18px}
+.bloc p{margin-top:10px;max-width:68ch}
+.bloc p:first-child{margin-top:0}
+.bloc ul.tirets{margin-top:10px}
+.bloc ul.tirets li{position:relative;padding-left:22px;margin-top:5px;max-width:66ch}
+.bloc ul.tirets li::before{content:"–";position:absolute;left:4px;color:var(--accent-fonce);font-weight:700}
+.bloc ol.pas{counter-reset:pas;margin-top:12px}
+.bloc ol.pas>li{counter-increment:pas;position:relative;padding-left:34px;margin-top:9px;max-width:66ch}
+.bloc ol.pas>li::before{content:counter(pas);position:absolute;left:0;top:1px;width:22px;height:22px;display:grid;place-items:center;font-size:12.5px;font-weight:700;color:var(--accent-nuit);background:var(--accent-pale);border:1px solid var(--accent-trait)}
+.note{font-size:14px;color:var(--discret)}
+.duree{font-size:13px;color:var(--discret);font-weight:400;margin-left:8px;white-space:nowrap}
+
+/* Étape à cocher */
+.etape{border-left:3px solid var(--trait-fort)}
+.etape.faite{border-left-color:var(--accent)}
+.etape-tete{display:flex;align-items:flex-start;gap:14px;justify-content:space-between}
+.fait{flex:none;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--discret);cursor:pointer;user-select:none;padding:4px 9px;border:1px solid var(--trait-fort);background:var(--carte)}
+.fait input{appearance:none;-webkit-appearance:none;width:14px;height:14px;margin:0;border:1.5px solid var(--discret);background:#fff;display:grid;place-items:center;cursor:pointer}
+.fait input:checked{background:var(--accent-fonce);border-color:var(--accent-fonce)}
+.fait input:checked::after{content:"";width:8px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translateY(-1px)}
+.etape.faite .fait{color:var(--accent-nuit);border-color:var(--accent-trait);background:var(--accent-pale)}
+
+/* Repère */
+.repere{background:var(--accent-pale);border:1px solid var(--accent-trait);border-left:3px solid var(--accent)}
+.repere h2{font-size:16.5px}
+.repere .verif{font-size:13px;color:var(--accent-nuit);margin-top:12px}
+.sources{margin-top:12px;font-size:14px}
+.sources li{margin-top:4px;padding-left:22px;position:relative}
+.sources li::before{content:"↗";position:absolute;left:3px;color:var(--accent-fonce)}
+
+/* Champs */
+.champs{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;margin-top:14px}
+.champ{display:flex;flex-direction:column;gap:5px;min-width:0}
+.champ.large{grid-column:1/-1}
+.champ>span.l{font-size:14px;font-weight:600;color:var(--encre)}
+.champ>span.l em{font-style:normal;font-weight:400;color:var(--discret)}
+.champ .aide{font-size:13px;color:var(--discret);line-height:1.4}
+.champ input[type=text],.champ input[type=number],.champ input[type=date],.champ textarea,.champ select{width:100%;padding:9px 11px;border:1px solid var(--trait-fort);background:#fff;border-radius:0;line-height:1.45}
+.champ textarea{resize:vertical;min-height:72px}
+.champ input:focus,.champ textarea:focus,.champ select:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+.coches{display:grid;gap:6px;margin-top:12px}
+.coche{display:flex;gap:10px;align-items:flex-start;font-size:15px;cursor:pointer}
+.coche input{margin:4px 0 0;width:16px;height:16px;accent-color:var(--accent-fonce);flex:none}
+
+/* Consigne à copier */
+.consigne{margin-top:14px;border:1px solid var(--trait-fort);background:var(--creux)}
+.consigne-tete{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 8px 8px 14px;border-bottom:1px solid var(--trait-fort);background:#fff}
+.consigne-tete b{font-size:14px;color:var(--encre)}
+.consigne pre{margin:0;padding:14px;font-family:var(--mono);font-size:13px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto;color:var(--encre)}
+.consigne pre .vide{color:var(--ambre);background:var(--ambre-pale)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:34px;padding:0 13px;font-size:14px;font-weight:600;background:var(--carte);border:1px solid var(--trait-fort);cursor:pointer;text-decoration:none;color:var(--encre);white-space:nowrap}
+.btn:hover{border-color:var(--accent);color:var(--accent-nuit)}
+.btn.plein{background:var(--accent-fonce);border-color:var(--accent-fonce);color:#fff}
+.btn.plein:hover{background:var(--accent-nuit);color:#fff}
+.btn.ok{background:var(--accent-pale);border-color:var(--accent);color:var(--accent-nuit)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+
+/* Décision */
+.decision{border-top:3px solid var(--encre)}
+.decision .q{font-size:19px;font-weight:650;color:var(--encre);line-height:1.25;letter-spacing:-.01em}
+.decision .genre{font-size:13px;color:var(--discret);margin-bottom:4px}
+.options{display:grid;gap:8px;margin-top:14px}
+.option{display:flex;gap:11px;align-items:flex-start;padding:12px 14px;border:1px solid var(--trait-fort);background:#fff;cursor:pointer}
+.option:hover{border-color:var(--accent)}
+.option input{margin:4px 0 0;accent-color:var(--accent-fonce);width:16px;height:16px;flex:none}
+.option.choisi{border-color:var(--accent);background:var(--accent-pale);box-shadow:inset 3px 0 0 var(--accent)}
+.suite{margin-top:14px;padding:12px 14px;background:var(--creux);border-left:3px solid var(--encre)}
+.suite.grave{background:var(--rouge-pale);border-left-color:var(--rouge);color:#7F1D1D}
+.effets{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.effet{font-size:12.5px;font-weight:600;padding:2px 8px;border:1px solid var(--trait-fort);background:#fff;font-variant-numeric:tabular-nums}
+.effet.bon{border-color:var(--accent-trait);color:var(--accent-nuit);background:var(--accent-pale)}
+.effet.mauvais{border-color:var(--rouge-trait);color:var(--rouge);background:var(--rouge-pale)}
+
+/* Scène */
+.scene{background:var(--encre);border-color:var(--encre);color:#CBD5E1}
+.scene .genre{font-size:13px;color:#94A3B8}
+.scene h2{color:#fff;font-size:21px;margin-top:2px}
+.scene p{color:#E2E8F0;font-size:16.5px}
+.scene .reps{display:grid;gap:8px;margin-top:16px}
+.scene .rep{text-align:left;padding:11px 14px;background:transparent;border:1px solid #475569;color:#F1F5F9;cursor:pointer;line-height:1.4}
+.scene .rep:hover{border-color:#6EE7B7}
+.scene .rep.choisi{background:var(--accent-fonce);border-color:var(--accent-fonce);color:#fff}
+.scene .suite{background:#1E293B;border-left-color:#6EE7B7;color:#E2E8F0}
+.scene .effet{background:#1E293B;border-color:#475569;color:#E2E8F0}
+.scene .effet.bon{color:#6EE7B7;border-color:#065F46;background:#1E293B}
+.scene .effet.mauvais{color:#FCA5A5;border-color:#7F1D1D;background:#1E293B}
+.scene .verrou{color:#94A3B8;font-size:15px}
+.scene .champ>span.l{color:#fff}
+.scene .champ textarea{background:#fff;color:var(--encre)}
+.scene :focus-visible{outline-color:#6EE7B7}
+
+/* Schéma */
+.schema{margin-top:14px;border:1px solid var(--trait-fort);background:#fff}
+.schema svg{display:block;width:100%;height:auto;background:var(--fond)}
+.schema img{display:block;width:100%;height:auto;border-top:1px solid var(--trait-fort)}
+.schema figcaption{padding:12px 14px;border-top:1px solid var(--trait-fort);font-size:14.5px}
+.schema figcaption ol{counter-reset:leg}
+.schema figcaption li{counter-increment:leg;position:relative;padding-left:30px;margin-top:5px}
+.schema figcaption li::before{content:counter(leg);position:absolute;left:0;top:1px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--accent-fonce);color:#fff;font-size:12px;font-weight:700}
+.schema figcaption .note{margin-top:9px}
+
+/* Tableaux */
+.tab{width:100%;border-collapse:collapse;margin-top:14px;font-size:14px}
+.tab th{text-align:left;font-weight:600;color:var(--encre);padding:7px 8px;border-bottom:2px solid var(--encre);vertical-align:bottom;line-height:1.25}
+.tab td{padding:6px 6px;border-bottom:1px solid var(--trait);vertical-align:top}
+.tab td input,.tab td textarea,.tab td select{width:100%;padding:7px 8px;border:1px solid var(--trait-fort);background:#fff;border-radius:0;font-size:14px;line-height:1.4}
+.tab td textarea{resize:vertical;min-height:54px}
+.tab.donnees{font-family:var(--mono);font-size:12px}
+.tab.donnees th{font-weight:600;border-bottom-width:1px}
+.defile{overflow-x:auto}
+
+/* Idées */
+.idees{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.idee{border:1px solid var(--trait-fort);padding:14px;background:#fff;display:flex;flex-direction:column;gap:6px}
+.idee.choisie{border-color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
+.idee .fam{font-size:12.5px;color:var(--discret)}
+.idee h3{margin:0;font-size:16px}
+.idee p{margin:0;font-size:14px;line-height:1.45}
+.idee .niv{display:flex;gap:3px;align-items:center;font-size:12.5px;color:var(--discret)}
+.idee .niv i{width:14px;height:6px;background:var(--trait)}
+.idee .niv i.on{background:var(--accent)}
+.idee .btn{align-self:flex-start;margin-top:auto}
+
+/* Parcours des deux séances */
+.parcours{margin-top:14px;border-left:3px solid var(--accent)}
+.parcours li{padding:10px 0 10px 18px;border-bottom:1px solid var(--trait);position:relative}
+.parcours li:last-child{border-bottom:0}
+.parcours li::before{content:"";position:absolute;left:-8px;top:17px;width:13px;height:13px;background:var(--accent)}
+.parcours li.entre::before{background:#fff;border:3px solid var(--accent)}
+.parcours b{display:block;color:var(--encre)}
+
+/* Résultats chiffrés */
+.resultats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:14px;border:1px solid var(--trait-fort)}
+.resultats div{padding:12px 14px;border-right:1px solid var(--trait);border-bottom:1px solid var(--trait);background:#fff}
+.resultats div:nth-child(3n){border-right:0}
+.resultats dt{font-size:13px;color:var(--discret);line-height:1.3}
+.resultats dd{margin:4px 0 0;font-size:22px;font-weight:700;color:var(--encre);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.resultats dd.neg{color:var(--rouge)}
+.resultats dd small{font-size:13px;font-weight:400;color:var(--discret)}
+
+/* État du projet */
+.etat{position:fixed;z-index:30;top:12px;right:12px;width:var(--etat);max-height:calc(100vh - 24px);overflow:auto;padding:16px}
+.etat h2{font-size:15px;color:var(--encre);font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.etat h2 button{display:none}
+.jauge{margin-top:14px}
+.jauge-l{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13.5px}
+.jauge-l b{color:var(--encre);font-weight:650}
+.jauge-l span{color:var(--discret);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.seg{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;margin-top:5px}
+.seg i{height:10px;background:var(--trait)}
+.seg.vert i.on{background:var(--accent)}
+.seg.neutre i.on{background:#475569}
+.seg.ambre i.on{background:#D97706}
+.seg.rouge i.on{background:var(--rouge)}
+.jauge small{display:block;font-size:12px;color:var(--discret);margin-top:3px}
+.etat h3{font-size:13.5px;color:var(--encre);margin-top:18px;padding-top:12px;border-top:1px solid var(--trait-fort)}
+.alertes{margin-top:8px;display:grid;gap:6px}
+.alerte{display:block;font-size:13px;line-height:1.4;padding:8px 10px;border:1px solid var(--trait-fort);border-left-width:3px;background:#fff;text-decoration:none;color:var(--texte)}
+.alerte.rouge{border-color:var(--rouge-trait);border-left-color:var(--rouge);background:var(--rouge-pale);color:#7F1D1D}
+.alerte.orange{border-color:var(--ambre-trait);border-left-color:var(--ambre);background:var(--ambre-pale);color:#78350F}
+.alerte.info{border-left-color:var(--discret)}
+a.alerte:hover{border-color:var(--encre)}
+.calme{font-size:13px;color:var(--discret);margin-top:8px}
+.bouton-etat{display:none}
+
+/* Pied de chapitre */
+.pied{display:flex;justify-content:space-between;gap:10px;margin-top:22px}
+
+/* Rappel, message bref, dialogue */
+.rappel{position:fixed;z-index:50;left:50%;bottom:16px;transform:translateX(-50%);width:min(620px,calc(100vw - 24px));padding:12px 14px;display:flex;gap:12px;align-items:center;justify-content:space-between;border-color:var(--ambre);font-size:14.5px;color:var(--encre)}
+.rappel div{display:flex;gap:6px;flex:none}
+.bref{position:fixed;z-index:60;left:50%;bottom:76px;transform:translateX(-50%);background:var(--encre);color:#fff;padding:8px 14px;font-size:14px;font-weight:600}
+dialog{border:1px solid var(--encre);padding:0;width:min(480px,calc(100vw - 32px));border-radius:0;color:var(--texte)}
+dialog::backdrop{background:rgba(15,23,42,.45);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+dialog form{padding:22px}
+dialog h2{font-size:19px;color:var(--encre)}
+dialog p{margin-top:10px}
+dialog .actions{justify-content:flex-end;margin-top:20px}
+
+/* Aperçu du dossier */
+.dossier{background:#fff;color:var(--encre);font-size:14.5px;line-height:1.5}
+.dossier .couv{border-bottom:3px solid var(--encre);padding-bottom:14px;margin-bottom:18px}
+.dossier .couv h1{font-size:26px;line-height:1.15;letter-spacing:-.015em;margin:4px 0 8px}
+.dossier .couv p{margin:2px 0;color:var(--texte)}
+.dossier h2{font-size:17px;margin:22px 0 8px;padding-top:10px;border-top:1px solid var(--trait-fort);color:var(--encre)}
+.dossier h3{font-size:14.5px;margin:12px 0 2px;color:var(--encre)}
+.dossier p{margin:3px 0;max-width:none;white-space:pre-wrap;overflow-wrap:anywhere}
+.dossier .vide{color:var(--ambre);font-style:italic}
+.dossier dl{margin:6px 0;display:grid;grid-template-columns:minmax(150px,32%) 1fr;gap:3px 14px}
+.dossier dt{color:var(--discret)}
+.dossier dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.dossier table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+.dossier th,.dossier td{border:1px solid var(--trait-fort);padding:5px 7px;text-align:left;vertical-align:top;white-space:pre-wrap}
+.dossier th{background:var(--creux)}
+.dossier .jauges{break-inside:avoid}
+.dossier .jg{display:grid;grid-template-columns:150px 1fr 110px;gap:10px;align-items:center;margin:4px 0}
+.dossier .jg .seg{margin:0}
+.dossier ul{margin:6px 0}
+.dossier ul li{padding-left:18px;position:relative;margin:3px 0}
+.dossier ul li::before{content:"–";position:absolute;left:2px}
+.dossier pre{font-family:var(--mono);font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--creux);padding:10px;margin:6px 0;border:1px solid var(--trait)}
+#impression{display:none}
+
+/* Écrans moyens : l'état devient un volet */
+@media (max-width:1239px){
+  main{margin-right:24px}
+  .etat{display:none;box-shadow:0 12px 40px rgba(15,23,42,.18)}
+  .etat.ouvert{display:block}
+  .etat h2 button{display:inline-flex}
+  .bouton-etat{display:flex;position:fixed;z-index:29;right:12px;top:12px;align-items:center;gap:8px;height:40px;padding:0 12px;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--encre)}
+  .bouton-etat .pastilles{display:flex;gap:3px}
+  .bouton-etat .pastilles i{width:8px;height:14px;background:var(--accent)}
+  .bouton-etat .pastilles i.neutre{background:#475569}
+  .bouton-etat .pastilles i.ambre{background:#D97706}
+  .bouton-etat .pastilles i.rouge{background:var(--rouge)}
+  .page{padding-top:44px}
+}
+/* Petits écrans : la navigation devient un volet */
+@media (max-width:899px){
+  main{margin:0;padding:112px 16px 120px}
+  .page{padding-top:0}
+  .colonne{top:0;left:0;right:0;bottom:auto;width:auto;gap:0}
+  .barre{border-width:0 0 1px;padding:8px 12px}
+  .barre-actions{grid-template-columns:repeat(4,1fr)}
+  .barre-mobile{display:flex;gap:4px;margin-top:6px}
+  .barre-mobile button{flex:1;height:32px;font-size:13px;font-weight:600;background:var(--carte);border:1px solid var(--trait-fort);cursor:pointer}
+  .barre-etat{display:none}
+  .bouton-etat{display:none}
+  .nav{display:none;position:fixed;top:87px;left:0;right:0;bottom:0;border-width:0;background:rgba(255,255,255,.97)}
+  .nav.ouvert{display:block}
+  .etat{top:87px;right:0;left:0;width:auto;max-height:calc(100vh - 87px);border-width:0 0 1px;background:rgba(255,255,255,.97)}
+  .champs,.idees{grid-template-columns:1fr}
+  .resultats{grid-template-columns:1fr 1fr}
+  .resultats div:nth-child(3n){border-right:1px solid var(--trait)}
+  .resultats div:nth-child(2n){border-right:0}
+  .bloc{padding:16px}
+  .etape-tete{flex-direction:column;gap:10px}
+  .tab.large-mobile{min-width:640px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .btn,.option,.rep,.nav a{transition:border-color .12s,background-color .12s}
+}
+
+/* Impression : seul le dossier sort */
+@page{size:A4;margin:16mm 15mm}
+@media print{
+  html,body{background:#fff}
+  body>*:not(#impression){display:none!important}
+  #impression{display:block}
+  .dossier{font-size:10.5pt}
+  .dossier h2{break-after:avoid}
+  .dossier h3{break-after:avoid}
+  .dossier table,.dossier .jg,.dossier dl>*{break-inside:avoid}
+  .dossier tr,.dossier li{break-inside:avoid}
+  .dossier .tt{break-after:avoid}
+  .seg i,.dossier th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+
+/* Dépôt de fichiers */
+.depot{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;margin-top:14px;padding:26px 16px;border:2px dashed var(--accent-trait);background:var(--accent-pale);color:var(--accent-nuit);text-align:center;cursor:pointer}
+.depot span{font-size:14px;color:var(--texte)}
+.depot:hover,.depot:focus-visible,.depot.survol{border-color:var(--accent);background:#D1FAE5;outline:none}
+.depot-resultat{margin-top:12px}
+.depot-bilan{margin:0 0 8px}
+.depot-resultat h3{margin:18px 0 6px}
+.desc-depot{margin:8px 0 10px;padding:12px 14px;border:1px solid var(--trait);background:#F8FAFC;font-size:14.5px;line-height:1.55;white-space:pre-wrap}
+.alerte-depot{margin:8px 0;padding:9px 12px;border:1px solid var(--ambre-trait);background:var(--ambre-pale);color:var(--ambre);font-weight:600;font-size:14px}
+#depose{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:rgba(248,250,252,.78);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);pointer-events:none}
+#depose[hidden]{display:none}
+#depose>div{display:flex;flex-direction:column;gap:6px;text-align:center;padding:34px 40px;border:2px dashed var(--accent);background:#fff;box-shadow:0 12px 36px rgba(15,23,42,.14);max-width:90vw}
+#depose b{font-size:20px;color:var(--accent-nuit)}
+#depose span{color:var(--texte)}
+@media print{#depose,.depot,.depot-resultat{display:none!important}}
+.idee .actions{margin-top:auto}
+.idee .actions .btn{margin-top:0}
+.idee .btn[disabled]{opacity:1;cursor:default}
+
+/* Obligatoire et facultatif */
+.statut{display:inline-block;margin-left:10px;padding:2px 8px;border:1px solid;font-size:12px;font-weight:700;letter-spacing:.01em;white-space:nowrap;vertical-align:middle}
+.statut.obligatoire{background:var(--accent-pale);border-color:var(--accent-trait);color:var(--accent-nuit)}
+.statut.facultatif{background:var(--creux);border-color:var(--trait-fort);color:var(--discret)}
+.partie{margin-top:22px;padding:12px 16px;border-left:4px solid}
+.partie h2{margin:6px 0 4px;font-size:19px}
+.partie p{margin:0}
+.partie .statut{margin-left:0}
+.partie.obligatoire{border-color:var(--accent);background:var(--accent-pale)}
+.partie.facultatif{border-color:var(--trait-fort);background:var(--creux)}
+.bloc.entrainement{border-style:dashed}
+@media print{.statut,.partie{display:none!important}}
+
+/* Aide repliable */
+details.aide{padding:0}
+details.aide>summary{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;list-style:none;font-weight:700;font-size:16px;color:var(--encre)}
+details.aide>summary::-webkit-details-marker{display:none}
+details.aide>summary::before{content:"";flex:none;width:8px;height:8px;border-right:2px solid var(--accent-fonce);border-bottom:2px solid var(--accent-fonce);transform:rotate(-45deg);transition:transform .12s}
+details.aide[open]>summary::before{transform:rotate(45deg)}
+details.aide>summary:hover{background:var(--creux)}
+details.aide>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.aide-corps{padding:2px 16px 16px}
+.aide-corps>:first-child{margin-top:0}
+details.aide-schema{margin-top:14px;border:1px solid var(--trait-fort);background:#fff}
+details.aide-schema>summary{font-size:15px}
+details.aide-schema .schema{margin:0;padding:0 16px 16px}
+
+details.aide .picto{flex:none;color:var(--accent-fonce)}
+@media print{details.aide .picto{display:none}}
+
+/* Prochaine étape, compteurs, glossaire, étiquette de menu */
+.prochaine{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:18px 0 6px;padding:12px 16px;border:1px solid var(--accent-trait);border-left:4px solid var(--accent);background:var(--accent-pale)}
+.prochaine>div{flex:1 1 280px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.prochaine .lib{font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--accent-nuit)}
+.prochaine b{font-size:16px;color:var(--encre);overflow-wrap:anywhere}
+.prochaine .ou{font-size:13.5px;color:var(--texte)}
+.prochaine .reste{flex-basis:100%;font-size:13px;color:var(--discret)}
+.prochaine:empty{display:none}
+.compteur{display:inline-block;margin-left:10px;padding:2px 8px;border:1px solid;font-size:12px;font-weight:700;white-space:nowrap;vertical-align:middle}
+.compteur.reste{color:var(--ambre);background:var(--ambre-pale);border-color:var(--ambre-trait)}
+.compteur.ok{color:var(--accent-nuit);background:var(--accent-pale);border-color:var(--accent-trait)}
+.glossaire{margin:0}
+.glossaire dt{margin-top:12px;font-weight:700;color:var(--encre)}
+.glossaire dt:first-child{margin-top:0}
+.glossaire dd{margin:2px 0 0}
+.nav-tag{display:block;margin-top:1px;font-style:normal;font-size:11.5px;font-weight:400;color:var(--discret)}
+.etape,.decision,.scene,[data-champ]{scroll-margin-top:24px}
+@keyframes clignote{from{background:var(--accent-pale)}to{background:transparent}}
+.flash{animation:clignote 1.6s ease-out}
+@media (prefers-reduced-motion:reduce){.flash{animation:none}}
+@media print{.prochaine,.compteur{display:none!important}}
+.reps.projets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.reps.projets .rep{text-align:left;width:100%}
+.fiche{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin-top:12px}
+.fiche dt{font-weight:600;color:var(--encre)}.fiche dd{margin:0}
+@media(max-width:700px){.reps.projets{grid-template-columns:1fr}.fiche{grid-template-columns:1fr}}
+.mois-liste{margin-top:14px;display:grid;gap:3px}
+.mois{display:grid;grid-template-columns:96px 1fr 36px;gap:8px;align-items:center;font-size:13px}
+.mois .b{background:var(--trait);height:12px;display:block}
+.mois .b i{display:block;height:12px;background:var(--accent-fonce)}
+.mois .b i.sur{background:#B45309}
+.mois .n{text-align:right;font-variant-numeric:tabular-nums}
+.ligne-journal h3{margin:0 0 4px}
+.fiche-projet{margin-top:12px;border-left:3px solid var(--trait-fort)}
+.fiche-projet.choisi{border-left-color:var(--accent);background:#F3FAF6}
+.fiche-projet h3{margin:0}
+.cadre-outil{margin-top:14px;border:1px solid var(--trait-fort);background:#fff}
+.cadre-outil iframe{display:block;width:100%;height:760px;border:0}
+@media print{.cadre-outil{display:none}}
+
+</style>
+</head>
+<body>
+
+<div class="colonne">
+<div class="barre flottant" role="toolbar" aria-label="Fichier de projet">
+  <div class="barre-actions">
+    <button type="button" data-action="nouveau" title="Nouveau projet (Alt + N)">Nouveau</button>
+    <button type="button" data-action="ouvrir" title="Ouvrir un fichier de projet (Alt + O)">Ouvrir</button>
+    <button type="button" data-action="enregistrer" class="plein" title="Enregistrer le fichier de projet (Ctrl + S ou ⌘ S)">Enregistrer</button>
+    <button type="button" data-action="exporter" title="Exporter le dossier en PDF (Ctrl + E ou ⌘ E)">Exporter</button>
+  </div>
+  <div class="barre-etat" id="barre-etat" aria-live="polite"><i></i><span>Prêt</span></div>
+  <div class="barre-mobile">
+    <button type="button" data-action="volet-nav" aria-controls="nav" aria-expanded="false">Étapes</button>
+    <button type="button" data-action="volet-etat" aria-controls="etat" aria-expanded="false">État du projet</button>
+  </div>
+</div>
+
+<nav class="nav flottant" id="nav" aria-label="Étapes du parcours"></nav>
+</div>
+
+<main id="main" tabindex="-1"><div class="page" id="page"></div></main>
+
+<button type="button" class="bouton-etat flottant" data-action="volet-etat" aria-controls="etat" aria-expanded="false">
+  <span class="pastilles" id="pastilles"></span>État du projet
+</button>
+<aside class="etat flottant" id="etat" aria-label="État du projet"></aside>
+
+<div class="rappel flottant" id="rappel" hidden role="status">
+  <span id="rappel-texte">Enregistrez le fichier de projet avant de fermer. Le navigateur peut tout perdre.</span>
+  <div>
+    <button type="button" class="btn plein" data-action="enregistrer">Enregistrer</button>
+    <button type="button" class="btn" data-action="copie-faite" id="rappel-fait" hidden>Copie faite</button>
+    <button type="button" class="btn" data-action="plus-tard">Plus tard</button>
+  </div>
+</div>
+<div class="bref" id="bref" hidden role="status"></div>
+
+<dialog id="dlg" aria-labelledby="dlg-t">
+  <form method="dialog">
+    <h2 id="dlg-t"></h2>
+    <p id="dlg-p"></p>
+    <div class="actions">
+      <button class="btn" value="non" id="dlg-non">Annuler</button>
+      <button class="btn plein" value="oui" id="dlg-oui">Continuer</button>
+    </div>
+  </form>
+</dialog>
+
+<input type="file" id="fichier" accept=".json,application/json" hidden>
+<div id="depose" hidden aria-hidden="true"><div><b>Déposez le fichier de projet</b><span>Il remplace le travail affiché, après confirmation.</span></div></div>
+<div id="impression" class="dossier"></div>
+
+<script>
+(function () {
+'use strict';
+/* ───────── Données du parcours ───────── */
+const APP = { id: 'tnbim-esct', version: 1 };
+const CLE = 'tnbim-esct-v1';
+
+/* ───────── RÉGLAGES DU MODULE : seul bloc à modifier chaque année ─────────
+   Dates au format AAAA-MM-JJ. Tous les textes de l'application s'en déduisent.
+   nbGroupes : nombre de groupes par classe (simple aide à la saisie).
+   soutenance : minutes par groupe, exposé puis questions.
+   Les dates des sessions ne sont pas dans ce bloc : chaque étudiant les saisit à la page « Départ ». Le dépôt se fait la veille de la dernière session, sans date affichée.
+   verifieLe : laisse vide tant que tu n'as pas relu les références juridiques sur les sources officielles.
+   Les repères juridiques ne se mettent pas à jour tout seuls : relis-les, puis écris la date. */
+const CONFIG = {
+  module: 'La transition numérique, le BIM et les enjeux juridiques',
+  formation: 'Manager de projets BTP, ESCT Nantes',
+  rncp: '38810',
+  verifieLe: '',
+  nbGroupes: 6,
+  remise: 'Teams',
+  soutenance: { total: 20, expose: 12, questions: 8 }
+};
+const MOIS_CFG = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+const dCfg = iso => { const [a, m, j] = iso.split('-').map(Number); return { a, m: m - 1, j }; };
+const jourCfg = j => (j === 1 ? '1er' : String(j));
+const dJM = iso => { const d = dCfg(iso); return jourCfg(d.j) + ' ' + MOIS_CFG[d.m]; };
+const dLong = iso => { const d = dCfg(iso); return jourCfg(d.j) + ' ' + MOIS_CFG[d.m] + ' ' + d.a; };
+const decaler = (iso, jours) => { const d = dCfg(iso); return new Date(Date.UTC(d.a, d.m, d.j + jours)); };
+const dJMdepuis = (iso, jours) => { const d = decaler(iso, jours); return jourCfg(d.getUTCDate()) + ' ' + MOIS_CFG[d.getUTCMonth()]; };
+/* Les dates sont saisies par les étudiants à la page « Départ ». Le dépôt se fait la veille de la dernière session. */
+const DATE_OK = x => /^\d{4}-\d{2}-\d{2}$/.test(String(x || ''));
+const DATE_VIDE = '(date à saisir à la page « Départ »)';
+const dateChamp = cle => { const x = S.champs && S.champs[cle]; return DATE_OK(x) ? x : ''; };
+const dLongDepuis = (iso, jours) => { const d = decaler(iso, jours); return jourCfg(d.getUTCDate()) + ' ' + MOIS_CFG[d.getUTCMonth()] + ' ' + d.getUTCFullYear(); };
+const S1 = () => dateChamp('id_seance1') ? dJM(dateChamp('id_seance1')) : DATE_VIDE;
+const S2 = () => dateChamp('id_seance2') ? dJM(dateChamp('id_seance2')) : DATE_VIDE;
+const S1L = () => dateChamp('id_seance1') ? dLong(dateChamp('id_seance1')) : DATE_VIDE;
+const S2L = () => dateChamp('id_seance2') ? dLong(dateChamp('id_seance2')) : DATE_VIDE;
+/* Le dépôt se fait la veille de la dernière session : la page n'affiche pas de date, pour rester juste pour les trois classes */
+const DEPOT = () => 'la veille de la dernière session';
+const DEPOTL = DEPOT;
+const nomClasse = () => rempli('id_classe') ? String(v('id_classe')).trim() : '…';
+const VERIFIE = () => CONFIG.verifieLe ? dLong(CONFIG.verifieLe) : '';
+
+/* Références officielles : liens de départ, à ouvrir et à relire. Aucun article n'est cité de mémoire dans cette page. */
+const SOURCES = {
+  legifrance: { t: `Légifrance – le service public de la diffusion du droit`, u: 'https://www.legifrance.gouv.fr/' },
+  daj: { t: `Direction des affaires juridiques (économie.gouv.fr) – commande publique`, u: 'https://www.economie.gouv.fr/daj' },
+  rgpd: { t: `CNIL – Texte du RGPD, article par article`, u: 'https://www.cnil.fr/fr/reglement-europeen-protection-donnees' },
+  cnil_ia: { t: `CNIL – Intelligence artificielle`, u: 'https://www.cnil.fr/fr/technologies/intelligence-artificielle-ia' },
+  cnil_generative: { t: `CNIL – Questions-réponses sur l'utilisation d'un système d'IA générative`, u: 'https://www.cnil.fr/fr/les-questions-reponses-de-la-cnil-sur-lutilisation-dun-systeme-dia-generative' },
+  ia_ce: { t: `Commission européenne – Législation sur l'IA et calendrier d'application`, u: 'https://digital-strategy.ec.europa.eu/fr/policies/regulatory-framework-ai' },
+  ia_texte: { t: `Règlement (UE) 2024/1689 sur l'intelligence artificielle – texte officiel`, u: 'https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=OJ:L_202401689' },
+  anssi: { t: `ANSSI – la directive NIS 2`, u: 'https://cyber.gouv.fr/' },
+  claude_projets: { t: `Aide de Claude – créer et gérer des projets (en anglais)`, u: 'https://support.claude.com/en/articles/9519177' },
+  claude_limites: { t: `Aide de Claude – bien utiliser ses limites d'usage (en anglais)`, u: 'https://support.claude.com/en/articles/9797557' }
+};
+const OUTILS = {
+  calibrateur: 'https://pierrickbriand.github.io/Calibrateur-de-preferences-Claude/',
+  entraineur: 'https://pierrickbriand.github.io/entraineur-de-prompt/'
+};
+
+/* Thèmes juridiques du module (issus du TD). Chaque groupe vérifie les références sur la source officielle. */
+const THEMES_JURIDIQUES = [
+  `Propriété de la maquette numérique et des données du BIM`,
+  `Responsabilités des acteurs et convention BIM`,
+  `Documents contractuels de travaux : CCAG-Travaux et autres cadres`,
+  `Données personnelles sur un chantier (RGPD)`,
+  `Règlement européen sur l'intelligence artificielle`,
+  `Cybersécurité des entreprises (directive NIS 2)`
+];
+
+/* Le chantier fictif, commun à tous les groupes */
+const CHANTIER = {
+  nom: 'Rive Nord',
+  resume: `Immeuble de bureaux de sept niveaux (rez-de-chaussée et six étages) avec un sous-sol de stationnement, à Nantes. Le site, le maître d'ouvrage et les entreprises sont fictifs.`,
+  surface: 6800, budget: 14200000, duree: 22, os: '2027-01-04',
+  moa: `Société Rive Nord Immobilier (fictive)`,
+  moe: `Atelier d'architecture et bureau d'études (fictifs)`,
+  bim: `Maquette numérique de conception, niveau de détail à préciser dans la convention BIM (à construire par le groupe)`,
+  lots: [
+    // n, intitulé, entreprise fictive, montant HT, effectif maximum, début (mois depuis l'OS), durée (mois)
+    [1, 'Terrassement et fondations', 'Fondations Ouest (fictive)', 1150000, 14, 0, 4],
+    [2, 'Gros œuvre béton armé', 'Béton Loire (fictive)', 3300000, 46, 3, 10],
+    [3, 'Charpente métallique, couverture, étanchéité', 'Structures Atlantique (fictive)', 1050000, 18, 11, 5],
+    [4, 'Façades vitrées et menuiseries extérieures', 'Façades Estuaire (fictive)', 2350000, 22, 12, 7],
+    [5, 'Cloisons, doublages, plafonds', 'Cloisons Ouest (fictive)', 1200000, 30, 15, 6],
+    [6, 'Revêtements de sols, peintures', 'Finitions Erdre (fictive)', 760000, 20, 18, 4],
+    [7, 'Électricité courants forts et faibles', 'Électricité Maine (fictive)', 1450000, 24, 13, 9],
+    [8, 'Chauffage, ventilation, climatisation, plomberie', 'Fluides Océan (fictive)', 1900000, 26, 12, 9],
+    [9, 'Ascenseurs', 'Élévation Bretagne (fictive)', 380000, 6, 17, 4],
+    [10, 'Voirie, réseaux divers, espaces verts', 'Aménagements Sèvre (fictive)', 410000, 10, 19, 3],
+    [11, 'Serrurerie, métallerie', 'Métal Vilaine (fictive)', 250000, 8, 16, 5]
+  ],
+  jalons: [
+    ['Ordre de service de démarrage', 0], ['Fin des fondations', 4], ['Fin du gros œuvre', 13], ['Hors d\'eau', 16],
+    ['Hors d\'air', 19], ['Fin des essais techniques', 21], ['Réception', 22]
+  ],
+  aleas: [
+    `Un réseau enterré, absent des plans, est découvert pendant le terrassement. Il faut le dévoyer.`,
+    `Le fournisseur des vitrages annonce quatorze semaines de délai au lieu de dix.`,
+    `Le maître d'ouvrage demande une terrasse accessible sur le toit, après la signature des marchés.`,
+    `L'entreprise de gros œuvre manque de grutiers pendant deux mois.`,
+    `Le bureau d'études met à jour la maquette numérique : le plan de réservations des fluides change.`
+  ]
+};
+const eur = x => nb(x) + ' €';
+const dateMois = n => { const d = decaler(CHANTIER.os, 0); const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + n, d.getUTCDate())); return MOIS_CFG[t.getUTCMonth()] + ' ' + t.getUTCFullYear(); };
+
+const PROJETS = [
+  { id: 'strategie', t: `Comparateur de scénarios de transition numérique`, court: `Comparateur de scénarios`, missions: ['Stratégie de construction'],
+    but: `Comparer deux ou trois façons de numériser le chantier Rive Nord. Par exemple : la maquette sert seulement à la conception ; la maquette est partagée jusqu'au chantier, avec une convention BIM ; le chantier est connecté, avec des capteurs et une IA qui alerte.`,
+    livrable: `Une grille de comparaison avec des critères pondérés, une recommandation argumentée et la liste de vos hypothèses chiffrées, avec leurs sources.`,
+    implique: `C'est le projet du benchmarking. Vous cherchez des ordres de grandeur (coût, délai, gains) dans des sources que vous citez. Vous notez chaque scénario, vous défendez vos poids. La difficulté : trouver des sources fiables et ne pas inventer de chiffres.`,
+    ia: `Claude aide à lister les critères, à critiquer vos poids et à trouver des pistes de sources. Chaque ordre de grandeur se vérifie dans une source ouverte et datée.` },
+  { id: 'chantier', t: `Tableau de bord numérique de chantier et pilotage des écarts`, court: `Tableau de bord`, missions: ['Performance financière', 'Pilotage de projet'],
+    but: `Construire le tableau de bord qu'un chantier numérisé rend possible : avancement et dépenses par lot, écarts entre le prévu et le réel, actions correctives. Vous dites d'où viendraient les données (maquette, pointage, capteurs) et ce que le numérique change par rapport au suivi sur papier.`,
+    livrable: `Un tableau de bord sur les lots de Rive Nord, trois indicateurs clés, la liste des données numériques nécessaires et un plan d'action pour un aléa du chantier.`,
+    implique: `Vous inventez des données de suivi plausibles, la page calcule les écarts, vous refaites un calcul à la main. La difficulté : rester cohérent entre les lots, et expliquer ce que chaque indice veut dire à quelqu'un qui ne connaît pas la méthode.`,
+    ia: `Claude aide à construire des données plausibles et à lire les écarts. Les calculs se refont à la main sur au moins un lot.` },
+  { id: 'contrats', t: `Veille juridique de la transition numérique`, court: `Veille juridique`, missions: ['Gestion contractuelle'],
+    but: `Repérer les risques juridiques que le numérique ajoute au chantier Rive Nord : convention BIM et responsabilités, propriété et réutilisation de la maquette, données personnelles du chantier connecté, pièces contractuelles rédigées avec une IA, cybersécurité. Pour chaque risque, trouver la référence officielle et dire ce que fait le manager de projets.`,
+    livrable: `Une fiche de veille par cas, avec la référence officielle consultée et sa date, trois points de vigilance, et la fiche de contrôle des références du groupe.`,
+    implique: `Vous ouvrez des textes officiels (Légifrance, CNIL, EUR-Lex) et vous écrivez ce qu'ils disent, avec la date de consultation. Claude propose des pistes, parfois fausses : vous les contrôlez une par une. La difficulté : lire un texte juridique et n'en garder que ce qui concerne le chantier.`,
+    ia: `Claude propose des pistes. Chaque référence est ouverte sur sa source officielle avant d'entrer dans le dossier.` },
+  { id: 'rh', t: `Compétences et organisation de la transition numérique`, court: `Compétences`, missions: ['Management RH', 'Pilotage de projet'],
+    but: `Lire la charge des équipes de Rive Nord sur 22 mois, repérer les pointes, puis dire quelles compétences numériques manquent (coordination BIM, modélisation, gestion des données, lecture de la maquette sur le chantier) et comment les obtenir : recruter, former, sous-traiter.`,
+    livrable: `Un planning de charge commenté, une carte des compétences numériques à acquérir et trois mesures de gestion des ressources humaines, avec un coût et un délai.`,
+    implique: `Vous travaillez sur les métiers : qui change de façon de travailler, qui doit être formé, dans quel ordre. La difficulté : chiffrer un coût et un délai de formation sans inventer, et n'utiliser aucune donnée sur de vraies personnes.`,
+    ia: `Claude aide à lisser la charge et à lister les compétences. Il ne reçoit aucune donnée sur de vraies personnes.` }
+];
+const MISSIONS = ['Stratégie de construction', 'Performance financière', 'Gestion contractuelle', 'Pilotage de projet', 'Management RH'];
+
+const JAUGES = {
+  risque:      { l: 'Risque juridique', base: 40, sens: -1, aide: 'Plus bas, c\'est mieux.', niv: ['faible', 'modéré', 'à surveiller', 'élevé'] },
+  charge:      { l: 'Charge de travail', base: 40, sens: -1, aide: 'Plus bas, c\'est mieux.', niv: ['légère', 'modérée', 'à surveiller', 'lourde'] },
+  fiabilite:   { l: 'Fiabilité des sources', base: 50, sens: 1, aide: 'Ce que le groupe a vérifié. Plus haut, c\'est mieux.', niv: ['solide', 'correcte', 'à surveiller', 'fragile'] },
+  tracabilite: { l: 'Traçabilité de l\'IA', base: 50, sens: 1, aide: 'Journal de bord tenu. Plus haut, c\'est mieux.', niv: ['bonne', 'correcte', 'à surveiller', 'faible'] }
+};
+
+const DECISIONS = {
+  donnees: {
+    q: `Avec quelles données le groupe travaille-t-il ?`,
+    sources: ['cnil_generative'],
+    options: [
+      { id: 'fictives', l: `Le chantier fictif Rive Nord, fourni par cette page`, e: { risque: -5, fiabilite: 5 },
+        suite: `Tout le monde part de la même base. Les écarts entre groupes viendront de vos choix, pas des données.` },
+      { id: 'anonymes', l: `Le chantier fictif, complété par des données d'entreprise anonymisées, avec l'accord écrit du maître de stage ou du tuteur`, e: { risque: 5, charge: 5 },
+        suite: `Vos résultats seront plus réalistes. Supprimer les noms ne suffit pas toujours : un chantier se reconnaît à son lieu, son budget et ses entreprises.` },
+      { id: 'reelles', l: `Des documents réels d'un chantier ou d'une entreprise, tels quels`, e: { risque: 35, fiabilite: -10 }, grave: true,
+        suite: `Stop. Vous confiez à un tiers des documents contractuels, des prix ou des noms de personnes. Changez ce choix avant de continuer.` }
+    ]
+  },
+  cadrage: {
+    q: `Quand le groupe écrit-il son cadrage initial ?`,
+    options: [
+      { id: 'avant', l: `Avant tout usage de Claude, à la main, en séance`, e: { tracabilite: 15, fiabilite: 5 },
+        suite: `Vous aurez une trace de votre pensée avant l'outil. C'est ce que demande le journal de bord.` },
+      { id: 'apres', l: `Après un premier échange avec Claude, pour gagner du temps`, e: { tracabilite: -10, fiabilite: -5 },
+        suite: `Le cadrage ne montre plus ce que vous pensiez seuls. Le jury ne pourra pas mesurer ce que l'outil a changé.` },
+      { id: 'jamais', l: `Nous le demandons à Claude`, e: { tracabilite: -25, fiabilite: -10 }, grave: true,
+        suite: `Le cadrage initial doit être écrit sans IA. Reprenez-le à la main, même en trois lignes.` }
+    ]
+  },
+  sources: {
+    q: `Claude vous donne un article de loi ou une norme. Que faites-vous ?`,
+    sources: ['legifrance', 'daj'],
+    options: [
+      { id: 'verifier', l: `Nous ouvrons la source officielle, nous lisons le texte et nous notons la date de consultation`, e: { risque: -10, fiabilite: 15, charge: 5 },
+        suite: `Vous avez la preuve que la référence existe et dit ce que vous écrivez. Notez le verdict dans la fiche de contrôle : exacte, inexacte, introuvable ou périmée.` },
+      { id: 'recouper', l: `Nous vérifions sur un site de vulgarisation ou une autre IA`, e: { risque: 5, fiabilite: 0 },
+        suite: `Vous recoupez, mais sans source officielle. Une autre IA peut se tromper de la même façon.` },
+      { id: 'copier', l: `Nous copions la référence dans le dossier : l'outil est plutôt fiable`, e: { risque: 25, fiabilite: -25, tracabilite: -5 }, grave: true,
+        suite: `Une référence inventée ou périmée coûte cher à l'oral. Aucune référence n'entre dans le dossier sans avoir été ouverte.` }
+    ]
+  },
+  journal: {
+    q: `Comment le groupe tient-il son journal de bord IA ?`,
+    options: [
+      { id: 'continu', l: `Une ligne par usage significatif, remplie au fil de l'eau par un responsable désigné`, e: { tracabilite: 25, charge: 5 },
+        suite: `Le journal reste fidèle. Il vous servira de base pour le bilan et pour les questions du jury.` },
+      { id: 'chacun', l: `Chacun note ses propres usages, puis nous fusionnons avant le dépôt`, e: { tracabilite: 10, charge: 10 },
+        suite: `C'est faisable si vous fixez une date de fusion. Sinon, il manquera des lignes.` },
+      { id: 'fin', l: `Nous le reconstituons à la fin, de mémoire`, e: { tracabilite: -15, fiabilite: -5 }, grave: true,
+        suite: `Un journal reconstitué oublie les rejets, qui sont ce qu'il y a de plus utile. Sans journal, l'usage de l'IA est plafonné à 1,5 point sur 3.` }
+    ]
+  },
+  projet_perim: {
+    q: `Quelle ambition pour le projet du groupe ?`,
+    options: [
+      { id: 'une', l: `Un livrable minimal, complet et vérifié`, e: { charge: -10, fiabilite: 5 },
+        suite: `Vous aurez un projet que vous savez défendre. Le reste passe dans « la suite ».` },
+      { id: 'deux', l: `Le livrable minimal, plus une extension si le temps le permet`, e: { charge: 10 },
+        suite: `Décidez dès maintenant à quel moment vous arrêtez l'extension.` },
+      { id: 'tout', l: `Tout le projet, y compris les calculs les plus fins`, e: { risque: 5, charge: 30, fiabilite: -10 }, grave: true,
+        suite: `Vous risquez de présenter beaucoup de pages et peu de preuves. Réduisez le périmètre.` }
+    ]
+  }
+};
+
+const SCENES = {
+  s_veille: {
+    titre: `Le jour du dépôt, 17 h : la veille de la dernière session`,
+    dependDe: ['sources', 'journal'],
+    variantes: [
+      { id: 'inventee', si: c => c.choix.sources === 'copier',
+        texte: `Un membre du groupe relit le dossier. Il cherche l'article cité à la page 6. Il ne le trouve pas sur la source officielle.`,
+        reps: [
+          { id: 'a', l: `Vous retirez la référence, vous le notez dans le journal comme « rejeté, introuvable » et vous contrôlez toutes les autres`, e: { risque: -10, fiabilite: 15, tracabilite: 10, charge: 10 }, suite: `Vous perdez une heure et vous gagnez un dossier fiable. Le rejet montre aussi que vous contrôlez l'outil.` },
+          { id: 'b', l: `Vous remplacez l'article par un autre, proposé par Claude`, e: { risque: 10, fiabilite: -10 }, suite: `Vous reproduisez le même risque. Ouvrez cette nouvelle référence avant de la garder.` },
+          { id: 'c', l: `Vous laissez la référence : le jury ne vérifiera pas`, e: { risque: 15, fiabilite: -15 }, suite: `Le jury peut vérifier. Vous défendriez à l'oral une référence que vous n'avez jamais lue.` }
+        ] },
+      { id: 'journalvide', si: c => c.choix.journal === 'fin',
+        texte: `Il est 17 h. Le journal compte deux lignes, alors que le groupe a utilisé Claude pendant plusieurs séances.`,
+        reps: [
+          { id: 'a', l: `Vous reconstituez les usages à partir de l'historique de vos conversations, et vous écrivez que le journal est reconstitué`, e: { tracabilite: 15, charge: 10 }, suite: `Vous restez honnêtes. Vous retrouverez des rejets que la mémoire avait effacés.` },
+          { id: 'b', l: `Vous inventez des lignes plausibles`, e: { tracabilite: -20, risque: 10 }, suite: `Un journal inventé est pire qu'un journal court. Reprenez avec l'historique réel.` },
+          { id: 'c', l: `Vous déposez deux lignes`, e: { tracabilite: -10 }, suite: `Le plafond de 1,5 point sur 3 risque de s'appliquer. Ajoutez au moins les usages principaux.` }
+        ] },
+      { id: 'tendu', si: c => c.j.charge >= 65,
+        texte: `Le groupe a encore la moitié du projet à finir. Le support compte dix-neuf diapositives.`,
+        reps: [
+          { id: 'a', l: `Vous gardez le livrable minimal et dix diapositives au plus, quitte à retirer un chapitre`, e: { charge: -20, fiabilite: 5 }, suite: `Vous présenterez peu, mais complet. C'est ce que demande la consigne.` },
+          { id: 'b', l: `Vous demandez à Claude de tout condenser en une heure`, e: { charge: 5, fiabilite: -10, tracabilite: -5 }, suite: `Vous aurez un dossier que personne n'a relu. Notez cet usage dans le journal.` },
+          { id: 'c', l: `Vous déposez le dossier tel quel`, e: { charge: 5, fiabilite: -10 }, suite: `Le jury verra les trous. Mieux vaut un périmètre réduit qu'un dossier troué.` }
+        ] },
+      { id: 'pret', si: () => true,
+        texte: `Le dossier est prêt une heure avant le dépôt. Le groupe hésite à relire encore.`,
+        reps: [
+          { id: 'a', l: `Vous faites relire le journal et la fiche de contrôle par une personne qui n'a pas écrit le dossier`, e: { fiabilite: 10, tracabilite: 5 }, suite: `Un regard neuf repère ce que vous ne voyez plus. C'est la meilleure heure du projet.` },
+          { id: 'b', l: `Vous déposez tout de suite`, e: {}, suite: `Vous tenez le délai. Vérifiez au moins que les deux fichiers sont bien partis sur Teams.` },
+          { id: 'c', l: `Vous demandez à Claude de relire tout le dossier`, e: { tracabilite: 5, fiabilite: -5 }, suite: `Il corrigera du style, pas les faits. Notez l'usage dans le journal et gardez la vérification humaine.` }
+        ] }
+    ]
+  }
+};
+
+const QUESTIONS_JURY = {
+  risque: `Si une référence juridique de votre dossier est fausse, qui l'a contrôlée et comment ?`,
+  charge: `Qu'avez-vous choisi de ne pas faire, et pourquoi ?`,
+  fiabilite: `Quelle source avez-vous rejetée, et comment l'avez-vous su ?`,
+  tracabilite: `Montrez une ligne de votre journal où vous avez rejeté ou corrigé la réponse de Claude.`
+};
+
+const ROLES = [
+  ['r_coord', 'Coordination du groupe', `Tient le calendrier, anime les points d'étape, dépose les fichiers sur Teams.`],
+  ['r_ia', 'Journal de bord IA', `Tient le journal ligne par ligne, relit les consignes clés, prépare le bilan.`],
+  ['r_jur', 'Références juridiques', `Tient la fiche de contrôle : ouvre chaque source officielle, note le verdict et la date.`],
+  ['r_proj', 'Contenu du projet', `Garde la cohérence du livrable, refait les calculs à la main.`],
+  ['r_pres', 'Support de présentation', `Prépare les dix diapositives au plus, avec sources et dates.`]
+];
+
+/* Grille d'évaluation de la soutenance : proposée par le formateur, 20 points. Quatre niveaux par critère. */
+const GRILLE = [
+  { c: `Cadrage stratégique`, pts: 3, q: `Le problème du chantier est compris et formulé ; le cadrage initial a été écrit sans IA ; le périmètre est tenu.` },
+  { c: `Benchmarking et solutions techniques`, pts: 3, q: `Les options ou cas sont comparés avec des critères explicites, des sources citées et datées, des forces et des faiblesses.` },
+  { c: `Cadre juridique`, pts: 3, q: `Les références sont ouvertes sur une source officielle, avec un verdict et une date ; les risques pour le chantier sont nommés.` },
+  { c: `Mise en œuvre : méthode, contrôles, tests, modifications`, pts: 3, q: `Le groupe décrit comment il a travaillé, ce qu'il a contrôlé, les tests faits et les modifications importantes apportées en cours de route.` },
+  { c: `Démonstration de l'efficacité, limites et contraintes`, pts: 3, q: `Un résultat est montré et refait à la main ; les limites, les hypothèses et les contraintes sont dites sans les cacher.` },
+  { c: `Usage de l'IA tracé`, pts: 3, q: `Le journal de bord montre des usages, des rejets et des vérifications. Sans journal, ce critère est plafonné à 1,5 point.` },
+  { c: `Oral et support`, pts: 2, q: `Dix diapositives au plus, sources et dates visibles, temps tenu, chaque membre prend la parole.` }
+];
+const NIVEAUX_GRILLE = ['insuffisant', 'fragile', 'solide', 'maîtrisé'];
+
+/* ───────── État, sauvegarde, calcul ───────── */
+function nouvelEtat() {
+  return { app: APP.id, version: APP.version, cree: new Date().toISOString(), maj: null, exportLe: null, modifs: 0,
+    chapitre: 'depart', champs: {}, faits: {}, choix: {}, scenes: {} };
+}
+let S = nouvelEtat();
+let stockageOk = true;
+
+function charger() {
+  try {
+    const brut = localStorage.getItem(CLE);
+    if (brut) { const d = JSON.parse(brut); if (d && d.app === APP.id) S = Object.assign(nouvelEtat(), d); }
+  } catch (e) { stockageOk = false; }
+}
+let minuteur = null, aSauver = false;
+function sauver() {
+  clearTimeout(minuteur); aSauver = true;
+  minuteur = setTimeout(() => {
+    try { localStorage.setItem(CLE, JSON.stringify(S)); stockageOk = true; } catch (e) { stockageOk = false; }
+    aSauver = false;
+    majBarre();
+  }, 250);
+}
+function toucher() { S.maj = new Date().toISOString(); S.modifs = (S.modifs || 0) + 1; sauver(); }
+
+const v = (cle, defaut) => { const x = S.champs[cle]; return (x === undefined || x === null) ? (defaut === undefined ? '' : defaut) : x; };
+const rempli = cle => String(v(cle)).trim().length > 0;
+const num = (cle, defaut) => { const x = parseFloat(String(v(cle, defaut)).replace(/\s/g, '').replace(',', '.')); return isFinite(x) ? x : NaN; };
+const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const borne = x => Math.max(0, Math.min(100, x));
+
+/* Typographie française : espaces insécables, apostrophes, milliers */
+function typo(t) {
+  return String(t)
+    .replace(/(\p{L})'(?=\p{L}|«)/gu, '$1’')
+    .replace(/« /g, '« ').replace(/ »/g, ' »')
+    .replace(/ ([:;!?])/g, ' $1')
+    .replace(/(\d) (\d{3})(?!\d)/g, '$1 $2')
+    .replace(/(\d) h (\d)/g, '$1 h $2')
+    .replace(/(\d) (%|€|h|min|heures?|minutes?|jours?|semaines?|mois|ans?)(?![\p{L}])/gu, '$1 $2')
+    .replace(/n° /g, 'n° ');
+}
+function typoNoeuds(racine) {
+  const marcheur = document.createTreeWalker(racine, NodeFilter.SHOW_TEXT, {
+    acceptNode(n) {
+      const p = n.parentElement;
+      if (!p || p.closest('pre,textarea,script,style,[data-brut]')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  const noeuds = []; while (marcheur.nextNode()) noeuds.push(marcheur.currentNode);
+  noeuds.forEach(n => { const t = typo(n.nodeValue); if (t !== n.nodeValue) n.nodeValue = t; });
+  racine.querySelectorAll('[placeholder]').forEach(e => e.setAttribute('placeholder', typo(e.getAttribute('placeholder'))));
+}
+const nb = (x, dec) => isFinite(x) ? x.toLocaleString('fr-FR', { maximumFractionDigits: dec || 0, minimumFractionDigits: 0 }) : '–';
+const heure = iso => { const d = new Date(iso); return d.getHours() + ' h ' + String(d.getMinutes()).padStart(2, '0'); };
+const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+const dateFr = d => (d.getDate() === 1 ? '1er' : d.getDate()) + ' ' + MOIS[d.getMonth()] + ' ' + d.getFullYear();
+
+/* Ordre de calcul : les choix d'un chapitre, puis la scène qui en découle */
+const ORDRE = [
+  ['d', 'donnees'], ['d', 'cadrage'], ['d', 'projet_perim'], ['d', 'sources'], ['d', 'journal'], ['s', 's_veille']
+];
+function appliquer(j, e) { Object.keys(e || {}).forEach(k => { j[k] = borne(j[k] + e[k]); }); }
+function calcul() {
+  const j = {}; Object.keys(JAUGES).forEach(k => { j[k] = JAUGES[k].base; });
+  const variantes = {};
+  ORDRE.forEach(([type, id]) => {
+    if (type === 'd') {
+      const o = DECISIONS[id].options.find(x => x.id === S.choix[id]);
+      if (o) appliquer(j, o.e);
+    } else {
+      const sc = SCENES[id];
+      if (!sc.dependDe.every(d => S.choix[d])) { variantes[id] = null; return; }
+      const va = sc.variantes.find(x => x.si({ j: Object.assign({}, j), choix: S.choix }));
+      variantes[id] = va;
+      const rep = S.scenes[id] && S.scenes[id][va.id];
+      const r = va.reps.find(x => x.id === rep);
+      if (r) appliquer(j, r.e);
+    }
+  });
+  const c = S.choix;
+  const drap = {
+    donneesReelles: c.donnees === 'reelles', cadrageIA: c.cadrage === 'jamais' || c.cadrage === 'apres', sansVerif: c.sources === 'copier',
+    journalTardif: c.journal === 'fin', tropLarge: c.projet_perim === 'tout'
+  };
+  /* Question du jury : le point le plus faible */
+  const faiblesse = { risque: j.risque, charge: j.charge, fiabilite: 100 - j.fiabilite, tracabilite: 100 - j.tracabilite };
+  const faible = Object.keys(faiblesse).sort((a, b) => faiblesse[b] - faiblesse[a])[0];
+  return { j, variantes, drap, faible };
+}
+function niveau(k, x) {
+  const g = JAUGES[k], r = g.sens < 0 ? (x <= 30 ? 0 : x <= 50 ? 1 : x <= 64 ? 2 : 3) : (x >= 70 ? 0 : x >= 50 ? 1 : x >= 36 ? 2 : 3);
+  return [['vert', 'neutre', 'ambre', 'rouge'][r], g.niv[r]];
+}
+function alertes(C) {
+  const a = [], d = C.drap, j = C.j;
+  if (d.donneesReelles) a.push(['rouge', `Données réelles : changez ce choix avant d'aller plus loin.`, 'chantier']);
+  if (d.sansVerif) a.push(['rouge', `Références copiées sans vérification : ouvrez chaque source officielle.`, 'journal']);
+  if (d.cadrageIA) a.push(['orange', `Cadrage initial non écrit avant Claude : reprenez-le à la main.`, 'journal']);
+  if (d.journalTardif) a.push(['orange', `Journal reconstitué à la fin : sans journal, l'usage de l'IA est plafonné à 1,5 point sur 3.`, 'journal']);
+  if (d.tropLarge || j.charge >= 65) a.push(['orange', `Périmètre trop large pour l'oral.`, 'projet']);
+  if (j.fiabilite <= 35) a.push(['orange', `Sources fragiles : que reste-t-il à vérifier ?`, 'journal']);
+  if (j.tracabilite <= 35) a.push(['orange', `Traçabilité faible : le journal manque de lignes.`, 'journal']);
+  const n = lignesJournal().filter(l => l.rempli).length;
+  if (n >= 3 && !lignesJournal().some(l => l.rempli && (l.decision === 'rejete' || l.decision === 'modifie'))) a.push(['info', `Aucune ligne du journal n'est modifiée ou rejetée. Cela peut arriver, mais le jury demandera ce que vous avez corrigé.`, null]);
+  const sansJustif = Object.keys(DECISIONS).filter(id => S.choix[id] && !rempli('j_' + id)).length;
+  if (sansJustif) a.push(['info', sansJustif === 1 ? `Un choix reste sans justification.` : sansJustif + ` choix restent sans justification.`, null]);
+  return a;
+}
+
+/* ───────── Registre et aides de rendu ───────── */
+const REG = { etapes: {}, champs: {}, decisions: {}, scenes: {}, facultatives: {}, seq: [], seqVu: {}, etapeChamps: {}, champsEtape: {} };
+function enreg(t, id, ch, titre) { const k = t + ':' + id; if (REG.seqVu[k]) return; REG.seqVu[k] = true; REG.seq.push({ t, id, ch, titre: String(titre).replace(/<[^>]+>/g, '') }); }
+/* Étapes d'entraînement : facultatives, hors taux de remplissage et hors progression */
+const ENTRAINEMENT = ['c_test'];
+const CHAPITRES_MIXTES = ['claude'];
+let CH = null; /* chapitre en cours de rendu */
+
+function champ(cle, libelle, o) {
+  o = o || {};
+  REG.champs[cle] = { l: libelle, ch: CH, requis: !!o.requis };
+  const val = v(cle, o.defaut);
+  const facultatif = o.requis ? '' : ' <em>(facultatif)</em>';
+  let saisie;
+  if (o.type === 'zone') saisie = `<textarea data-champ="${cle}" rows="${o.lignes || 3}" placeholder="${esc(o.ex || '')}">${esc(val)}</textarea>`;
+  else if (o.type === 'date') saisie = `<input type="date" data-champ="${cle}" value="${esc(val)}">`;
+  else if (o.type === 'liste') saisie = `<select data-champ="${cle}">${[['', 'Choisir…']].concat(o.options).map(x => `<option value="${esc(x[0])}"${String(val) === String(x[0]) ? ' selected' : ''}>${esc(x[1])}</option>`).join('')}</select>`;
+  else saisie = `<input type="text"${o.type === 'nombre' ? ' inputmode="decimal"' : ''} data-champ="${cle}" value="${esc(val)}" placeholder="${esc(o.ex || '')}" autocomplete="off">`;
+  return `<label class="champ${o.large ? ' large' : ''}"><span class="l">${libelle}${o.sansMention ? '' : facultatif}</span>${saisie}${o.aide ? `<span class="aide">${o.aide}</span>` : ''}</label>`;
+}
+function coche(cle, libelle, defaut) {
+  REG.champs[cle] = { l: libelle, ch: CH, requis: false, coche: true };
+  const on = v(cle, defaut ? 'oui' : 'non') === 'oui';
+  return `<label class="coche"><input type="checkbox" data-coche="${cle}"${on ? ' checked' : ''}><span>${libelle}</span></label>`;
+}
+const estCoche = (cle, defaut) => v(cle, defaut ? 'oui' : 'non') === 'oui';
+
+const texteCompteur = n => n > 0 ? n + ' champ' + (n > 1 ? 's' : '') + ' à remplir' : 'Rempli';
+function etape(id, titre, duree, corps) {
+  REG.etapes[id] = CH; enreg('e', id, CH, titre);
+  const cles = Array.from(new Set((corps.match(/data-champ="([^"]+)"/g) || []).map(s => s.slice(12, -1))));
+  cles.forEach(k => { REG.champsEtape[k] = id; });
+  const requises = cles.filter(k => REG.champs[k] && REG.champs[k].requis); REG.etapeChamps[id] = requises;
+  const nManque = requises.filter(k => !rempli(k)).length;
+  const compteur = requises.length ? `<span class="compteur ${nManque ? 'reste' : 'ok'}" data-compteur>${texteCompteur(nManque)}</span>` : '';
+  const fac = ENTRAINEMENT.indexOf(id) >= 0; if (fac) REG.facultatives[id] = true;
+  const statut = CHAPITRES_MIXTES.indexOf(CH) >= 0 ? (fac ? `<span class="statut facultatif">Entraînement · facultatif</span>` : `<span class="statut obligatoire">Obligatoire</span>`) : '';
+  const fait = !!S.faits[id];
+  return `<section class="bloc etape${fait ? ' faite' : ''}${fac ? ' entrainement' : ''}" id="e-${id}"${requises.length ? ` data-requis="${requises.join(',')}"` : ''}>
+    <div class="etape-tete"><h2>${titre}${duree ? `<span class="duree">${duree}</span>` : ''}${statut}${compteur}</h2>
+    <label class="fait"><input type="checkbox" data-fait="${id}"${fait ? ' checked' : ''}>Fait</label></div>
+    ${corps}</section>`;
+}
+/* Aide contextuelle repliable : l'état ouvert ou fermé est gardé en mémoire pendant la visite, pas dans le projet */
+const AIDES = {};
+const PICTO_AIDE = '<svg class="picto" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="8.2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="6.2" r="1.1" fill="currentColor"/><path d="M10 9v5.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>';
+function aide(titre, corps, id) {
+  id = id || titre;
+  return `<details class="bloc aide" data-aide="${esc(id)}"${AIDES[id] ? ' open' : ''}><summary>${PICTO_AIDE}<span>${titre}</span></summary><div class="aide-corps">${corps}</div></details>`;
+}
+function partie(obligatoire, titre, texte) {
+  return `<div class="partie ${obligatoire ? 'obligatoire' : 'facultatif'}"><span class="statut ${obligatoire ? 'obligatoire' : 'facultatif'}">${obligatoire ? 'Obligatoire' : 'Facultatif'}</span><h2>${titre}</h2><p>${texte}</p></div>`;
+}
+function bloc(titre, corps, classe) { return `<section class="bloc${classe ? ' ' + classe : ''}">${titre ? `<h2>${titre}</h2>` : ''}${corps}</section>`; }
+function liens(ids) { return `<ul class="sources">${ids.map(i => `<li><a href="${SOURCES[i].u}" target="_blank" rel="noopener">${SOURCES[i].t}</a></li>`).join('')}</ul>`; }
+function repere(titre, corps, ids) {
+  return `<section class="bloc repere"><h2>${titre}</h2>${corps}${ids ? liens(ids) + `<p class="verif">${VERIFIE() ? `Repères relus le ${VERIFIE()} sur les sources officielles.` : `Repères à vérifier : aucun texte n'a encore été relu pour ce module.`} Le droit change : ouvrez la source avant de la citer.</p>` : ''}</section>`;
+}
+function tirets(items) { return `<ul class="tirets">${items.map((x, i) => `<li>${x}${/[?!]$/.test(x) ? '' : i === items.length - 1 ? '.' : ' ;'}</li>`).join('')}</ul>`; }
+function pas(items) { return `<ol class="pas">${items.map(x => `<li>${x}</li>`).join('')}</ol>`; }
+
+const CONSIGNES = {};
+function consigne(id, titre) {
+  return `<div class="consigne"><div class="consigne-tete"><b>${titre}</b><button type="button" class="btn" data-copier="${id}">Copier</button></div><pre data-consigne="${id}" tabindex="0"></pre></div>`;
+}
+const VIDE = '⟦à compléter⟧';
+const ou = (cle, defaut) => rempli(cle) ? String(v(cle)).trim() : (defaut || VIDE);
+
+function effets(e) {
+  const k = Object.keys(e || {}); if (!k.length) return '';
+  return `<div class="effets">${k.map(x => { const bon = (e[x] * JAUGES[x].sens) > 0; return `<span class="effet ${bon ? 'bon' : 'mauvais'}">${JAUGES[x].l} ${e[x] > 0 ? '+' : '−'}${Math.abs(e[x])}</span>`; }).join('')}</div>`;
+}
+function decision(id) {
+  REG.decisions[id] = CH; enreg('d', id, CH, DECISIONS[id].q);
+  REG.champs['j_' + id] = { l: 'Justification', ch: CH, requis: true };
+  const d = DECISIONS[id], choisi = S.choix[id], o = d.options.find(x => x.id === choisi);
+  return `<section class="bloc decision" id="d-${id}">
+    <p class="genre">Un choix à faire</p><p class="q">${d.q}</p>
+    <div class="options" role="radiogroup" aria-label="${esc(d.q)}">${d.options.map(x => `<label class="option${x.id === choisi ? ' choisi' : ''}"><input type="radio" name="d-${id}" value="${x.id}" data-decision="${id}"${x.id === choisi ? ' checked' : ''}><span>${x.l}</span></label>`).join('')}</div>
+    ${o ? `<div class="suite${o.grave ? ' grave' : ''}">${o.suite}</div>${effets(o.e)}
+      <div class="champs"><label class="champ large"><span class="l">Expliquez votre choix en trois phrases simples</span><textarea data-champ="j_${id}" rows="4" placeholder="1. Ce que nous avons lu ou constaté : …  2. Pourquoi ce choix convient à notre projet : …  3. Ce que nous ferons concrètement : …">${esc(v('j_' + id))}</textarea><span class="aide">Phrase 1 : ce que vous avez lu ou constaté${d.sources ? ' (dans un des textes ci-dessous)' : ''}. Phrase 2 : pourquoi ce choix convient à votre projet. Phrase 3 : ce que vous ferez concrètement. Vous pouvez changer d'avis : l'état du projet se recalcule.</span></label></div>
+      ${d.sources ? liens(d.sources) : ''}` : `<p class="note" style="margin-top:12px">Votre choix modifie l'état du projet, affiché à droite.</p>`}
+  </section>`;
+}
+function scene(id, C) {
+  REG.scenes[id] = CH; enreg('s', id, CH, 'Scène : ' + SCENES[id].titre);
+  const sc = SCENES[id], va = C.variantes[id];
+  if (!va) return `<section class="bloc scene" id="s-${id}"><p class="genre">Une scène</p><h2>${sc.titre}</h2><p class="verrou">Faites d'abord vos choix ci-dessus : la scène en dépend.</p></section>`;
+  const rep = S.scenes[id] && S.scenes[id][va.id], r = va.reps.find(x => x.id === rep);
+  return `<section class="bloc scene" id="s-${id}"><p class="genre">Une scène, née de vos choix</p><h2>${sc.titre}</h2><p>${va.texte}</p>
+    <div class="reps">${va.reps.map(x => `<button type="button" class="rep${x.id === rep ? ' choisi' : ''}" data-scene="${id}" data-variante="${va.id}" data-rep="${x.id}" aria-pressed="${x.id === rep}">${x.l}</button>`).join('')}</div>
+    ${r ? `<div class="suite">${r.suite}</div>${effets(r.e)}` : ''}</section>`;
+}
+
+/* Ce qui reste d'obligatoire, dans l'ordre du parcours */
+function restants(C) {
+  const out = [];
+  CHAPITRES.forEach(c => {
+    REG.seq.filter(x => x.ch === c.id).forEach(x => {
+      if (x.t === 'e') {
+        if (REG.facultatives[x.id] || horsProjet(x.id)) return;
+        const manque = (REG.etapeChamps[x.id] || []).filter(k => !rempli(k)).length;
+        if (!S.faits[x.id] || manque) out.push({ ch: c.id, ancre: '#e-' + x.id, titre: x.titre, detail: manque ? texteCompteur(manque) : 'à cocher quand c\'est fait' });
+      } else if (x.t === 'd') {
+        if (!S.choix[x.id] || !rempli('j_' + x.id)) out.push({ ch: c.id, ancre: '#d-' + x.id, titre: x.titre, detail: !S.choix[x.id] ? 'choix à faire' : 'justification à écrire' });
+      } else if (x.t === 's') {
+        const va = C.variantes[x.id];
+        if (!va || !(S.scenes[x.id] && S.scenes[x.id][va.id])) out.push({ ch: c.id, ancre: '#s-' + x.id, titre: x.titre, detail: va ? 'réponse à choisir' : 'après vos choix' });
+      }
+    });
+    Object.keys(REG.champs).forEach(k => {
+      const f = REG.champs[k];
+      if (f.ch !== c.id || !f.requis || k.indexOf('j_') === 0 || REG.champsEtape[k] || rempli(k)) return;
+      out.push({ ch: c.id, ancre: '[data-champ="' + k + '"]', titre: String(f.l).replace(/<[^>]+>/g, ''), detail: 'champ à remplir' });
+    });
+  });
+  return out;
+}
+
+/* Progression */
+function progression(ch, C) {
+  let total = 0, fait = 0;
+  Object.keys(REG.etapes).forEach(id => { if (REG.etapes[id] === ch && !REG.facultatives[id] && !horsProjet(id)) { total++; if (S.faits[id]) fait++; } });
+  Object.keys(REG.decisions).forEach(id => { if (REG.decisions[id] === ch) { total++; if (S.choix[id]) fait++; } });
+  Object.keys(REG.scenes).forEach(id => { if (REG.scenes[id] === ch) { total++; const va = C.variantes[id]; if (va && S.scenes[id] && S.scenes[id][va.id]) fait++; } });
+  return [fait, total];
+}
+
+/* Journal de bord IA : lignes numérotées, au moins trois affichées */
+const JB_CHAMPS = ['date', 'outil', 'objectif', 'consigne', 'resultat', 'decision', 'pourquoi', 'verif'];
+const nJournal = () => Math.max(3, parseInt(v('jb_n', '3'), 10) || 3);
+function lignesJournal() {
+  const out = [];
+  for (let n = 1; n <= Math.max(nJournal(), 40); n++) {
+    const l = { n }; JB_CHAMPS.forEach(c => { l[c] = String(v('jb' + n + '_' + c)).trim(); });
+    l.rempli = !!(l.objectif || l.consigne || l.resultat || l.pourquoi);
+    out.push(l);
+  }
+  return out.slice(0, Math.max(nJournal(), out.reduce((m, l) => l.rempli ? l.n : m, 0)));
+}
+
+const horsProjet = id => Object.keys(PREFIXES).some(k => id.indexOf(PREFIXES[k]) === 0 && v('pj_choix') !== k);
+
+/* ───────── Consignes à copier dans Claude ───────── */
+const groupe = () => rempli('id_groupe') ? 'G' + String(v('id_groupe')).trim().replace(/^g/i, '') : VIDE;
+const projetChoisi = () => PROJETS.find(p => p.id === v('pj_choix'));
+const libChoix = id => { const o = DECISIONS[id].options.find(x => x.id === S.choix[id]); return o ? o.l : VIDE; };
+
+/* Textes par défaut des instructions : les accolades signalent ce que l'étudiant remplace */
+const DEF_TRAVAIL = `Nous sommes {nombre} étudiants en Manager de projets BTP, en alternance chez {type d'entreprise : maîtrise d'œuvre, entreprise générale, bureau d'études}. Nous écrivons pour un jury de professionnels du BTP. Si notre demande est floue, pose-nous une question avant de produire. Signale-nous les erreurs et les points douteux. Ton direct, précis, sans flatterie. Ne reformule pas notre question.`;
+const DEF_JAMAIS = `Inventer un chiffre, une norme ou un article de loi. Remplacer notre cadrage par le tien. Utiliser des données de {notre entreprise ou nos vrais chantiers}. Terminer ta réponse par une offre d'aide générique. Employer les mots {« innovant », « révolutionnaire »} sans preuve.`;
+const FORMATS = {
+  prose: `Réponds en prose courte : pas de tableau ni de longue liste, sauf si nous le demandons.`,
+  listes: `Réponds par des listes courtes : une idée par ligne, introduite par deux-points.`,
+  tableau: `Quand tu compares des options, utilise un tableau. Sinon, réponds en prose courte.`,
+  etapes: `Réponds par étapes numérotées : une action par étape, dans l'ordre où nous la ferons.`
+};
+const LIB_FORMATS = [['prose', 'Prose courte, pas de tableau ni de longue liste'], ['listes', 'Listes courtes, une idée par ligne'], ['tableau', 'Tableau pour comparer, prose sinon'], ['etapes', 'Étapes numérotées, une action par étape']];
+function ficheChantierTexte() {
+  const C = CHANTIER, lots = C.lots;
+  const lignes = lots.map(l => `${l[0]}. ${l[1]} – ${l[2]} – ${nb(l[3])} € HT – effectif maximal ${l[4]} – début au mois ${l[5]} après l'ordre de service, durée ${l[6]} mois`).join('\n');
+  const jal = C.jalons.map(j => `– ${j[0]} : mois ${j[1]} (${dateMois(j[1])})`).join('\n');
+  return `FICHE DU CHANTIER FICTIF « ${C.nom.toUpperCase()} »
+Chantier entièrement fictif, commun à tous les groupes du module « ${CONFIG.module} ». Aucune donnée réelle.
+
+Opération : ${C.resume}
+Surface de plancher : ${nb(C.surface)} m²
+Budget des travaux : ${nb(C.budget)} € HT
+Durée : ${C.duree} mois à partir de l'ordre de service du ${dLong(C.os)} (date fictive)
+Maître d'ouvrage : ${C.moa}
+Maîtrise d'œuvre : ${C.moe}
+Maquette numérique : ${C.bim}
+
+LOTS (marchés privés, entreprises fictives)
+${lignes}
+
+JALONS
+${jal}
+
+ALÉAS POSSIBLES (à traiter selon le projet du groupe)
+${C.aleas.map(a => '– ' + a).join('\n')}
+
+RÈGLE DE TRAVAIL : si une donnée manque, dis-le et propose une hypothèse que je pourrai valider. N'invente jamais un chiffre présenté comme un fait.`;
+}
+function ficheChantierCsv() {
+  const q = x => '"' + String(x).replace(/"/g, '""') + '"';
+  return ['lot;intitule;entreprise_fictive;montant_ht_eur;effectif_max;debut_mois;duree_mois']
+    .concat(CHANTIER.lots.map(l => [l[0], q(l[1]), q(l[2]), l[3], l[4], l[5], l[6]].join(';'))).join('\n');
+}
+
+Object.assign(CONSIGNES, {
+  instructions: () => {
+    const m = [];
+    if (estCoche('ip_questions', true)) m.push(`Pose-nous au plus trois questions avant de produire quoi que ce soit.`);
+    if (estCoche('ip_plan', true)) m.push(`Propose un plan court avant de rédiger ou de calculer, et attends notre accord.`);
+    if (estCoche('ip_sources', true)) m.push(`Pour toute référence juridique ou technique, donne le nom exact du texte et dis si tu es sûr de son existence. Si tu n'es pas sûr, écris « à vérifier ».`);
+    if (estCoche('ip_doutes', true)) m.push(`Signale tes doutes et les calculs que nous devons refaire à la main.`);
+    if (estCoche('ip_change', true)) m.push(`Après chaque modification, dis en une phrase ce qui a changé.`);
+    if (estCoche('ip_contredire', true)) m.push(`Contredis-nous quand notre idée est trop large ou risquée.`);
+    return [`Tu es l'assistant ${rempli('id_nom') ? 'de ' + v('id_nom').trim() + ', membre du' : 'd\'un membre du'} groupe ${groupe()}, étudiants de la formation « ${CONFIG.formation} ». Le module s'appelle « ${CONFIG.module} ». Chaque membre du groupe a son propre projet Claude, avec ces mêmes instructions.
+
+NOTRE PROJET
+Nous travaillons sur le chantier fictif « ${CHANTIER.nom} » (fiche dans les fichiers du projet). Projet choisi : ${projetChoisi() ? projetChoisi().t : `le groupe vous l'indiquera dans la première conversation`}.
+Le module porte sur la transition numérique du BTP : stratégie, benchmarking, cadre juridique, organisation. Nous produisons un dossier, un support de présentation d'au plus dix diapositives et un journal de bord où nous traçons chaque usage de l'IA.
+
+TA MÉTHODE
+${m.map(x => '– ' + x).join('\n')}
+
+GARDE-FOUS
+– Travaille uniquement sur le chantier fictif. Si nous collons des données qui semblent réelles (noms, adresses, prix d'un vrai marché), arrête-toi et préviens-nous.
+– Ne présente jamais une estimation comme un fait. Dis ce que tu supposes.
+– Ne cite jamais un article de loi de mémoire sans le marquer « à vérifier » : nous ouvrirons la source officielle.
+– Ne fais jamais ceci : ${ou('ip_jamais', DEF_JAMAIS)}
+
+STYLE
+– Réponds en français, en phrases de vingt mots au plus, à la voix active, avec le vouvoiement.
+– ${FORMATS[v('ip_format')] || FORMATS.prose}
+– Guillemets français « », espace avant : ; ! ?, nombres avec espace des milliers (1 000) et virgule décimale (3,14), espace avant % et €.
+– Notre façon de travailler : ${ou('ip_travail', DEF_TRAVAIL)}`];
+  },
+  test_instructions: () => [`Avant de commencer, réponds point par point, en une ligne chacun.
+1. Quel est ton rôle dans ce projet, et pour qui travailles-tu ?
+2. Sur quel chantier travaillons-nous ? Donne sa surface, son budget et sa durée.
+3. Que fais-tu quand nous te demandons un article de loi ou une norme ?
+4. Que fais-tu si une donnée manque pour répondre ?
+5. Que refuses-tu de faire ?
+6. Quel format de réponse devons-nous attendre de toi ?
+7. Nous tutoies-tu ou nous vouvoies-tu ?
+8. Cite un risque de notre projet que tu vois déjà, et dis ce que tu supposes pour l'affirmer.`],
+  fiche_chantier: () => [ficheChantierTexte()],
+  cadrage_ia: () => [`Voici notre cadrage initial, écrit sans toi avant notre premier échange.
+
+Notre compréhension du problème : ${ou('cad_comprehension')}
+Nos hypothèses : ${ou('cad_hypotheses')}
+Ce que nous attendons de l'outil : ${ou('cad_attentes')}
+
+Compare-le à ce que tu aurais proposé. Dis-nous ce que nous avons oublié, ce qui est discutable, et ce que tu ne sais pas. Ne réécris pas notre cadrage.`],
+  demarrage: () => {
+    const p = projetChoisi();
+    if (!p) return [`Choisissez d'abord un projet, juste au-dessus.`];
+    return [`Nous démarrons le projet « ${p.t} » sur le chantier Rive Nord.
+
+Objectif : ${p.but}
+Livrable minimal : ${p.livrable}
+Missions couvertes : ${p.missions.join(', ')}.
+
+Avant de produire quoi que ce soit, pose-nous au plus trois questions. Puis propose un plan court en cinq étapes, avec pour chacune ce que nous vérifions à la main. Indique les points où tu manques d'information.`];
+  },
+  verif_refs: () => [`Pour le thème « ${ou('vr_theme', 'à choisir')} », liste les références juridiques ou techniques qui s'appliquent à notre chantier Rive Nord.
+
+Pour chaque référence : le nom exact du texte, ce qu'il règle en deux lignes, et ton niveau de certitude (sûr, probable, incertain). Ne cite aucun numéro d'article dont tu n'es pas sûr. Nous ouvrirons chaque source officielle et nous noterons notre verdict.`]
+});
+
+function cahierChantierMd() { return typo('# Fiche du chantier fictif Rive Nord\n\n' + ficheChantierTexte().replace(/^FICHE DU CHANTIER FICTIF.*\n/, '')); }
+function texteConsigne(id) {
+  const r = CONSIGNES[id]();
+  return typo(r[0]) + (r[1] ? '\n' + r[1] : '');
+}
+
+/* ───────── Contenu des chapitres ───────── */
+function tableau(entetes, lignes, classe) {
+  return `<div class="defile"><table class="tab ${classe || ''}"><thead><tr>${entetes.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${lignes.map(l => `<tr>${l.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+function aideLimite() {
+  return aide(`Claude me dit que j'ai atteint ma limite`, `<p>Les comptes gratuits ont une limite d'usage par session. Elle se remet à zéro toutes les cinq heures. Claude indique quand vous pourrez reprendre. Votre travail n'est pas perdu.</p>`
+    + pas([`Enregistrez le fichier de projet, avec le bouton « Enregistrer ».`, `Notez où vous en étiez : la consigne collée et la réponse attendue.`, `Avancez sur ce qui ne demande pas Claude : vos choix, votre cadrage, la fiche de contrôle des références.`, `Un autre membre du groupe peut continuer avec son propre compte. Il note l'usage dans le journal.`])
+    + `<p class="note">Pour consommer moins : regroupez vos demandes dans un seul message, évitez de recoller un long texte et ouvrez une conversation par tâche.</p>` + liens(['claude_limites']), 'aide_limite');
+}
+function aideGlossaire() {
+  const t = [
+    ['Journal de bord IA', `Tableau où le groupe note chaque usage significatif de l'IA : outil, objectif, consigne clé, résultat, décision (gardé, modifié ou rejeté) et vérification.`],
+    ['Cadrage initial', `Texte écrit sans IA avant le premier échange avec Claude : votre compréhension du problème, vos hypothèses, ce que vous attendez de l'outil.`],
+    ['Fiche de contrôle des références', `Tableau où le groupe note, pour chaque référence juridique, la source officielle consultée, la date et le verdict : exacte, inexacte, introuvable ou périmée.`],
+    ['Fichier de projet', `Fichier .json de cette page, qui garde tout le travail du groupe. Seule la page sait le lire.`],
+    ['BIM', `Modélisation des informations de la construction : une maquette numérique partagée entre les acteurs d'un projet.`],
+    ['Convention BIM', `Document qui fixe les règles d'échange de la maquette entre les acteurs : qui fait quoi, quel niveau de détail, quels formats.`],
+    ['Projet Claude', `Espace de Claude qui garde des instructions et des fichiers d'une conversation à l'autre.`],
+    ['Transition numérique', `Passage d'une organisation du papier et des échanges dispersés à des données partagées, structurées et exploitées à chaque étape d'un projet.`],
+    ['IoT (objets connectés)', `Capteurs et appareils reliés au réseau, qui mesurent et transmettent : position d'un engin, prise du béton, présence sur une zone.`],
+    ['Scénario', `Une façon de faire, décrite en une phrase, que l'on compare à d'autres.`],
+    ['Benchmarking', `Comparer plusieurs options ou plusieurs pratiques avec les mêmes critères, pour choisir en connaissance de cause.`],
+    ['Fourchette', `Une valeur basse et une valeur haute, au lieu d'un chiffre unique.`],
+    ['Invention', `Réponse fausse que Claude présente avec assurance, souvent quand une donnée manque.`]];
+  return aide(`Glossaire : les mots du module`, `<dl class="glossaire">${t.map(x => `<dt>${x[0]}</dt><dd>${x[1]}</dd>`).join('')}</dl>`);
+}
+function ficheChantier() {
+  const C = CHANTIER;
+  return `<dl class="fiche"><dt>Opération</dt><dd>${C.resume}</dd><dt>Surface de plancher</dt><dd>${nb(C.surface)} m²</dd><dt>Budget des travaux</dt><dd>${eur(C.budget)} HT</dd>
+    <dt>Durée</dt><dd>${C.duree} mois, à partir de l'ordre de service du ${dLong(C.os)} (date fictive)</dd><dt>Maître d'ouvrage</dt><dd>${C.moa}</dd><dt>Maîtrise d'œuvre</dt><dd>${C.moe}</dd><dt>Maquette numérique</dt><dd>${C.bim}</dd></dl>`;
+}
+function tableauLots() {
+  const tot = CHANTIER.lots.reduce((s, l) => s + l[3], 0);
+  return tableau(['N°', 'Lot', 'Entreprise (fictive)', 'Montant HT', 'Effectif max.', 'Début', 'Durée'],
+    CHANTIER.lots.map(l => [l[0], l[1], l[2], eur(l[3]), l[4], `mois ${l[5]}`, `${l[6]} mois`]).concat([['', '<b>Total</b>', '', `<b>${eur(tot)}</b>`, '', '', '']]));
+}
+function blocRoles() {
+  return `<div class="champs">${ROLES.map(r => champ(r[0], `${r[1]}`, { aide: r[2], sansMention: true, ex: 'Prénom NOM' })).join('')}</div>`;
+}
+function blocJournalLigne(n) {
+  const k = c => 'jb' + n + '_' + c, req = n === 1;
+  return `<section class="bloc ligne-journal"><h3>Ligne ${n}</h3><div class="champs">
+    ${champ(k('date'), 'Date', { ex: '14/10', requis: req, sansMention: true })}${champ(k('outil'), 'Outil', { ex: 'Claude, projet du groupe', requis: req, sansMention: true })}
+    ${champ(k('objectif'), 'Objectif', { large: true, ex: 'Ce que nous voulions obtenir', requis: req, sansMention: true })}
+    ${champ(k('consigne'), 'Consigne clé', { type: 'zone', lignes: 2, large: true, ex: 'La phrase qui a fait la différence, entre guillemets', requis: req, sansMention: true })}
+    ${champ(k('resultat'), 'Résultat obtenu', { type: 'zone', lignes: 2, large: true, requis: req, sansMention: true })}
+    ${champ(k('decision'), 'Décision', { type: 'liste', options: [['garde', 'Gardé'], ['modifie', 'Modifié'], ['rejete', 'Rejeté']], requis: req, sansMention: true })}
+    ${champ(k('pourquoi'), 'Pourquoi', { type: 'zone', lignes: 2, large: true, ex: 'Gardé : …. Rejeté : …', requis: req, sansMention: true })}
+    ${champ(k('verif'), 'Vérification (source consultée, date)', { type: 'zone', lignes: 2, large: true, ex: 'Document ouvert, date', requis: req, sansMention: true })}
+  </div></section>`;
+}
+function blocFicheControle() {
+  const lignes = THEMES_JURIDIQUES.map((t, i) => {
+    const n = i + 1, k = c => 'fc' + n + '_' + c;
+    return [t, cel(k('ref'), { l: 'Référence examinée' }), cel(k('src'), { l: 'Source officielle consultée' }), cel(k('date'), { l: 'Date de consultation', court: true }),
+      cel(k('verdict'), { l: 'Verdict', liste: [['exacte', 'Exacte'], ['inexacte', 'Inexacte'], ['introuvable', 'Introuvable'], ['perimee', 'Périmée']] })];
+  });
+  return tableau(['Thème', 'Référence examinée', 'Source officielle consultée', 'Date', 'Verdict'], lignes);
+}
+const cel = (cle, o) => { o = o || {}; REG.champs[cle] = { l: o.l || cle, ch: CH, requis: !!o.requis };
+  if (o.liste) return `<select data-champ="${cle}" aria-label="${esc(o.l || '')}">${[['', '…']].concat(o.liste).map(x => `<option value="${x[0]}"${v(cle) === x[0] ? ' selected' : ''}>${x[1]}</option>`).join('')}</select>`;
+  if (o.court) return `<input type="text" data-champ="${cle}" value="${esc(v(cle))}" aria-label="${esc(o.l || '')}" autocomplete="off">`;
+  return `<textarea data-champ="${cle}" rows="2" aria-label="${esc(o.l || '')}">${esc(v(cle))}</textarea>`; };
+
+function grilleHtml() {
+  const s = CONFIG.soutenance;
+  return `<p>Soutenance de <b>${s.total} minutes par groupe</b> : ${s.expose} minutes d'exposé, ${s.questions} minutes de questions. Chaque membre prend la parole. Note sur 20, selon sept critères. Chaque critère est jugé sur quatre niveaux : ${NIVEAUX_GRILLE.join(', ')}.</p>`
+    + tableau(['Critère', 'Points', 'Ce que le jury regarde'], GRILLE.map(g => [`<b>${g.c}</b>`, g.pts, g.q]))
+    + `<p class="note">Le groupe doit présenter la démonstration de l'efficacité de ce qu'il propose, ses limites et ses contraintes. Il décrit toute la mise en œuvre : les contrôles, les tests et les modifications importantes apportées en cours de route. Un travail qui montre ce qui a été rejeté ou corrigé est mieux noté qu'un travail lisse.</p>`;
+}
+const CHAPITRES = [
+/* ── Départ ── */
+{ id: 'depart', nav: 'Départ', groupe: 0, seance: () => `Module de 8 heures – deux sessions de 4 heures`,
+  titre: `Votre projet, votre chantier, votre journal`,
+  chapo: `En deux sessions de quatre heures, votre groupe traite un problème de transition numérique sur un chantier fictif commun, avec un projet choisi parmi quatre. Chacun trace ses usages de l'IA dans un journal de bord.`,
+  rendu: () => blocSecours() + bloc(`Ce que vous allez faire`, `<p>Vous êtes de futurs managers de projets BTP. Pendant deux sessions de quatre heures, vous traitez un problème de <b>transition numérique</b> sur un <b>chantier fictif</b>, « ${CHANTIER.nom} », le même pour tous les groupes.</p>
+      <p>Vous travaillez avec <b>Claude</b>, l'assistant d'IA, installé dans un <b>projet Claude</b> : un espace où vous rangez vos instructions et vos fichiers. Claude propose, vous vérifiez, vous décidez. Ce n'est pas une application à programmer.</p>
+      <h3>En groupe, mais chacun sur sa page</h3>
+      <p>Le travail se fait en groupe : même chantier, même projet, mêmes résultats. Mais <b>chaque étudiant utilise cette page sur son propre appareil</b>, avec son propre projet Claude, et rend son propre fichier. Pourquoi ? Parce que le journal de bord trace ce que <i>vous</i> avez demandé à Claude, ce que vous avez gardé et rejeté. Le jury lit le travail du groupe, et le journal de chacun.</p>
+      <h3>Vous remettez trois choses</h3>` + pas([
+        `<b>Le travail de votre projet</b>, choisi parmi quatre : comparateur de scénarios de transition numérique, tableau de bord numérique de chantier, veille juridique de la transition numérique, compétences et organisation de la transition numérique. Tous les quatre travaillent les mêmes objectifs : cadrage stratégique, benchmarking, cadre juridique, organisation.`,
+        `<b>Un journal de bord IA</b>, individuel : vous notez chaque usage important de Claude, ce que vous gardez, modifiez ou rejetez, et comment vous l'avez vérifié.`,
+        `<b>Un support de présentation</b> de dix diapositives au plus, commun au groupe, pour l'oral de la dernière session.`])
+      + `<h3>Le rôle de cette page</h3><p>Elle vous guide pas à pas, prépare vos consignes pour Claude, fait les calculs de votre projet, garde la trace de votre travail et produit le PDF à déposer. Elle ne remplace ni Claude ni votre réflexion : les références juridiques et les calculs se vérifient tout au long de la conception et de l'utilisation de votre futur projet.</p>`)
+    + bloc(`La transition numérique du BTP, en bref`, `<p><b>Définition.</b> La transition numérique, c'est passer du papier et des échanges dispersés (plans imprimés, e-mails, tableurs de chacun) à des données partagées, structurées et exploitées à chaque étape d'un projet : conception, chantier, exploitation du bâtiment.</p>
+      <p><b>Les enjeux pour le BTP.</b> Moins d'erreurs entre les plans et le chantier, des délais et des coûts mieux tenus, une sécurité mieux suivie, une traçabilité de qui a décidé quoi, et une maintenance du bâtiment préparée dès la conception. En face : un coût d'entrée, des compétences à acquérir, des contrats à réécrire et des données à protéger.</p>
+      <p><b>Les impacts sur les métiers et les processus.</b> Le conducteur de travaux et le chef de chantier lisent la maquette plutôt que des plans ; de nouveaux rôles apparaissent (coordination BIM, gestion des données) ; la réunion de chantier se fait autour d'une maquette partagée ; l'avancement se pointe sur tablette ; les décisions laissent une trace. Les processus changent autant que les outils.</p>
+      <h3>Quatre familles de technologies</h3>` + tirets([
+        `<b>le BIM</b> : une maquette numérique du bâtiment, partagée entre les acteurs, et surtout une façon de travailler ensemble autour d'elle (convention BIM, niveaux de détail, échanges). La modélisation sous Revit est enseignée par un autre formateur`,
+        `<b>l'IoT, les objets connectés</b> : des capteurs sur les engins, le béton, les zones à risque, qui mesurent et transmettent en continu`,
+        `<b>l'IA</b> : des outils qui analysent des données, rédigent, comparent et proposent, comme Claude. Elle aide à décider, elle ne décide pas`,
+        `<b>les technologies émergentes</b> : drones et scan 3D pour relever l'existant, réalité augmentée sur le chantier, robots et impression 3D, jumeau numérique du bâtiment en exploitation`])
+      + `<p><b>Dans ce module, nous nous consacrons à l'IA</b> : vous l'utilisez vous-mêmes avec Claude, et vous étudiez ce qu'elle change dans la stratégie, le cadre juridique et l'organisation d'un projet de construction.</p>`)
+    + bloc(`Les deux sessions`, `<ul class="parcours">
+      <li><b>Première session de cours</b>Vous réglez Claude, vous découvrez le chantier fictif, vous choisissez votre projet. Vous écrivez le cadrage initial sans IA, puis vous ouvrez le journal.</li>
+      <li class="entre"><b>Entre les deux sessions</b>Vous avancez le projet, vous vérifiez les références juridiques sur les sources officielles, vous tenez le journal. Dépôt sur Teams au plus tard ${DEPOTL()}.</li>
+      <li><b>Dernière session de cours</b>Soutenance orale de votre projet, ${CONFIG.soutenance.total} minutes par groupe, avec le support de dix diapositives au plus.</li></ul>`)
+    + etape('depart_identite', `Dites qui vous êtes`, '', `<p>Ces informations servent aux consignes, au journal et au dossier. Elles restent sur l'appareil : la page n'envoie rien sur Internet. Les dates vous sont données par votre formateur.</p>
+      <div class="champs">${champ('id_classe', `Classe`, { ex: 'MP2-gpC3', requis: true, sansMention: true })}
+      ${champ('id_groupe', `Numéro du groupe`, { ex: '3', requis: true, sansMention: true, aide: `Entre 1 et ${CONFIG.nbGroupes}, ou le numéro donné par votre formateur.` })}
+      ${champ('id_seance1', `Date de la première session`, { type: 'date', requis: true, sansMention: true })}
+      ${champ('id_seance2', `Date de la dernière session (oral)`, { type: 'date', requis: true, sansMention: true, aide: `Le dépôt sur Teams se fait la veille de cette session.` })}
+      ${champ('id_nom', `Vous, qui tenez cette page`, { ex: 'Prénom NOM', requis: true, sansMention: true, large: true, aide: `Votre nom figure sur votre PDF et sur votre fichier de projet.` })}
+      ${champ('id_membres', `Tous les membres du groupe`, { type: 'zone', large: true, ex: `Prénom NOM, un par ligne`, requis: true, sansMention: true })}</div>
+      <h3>Qui fait quoi dans le groupe</h3><p>Chacun garde un rôle principal. Le travail reste collectif. Écrivez le prénom et le nom.</p>${blocRoles()}`)
+    + aide(`Comment marche cette page`, tirets([
+        `chaque étudiant tient sa page et son fichier de projet ; les contenus communs (cadrage, plan, résultats) se recopient entre coéquipiers`,
+        `chaque étape contient des actions à cocher et des consignes à copier dans Claude`,
+        `chaque choix modifie l'état du projet : risque juridique, charge de travail, fiabilité des sources, traçabilité de l'IA`,
+        `vos choix déclenchent une scène : deux étudiants ne vivront pas la même histoire`,
+        `le travail s'enregistre seul sur cet appareil`]) + `
+      <h3>Le fichier de projet, votre vraie sauvegarde</h3>
+      <p><b>Ce que c'est.</b> Un petit fichier .json qui contient tout ce que vous avez saisi. Seule cette page sait le lire.</p>
+      <p><b>À quoi il sert.</b> Le navigateur peut tout perdre : cache vidé, autre ordinateur, session de l'école fermée. Avec ce fichier, vous reprenez là où vous vous étiez arrêté.</p>
+      <p><b>Ce que vous en faites.</b></p>` + pas([
+        `Cliquez sur « Enregistrer » à chaque pause et en fin de session. Le fichier arrive dans les téléchargements.`,
+        `Rangez-le dans le dossier du groupe sur Teams, ou envoyez-le à votre propre adresse.`,
+        `Pour reprendre : cliquez sur « Ouvrir », ou glissez le fichier n'importe où sur la page.`])
+      + `<p><b>À la fin.</b> Vous déposez sur Teams votre fichier de projet, votre PDF (journal et dossier) et le support commun du groupe, au plus tard ${DEPOTL()}. Ne collez jamais ce fichier dans Claude.</p>`
+      + tableau(['Action', 'Bouton', 'Raccourci'], [
+        ['Repartir de zéro', '« Nouveau »', 'Alt + N'], ['Reprendre un fichier de projet', '« Ouvrir », ou glisser le fichier sur la page', 'Alt + O'],
+        ['Enregistrer le fichier de projet', '« Enregistrer »', 'Ctrl + S, ou ⌘ S sur Mac'], ['Exporter le dossier en PDF', '« Exporter »', 'Ctrl + E, ou ⌘ E sur Mac']]))
+    + etape('depart_regles', `Retenez quatre règles`, '', pas([
+        `<b>Aucune donnée réelle dans Claude.</b> Ni entreprise, ni contrat, ni salarié. Vous travaillez sur le chantier fictif.`,
+        `<b>Le cadrage s'écrit sans IA</b>, avant le premier échange avec Claude.`,
+        `<b>Chaque usage significatif entre dans le journal</b>, avec ce que vous gardez, modifiez ou rejetez.`,
+        `<b>Aucune référence juridique n'entre dans le dossier sans avoir été ouverte</b> sur sa source officielle.`]))
+    + aide(`Ce qui est évalué : la grille de la soutenance`, grilleHtml() + `<p class="note">Sans journal de bord, l'usage de l'IA est plafonné à 1,5 point sur 3. Aucune donnée confidentielle ou personnelle ne figure dans le journal.</p>`, 'aide_grille')
+    + aideLimite() + aideGlossaire()
+},
+
+/* ── 1. Le chantier ── */
+{ id: 'chantier', nav: '1. Le chantier fictif', groupe: 0, seance: () => `Première session de cours`,
+  titre: `Un chantier fictif pour tous les groupes`,
+  chapo: `Tous les projets s'appuient sur le même chantier. Les données sont inventées : elles servent à apprendre, pas à décrire un vrai marché.`,
+  rendu: () => bloc(`Rive Nord`, ficheChantier() + `<h3>Les onze lots</h3>` + tableauLots()
+      + `<h3>Les jalons</h3>` + tableau(['Jalon', 'Mois après l\'ordre de service', 'Date'], CHANTIER.jalons.map(j => [j[0], j[1], dateMois(j[1])])))
+    + bloc(`Les aléas possibles`, `<p>Ces événements peuvent frapper le chantier. Chaque projet en traite au moins un.</p>` + `<ul class="tirets">${CHANTIER.aleas.map(a => `<li>${a}</li>`).join('')}</ul>`)
+    + etape('ch_lire', `Lisez la fiche ensemble`, '10 min', `<p><b>Pourquoi.</b> Vous allez choisir un projet et donner des consignes à Claude sur ce chantier. Si vous ne le connaissez pas, Claude le connaîtra mieux que vous, et vous ne pourrez pas le contredire. Dix minutes de lecture vous évitent une heure de travail à côté.</p>
+      <p><b>Comment.</b> Chacun lit la fiche en silence, puis pose au groupe une question à laquelle la fiche ne répond pas. Des exemples de questions utiles :</p>` + tirets([
+        `quel lot coûte le plus cher, et lequel dure le plus longtemps ?`,
+        `à quel moment le plus de lots travaillent en même temps ?`,
+        `quelles informations manquent pour décider : le niveau de détail de la maquette, le logiciel utilisé, qui pointe l'avancement ?`,
+        `quelles données numériques existent déjà sur ce chantier, et lesquelles n'existent pas ?`,
+        `qui décide de quoi entre le maître d'ouvrage, la maîtrise d'œuvre et les entreprises ?`])
+      + `<p><b>Ce qui manque à la fiche.</b> La fiche est volontairement incomplète, comme un vrai dossier reçu en début de mission. Notez ici ce qu'il vous manque pour votre projet. Ces manques deviendront vos <b>hypothèses</b> : vous les écrirez dans le dossier (« nous supposons que … »), vous les direz à Claude (« si une donnée manque, dis-le ») et le jury verra que vous n'avez rien inventé.</p>
+      <div class="champs">${champ('ch_manque', `Ce qui manque à la fiche, pour notre projet`, { type: 'zone', large: true, sansMention: true, ex: `Le niveau de détail de la maquette. Le logiciel de gestion. Le nombre de chefs de chantier par lot.` })}</div>
+      <p><b>Les fichiers du chantier.</b> Téléchargez la fiche au format .md : vous l'ajouterez à votre projet Claude à l'étape suivante. Les lots au format .csv servent aux projets qui calculent.</p>
+      <div class="actions"><button type="button" class="btn plein" data-action="fiche-md">Télécharger la fiche (.md)</button><button type="button" class="btn" data-action="fiche-csv">Télécharger les lots (.csv)</button></div>`)
+    + repere(`Données de chantier : ce qui est permis`, `<p>Les documents d'un vrai chantier (contrats, prix, plans, noms de salariés) sont confidentiels. Les confier à un outil d'IA grand public, c'est les confier à un tiers. Seule l'entreprise peut l'autoriser.</p>
+      <p>Une donnée personnelle concerne une personne identifiable : un nom, une fonction ou un e-mail. Le RGPD demande de ne traiter que les données nécessaires.</p>
+      <p>La CNIL recommande de ne saisir aucune information confidentielle dans un service d'IA grand public.</p>`, ['cnil_generative', 'rgpd'])
+    + decision('donnees')
+},
+
+/* ── 2. Régler Claude ── */
+{ id: 'claude', nav: '2. Régler Claude', groupe: 0, seance: () => `Première session de cours`,
+  titre: `Réglez Claude pour votre projet`,
+  chapo: `Claude travaille mieux quand il connaît le chantier et vos règles. Chaque étudiant crée son projet Claude, avec les mêmes instructions que ses coéquipiers.`,
+  rendu: () => bloc(`Pourquoi un projet Claude ?`, `<p>Sans projet, chaque nouvelle conversation repart de zéro : il faut tout recoller, et chaque membre du groupe obtient des réponses différentes.</p>
+      <p>Avec un projet, Claude connaît dès la première phrase le chantier Rive Nord et vos règles de travail. Tout le groupe travaille avec le même cadre, et vos usages restent faciles à tracer dans le journal.</p>
+      <p class="note">Quatre gestes, une quinzaine de minutes : ouvrir Claude, créer le projet, coller les instructions déjà rédigées, ajouter la fiche du chantier. Le reste est facultatif.</p>`)
+    + aideLimite() + etape('c_compte', `Ouvrez Claude`, '5 min', `<p>Allez sur <a href="https://claude.ai" target="_blank" rel="noopener">claude.ai</a> et connectez-vous. La formule gratuite permet de suivre le module. Elle limite le nombre de messages.</p>`
+      + tirets([`regroupez vos demandes dans un seul message`, `donnez le contexte dès le début`, `ouvrez une nouvelle conversation quand la précédente devient longue`, `si la limite arrive, avancez sur cette page en attendant`])
+      + `<p class="note">Ouvrez aussi « Paramètres », puis « Confidentialité ». Regardez si les conversations servent à améliorer les modèles, et décidez.</p>`)
+    + etape('c_projet', `Créez votre projet`, '5 min', `<p>Un projet garde des instructions et des fichiers d'une conversation à l'autre. Le compte gratuit en autorise cinq. Chaque membre du groupe crée le sien : mêmes instructions, même fiche du chantier.</p>`
+      + pas([`Dans Claude, ouvrez « Projets », puis « Nouveau projet ».`, `Nommez-le « TNBIM groupe ${rempli('id_groupe') ? esc(v('id_groupe')) : '…'} ».`, `Ajoutez la fiche du chantier (.md), téléchargée à l'étape 1, aux fichiers du projet.`, `Collez les instructions de l'étape suivante.`])
+      + aide(`La fiche ne se charge pas ?`, `<p>Si l'ajout de fichier échoue, copiez le texte ci-dessous et collez-le à la fin de la zone « Instructions » du projet. Claude le relira à chaque conversation.</p>` + consigne('fiche_chantier', `Texte de la fiche du chantier`), 'aide_fiche_texte') + liens(['claude_projets']))
+    + etape('c_instructions', `Collez les instructions`, '10 min', `<p>Les instructions sont déjà rédigées ci-dessous : copiez-les telles quelles dans votre projet. Les cases et les champs sont là pour les adapter. Dans les deux champs de texte, remplacez ce qui est entre accolades { } par votre situation.</p>
+      <div class="coches">${coche('ip_questions', `Poser au plus trois questions avant de produire`, true)}${coche('ip_plan', `Proposer un plan court avant de rédiger ou de calculer`, true)}
+      ${coche('ip_sources', `Marquer « à vérifier » toute référence dont il n'est pas sûr`, true)}${coche('ip_doutes', `Signaler ses doutes et les calculs à refaire à la main`, true)}
+      ${coche('ip_change', `Dire en une phrase ce qui a changé`, true)}${coche('ip_contredire', `Nous contredire quand notre idée est trop large ou risquée`, true)}</div>
+      <div class="champs">${champ('ip_format', `Format d'écriture des réponses`, { type: 'liste', options: LIB_FORMATS, sansMention: true, aide: `Sans choix, Claude répond en prose courte.` })}
+      ${champ('ip_travail', `Qui nous sommes et notre façon de travailler`, { type: 'zone', lignes: 5, large: true, defaut: DEF_TRAVAIL, sansMention: true, aide: `Remplacez les accolades. Vous pouvez tout réécrire.` })}
+      ${champ('ip_jamais', `Ce que Claude ne doit jamais faire`, { type: 'zone', lignes: 4, large: true, defaut: DEF_JAMAIS, sansMention: true, aide: `Remplacez les accolades. Ajoutez ce qui vous a déjà agacé chez une IA.` })}</div>`
+      + consigne('instructions', `Instructions du projet`) + `<p>Elles mentionnent votre projet : le groupe n'a pas encore choisi à ce stade. Claude l'apprendra dans la première conversation, ou vous revenez copier la version à jour après l'étape 3.</p>`)
+    + etape('c_test', `Vérifiez que Claude a compris (facultatif)`, '5 min', `<p>Envoyez cette consigne dans une conversation du projet. Comparez chaque réponse à ce que vous attendiez :</p>` + tirets([
+        `rôle : assistant de votre groupe, pour un module sur la transition numérique du BTP`,
+        `chantier : ${nb(CHANTIER.surface)} m², ${eur(CHANTIER.budget)} HT, ${CHANTIER.duree} mois`,
+        `références : nom exact du texte, et « à vérifier » quand il n'est pas sûr`,
+        `donnée manquante : il le dit et propose une hypothèse, il n'invente pas`,
+        `refus : données réelles, chiffres inventés, et ce que vous avez écrit dans « ne jamais faire »`,
+        `format : celui que vous avez choisi`,
+        `vouvoiement`,
+        `un risque : s'il en cite un sans dire ce qu'il suppose, c'est déjà une erreur à noter`]) + consigne('test_instructions', `Consigne de vérification`)
+      + `<div class="champs">${champ('c_test', `Ce que Claude a mal compris, et votre correction`, { type: 'zone', large: true })}</div>
+         <p class="note">Cet essai est un premier usage significatif : notez-le dans le journal.</p>`)
+    + bloc(`La suite : entraîner vos consignes`, `<p>À l'étape 3, avant de lancer le projet, vous passerez votre consigne de démarrage dans l'« Entraîneur de prompt », intégré à cette page. Il note la consigne, dit ce qui manque et vous fait recommencer jusqu'à une version prête.</p>`)
+},
+
+/* ── 3. Le projet ── */
+{ id: 'projet', nav: '3. Votre projet', groupe: 0, seance: () => `Première session de cours`,
+  titre: `Choisissez votre projet`,
+  chapo: `Quatre projets sont proposés. Tous travaillent les mêmes objectifs du module, chacun par un angle différent. Le groupe en choisit un.`,
+  rendu: () => {
+    const choix = v('pj_choix');
+    REG.champs.pj_choix = { l: 'Projet choisi', ch: CH, requis: true };
+    return etape('p_choix', `Choisissez un projet`, '15 min', `<p>Lisez les quatre fiches, discutez, puis cliquez. Le projet choisi s'écrit dans vos instructions, vos consignes et votre dossier. Vous pouvez changer d'avis pendant la première session, pas après.</p>
+      ${PROJETS.map(p => `<section class="bloc fiche-projet${p.id === choix ? ' choisi' : ''}"><h3>${p.t}</h3><dl class="fiche"><dt>Le but</dt><dd>${p.but}</dd><dt>Ce que vous produisez</dt><dd>${p.livrable}</dd><dt>Ce que cela implique</dt><dd>${p.implique}</dd><dt>Le rôle de Claude</dt><dd>${p.ia}</dd><dt>Angle principal</dt><dd>${p.missions.join(', ')}</dd></dl>
+        <div class="actions"><button type="button" class="btn${p.id === choix ? ' plein' : ''}" data-radio="pj_choix" data-valeur="${p.id}" aria-pressed="${p.id === choix}">${p.id === choix ? 'Projet choisi' : 'Choisir ce projet'}</button></div></section>`).join('')}`)
+    + bloc(`Les mêmes objectifs pour tous les groupes`, `<p>Quel que soit le projet, chaque groupe travaille les quatre objectifs du module : le <b>cadrage stratégique</b> (cadrage initial, plan, périmètre), le <b>benchmarking</b> (comparer des options ou des cas avec des critères et des sources), le <b>cadre juridique</b> (la fiche de contrôle des références, commune à tous) et l'<b>organisation</b> de la transition numérique (forces, faiblesses, mesures, ce que change le numérique).</p>
+      <p>Ce qui change d'un projet à l'autre, c'est l'angle principal, rattaché à une ou deux des cinq missions du manager de projets BTP. Le tableau le montre. Chaque projet comporte aussi un champ sur ce qu'il apporte aux autres missions.</p>`
+      + tableau(['Mission du manager de projets BTP', ...PROJETS.map(p => p.court)], MISSIONS.map(m => [m, ...PROJETS.map(p => p.missions.indexOf(m) >= 0 ? (p.id === choix ? '<b>● votre angle</b>' : '●') : '')])))
+    + decision('projet_perim')
+    + etape('p_entraineur', `Entraînez votre consigne de démarrage`, '15 min', `<p>Une consigne bien rédigée donne une meilleure première réponse, et moins de messages perdus. L'« Entraîneur de prompt », l'outil de votre formateur, note votre consigne sur cinq points : le rôle donné à l'IA, l'action demandée, le contexte, le public et la forme attendue. Il dit ce qui manque et vous fait recommencer.</p>` + pas([
+        `Copiez la consigne de démarrage de l'étape suivante (bouton « Copier »).`,
+        `Collez-la dans l'entraîneur ci-dessous, dans la zone « Votre prompt », puis cliquez sur « Analyser mon prompt ».`,
+        `Améliorez-la d'après l'analyse : ajoutez ce qui manque, retirez ce qui est flou. Recommencez jusqu'à une consigne jugée prête.`,
+        `Collez votre version finale dans le champ ci-dessous. C'est elle que vous enverrez à Claude, et c'est votre première ligne de journal.`])
+      + `<div class="cadre-outil"><iframe src="${OUTILS.entraineur}" title="Entraîneur de prompt" loading="lazy"></iframe></div>
+      <div class="actions"><a class="btn" href="${OUTILS.entraineur}" target="_blank" rel="noopener">Ouvrir l'entraîneur dans un nouvel onglet</a></div>
+      <div class="champs">${champ('p_consigne', `Votre consigne de démarrage, améliorée dans l'entraîneur`, { type: 'zone', lignes: 6, large: true, ex: `Collez ici la version finale, après l'analyse de l'entraîneur.`, aide: `Facultatif mais recommandé : elle figure dans votre dossier, à côté de la consigne de départ, et montre votre progrès.` })}</div>`)
+    + etape('p_depart', `Lancez le projet avec Claude`, '20 min', `<p>Envoyez cette consigne dans votre projet Claude, ou la version améliorée dans l'entraîneur. <b>Avant</b>, écrivez le cadrage initial à l'étape 5 « Journal et références » : le cadrage s'écrit sans IA, avant le premier échange.</p>` + consigne('demarrage', `Consigne de démarrage`)
+      + `<p><b>Le plan en cinq lignes.</b> Claude vous propose un plan. Discutez-le, corrigez-le, puis écrivez ici <i>votre</i> plan, pas le sien : cinq étapes, dans l'ordre, avec pour chacune qui s'en charge et ce que vous vérifiez à la main. Ce plan ira dans la section « Le projet » du dossier et sur la diapositive « Notre méthode ». À l'oral, le jury comparera ce plan à ce que vous avez réellement fait : les écarts sont normaux, à condition de les expliquer.</p>
+      <div class="champs">${champ('p_plan', `Le plan retenu par le groupe, en cinq lignes`, { type: 'zone', lignes: 6, large: true, requis: true, sansMention: true, ex: `1. Décrire les scénarios (tous, première session) ; vérification : relecture croisée.\n2. Chercher les ordres de grandeur (Prénom, avant le …) ; vérification : une source par chiffre.\n3. …` })}</div>`);
+  }
+},
+
+/* ── 4. Le travail du projet ── */
+{ id: 'travail', nav: '4. Travail du projet', groupe: 1, seance: () => `Entre les deux sessions, jusqu'au dépôt`,
+  titre: `Le travail de votre projet`,
+  chapo: `La page calcule, vous vérifiez. Chaque résultat se refait à la main au moins une fois, et chaque projet dit ses forces, ses faiblesses et ce qu'il apporte aux autres missions.`,
+  rendu: () => projetTravail()
+},
+
+/* ── 5. Le journal ── */
+{ id: 'journal', nav: '5. Journal et références', groupe: 1, seance: () => `De la première session au dépôt`,
+  titre: `Le journal de bord IA`,
+  chapo: `Le journal est votre preuve : il montre ce que Claude vous a apporté, ce que vous avez rejeté, et comment vous avez vérifié. Il se remplit au fil de l'eau, en deux minutes par ligne.`,
+  rendu: C => bloc(`À quoi sert le journal, et comment le remplir`, `<p><b>À quoi il sert.</b> Le jury ne peut pas voir vos conversations avec Claude. Le journal est la seule trace de votre usage de l'IA. C'est lui qui est noté sur ce critère : sans journal, l'usage de l'IA est plafonné à 1,5 point sur 3. Il montre surtout votre jugement : ce que vous avez rejeté ou corrigé compte plus que ce que vous avez gardé.</p>
+      <p><b>Quand ajouter une ligne.</b> Chaque fois que Claude a changé votre travail : une consigne qui a donné un résultat que vous avez utilisé, un résultat que vous avez corrigé, une réponse que vous avez rejetée. Pas besoin de noter « bonjour » ni les reformulations. Une bonne session de travail donne deux à quatre lignes.</p>
+      <p><b>Comment.</b> Tout de suite après l'échange, pas le soir. Dans l'ordre : la date, l'outil (« Claude, projet du groupe »), ce que vous vouliez, la phrase de votre consigne qui a fait la différence, ce que Claude a donné, votre décision (gardé, modifié ou rejeté) et pourquoi, puis comment vous avez vérifié : quel document ouvert, à quelle date. Aucune donnée confidentielle ou personnelle.</p>
+      <p><b>Trois moments obligatoires.</b> Le cadrage initial, écrit sans IA avant tout. Le journal, au fil de l'eau. Le bilan, avant le dépôt.</p>`)
+    + decision('cadrage')
+    + etape('j_cadrage', `Cadrage initial, écrit sans IA`, '20 min', `<p>Écrivez à la main, avant d'ouvrir Claude pour le projet. Quelques lignes suffisent. C'est votre point de départ : le jury le comparera à ce que vous présenterez, pour mesurer ce que le travail et l'IA ont changé.</p>
+      <div class="champs">${champ('cad_date', `Date d'écriture`, { ex: '14 octobre', requis: true, sansMention: true })}
+      ${champ('cad_comprehension', `Notre compréhension du problème`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Le chantier Rive Nord doit décider jusqu'où numériser. Le problème, c'est …` })}
+      ${champ('cad_hypotheses', `Nos hypothèses`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Nous supposons que … (reprendre « ce qui manque à la fiche »)` })}
+      ${champ('cad_attentes', `Ce que nous attendons de l'outil`, { type: 'zone', large: true, requis: true, sansMention: true, ex: `Des pistes de critères, des ordres de grandeur à vérifier, une relecture. Pas la décision.` })}</div>
+      <p class="note">Ensuite seulement, vous pouvez demander à Claude de le comparer à son avis. Notez-le dans le journal.</p>` + consigne('cadrage_ia', `Consigne de comparaison (après l'écriture)`))
+    + decision('journal')
+    + aide(`Exemple de ligne du journal`, tableau(['Date', 'Outil', 'Objectif', 'Consigne clé', 'Résultat obtenu', 'Gardé, modifié ou rejeté, et pourquoi', 'Vérification'], [[
+        '14/10', 'Claude, projet du groupe', 'Grille de benchmarking', '« Six critères observables, une source par critère, dis ce que tu ne sais pas »', 'Grille de six critères, deux sources introuvables',
+        'Gardé : quatre critères. Rejeté : deux sources, introuvables sur le site indiqué', 'Rapport annuel 2025 ouvert le 15/10 ; sources rejetées non retrouvées']]) + `<p class="note">Exemple du modèle de journal de l'école. Votre propre ligne parle de votre projet.</p>`)
+    + bloc(`Le journal de bord`, `<p>Une ligne par usage significatif. Ajoutez des lignes au fil de l'eau avec le bouton en bas. La première ligne est obligatoire, les suivantes comptent pour la note.</p>`
+      + Array.from({ length: nJournal() }, (_, i) => blocJournalLigne(i + 1)).join('')
+      + `<div class="actions"><button type="button" class="btn plein" data-action="jb-plus">Ajouter une ligne</button></div>`)
+    + decision('sources')
+    + repere(`Références juridiques à vérifier`, `<p>Voici les thèmes du module. Pour chacun, la fiche de contrôle demande la référence examinée, la source officielle consultée, la date et un verdict : exacte, inexacte, introuvable ou périmée.</p>`
+        + tirets(THEMES_JURIDIQUES), ['legifrance', 'daj', 'rgpd', 'ia_ce', 'ia_texte', 'anssi'])
+    + etape('j_refs', `Fiche de contrôle des références`, '30 min', `<p>Demandez d'abord à Claude des pistes, puis ouvrez chaque source. Le verdict compte plus que la piste : une référence « introuvable » bien notée vaut mieux qu'une référence copiée sans l'avoir lue.</p>
+      <div class="champs">${champ('vr_theme', `Thème en cours`, { type: 'liste', options: THEMES_JURIDIQUES.map(t => [t, t]), sansMention: true })}</div>` + consigne('verif_refs', `Consigne pour obtenir des pistes`) + blocFicheControle())
+    + etape('j_bilan', `Bilan, à remplir avant le dépôt`, '15 min', `<p>Trois questions, trois réponses honnêtes de quelques lignes. Elles ferment le journal et nourrissent la diapositive « Les limites ».</p><div class="champs">${champ('bi_perdu', `Ce que nous aurions perdu en travaillant sans IA`, { type: 'zone', large: true, requis: true, sansMention: true })}
+      ${champ('bi_gagne', `Ce que nous aurions gagné`, { type: 'zone', large: true, requis: true, sansMention: true })}
+      ${champ('bi_pasconfie', `Ce que nous avons volontairement pas confié à l'outil`, { type: 'zone', large: true, requis: true, sansMention: true })}</div>`)
+},
+
+/* ── 6. Dépôt ── */
+{ id: 'depot', nav: '6. Dépôt et oral', groupe: 2, seance: () => `Dépôt la veille de la dernière session – oral`,
+  titre: `Déposez, puis présentez`,
+  chapo: `L'état de votre projet, une scène née de vos choix, un diagnostic et l'export. Le dépôt se fait sur Teams, la veille de la dernière session.`,
+  rendu: C => scene('s_veille', C)
+    + (() => { const D = diagnostic(C); return bloc(D.titre, D.phrases.map(p => `<p>${p}</p>`).join('') + `<h3>Plan d'action</h3>` + D.temps.map(x => `<p class="tt"><b>${x.t}</b></p>${x.a.length ? tirets(x.a) : '<p class="note">Rien de particulier.</p>'}`).join('')
+        + `<h3>La question du jury</h3><p>« ${QUESTIONS_JURY[C.faible]} »</p>` + `<div class="champs">${champ('jury_reponse', `Notre réponse`, { type: 'zone', large: true, sansMention: true })}</div>`); })()
+    + aide(`La grille de la soutenance`, grilleHtml(), 'aide_grille_depot')
+    + etape('dp_support', `Support de présentation`, '', `<p>Dix diapositives au plus, avec les sources et les dates, commun au groupe. Voici le plan, tiré de votre travail. Vous le mettez en forme dans votre outil habituel. Pensez à montrer la mise en œuvre : vos contrôles, vos tests, les modifications importantes.</p>` + consigne('plan_support', `Plan des dix diapositives`) + `<p class="note">Les passages « à compléter » signalent ce qui manque encore. Chaque chiffre porte sa source et sa date.</p>`)
+    + etape('dp_relecture', `Relisez avant d'exporter`, '', `<p>Faites relire le journal et la fiche de contrôle par une personne qui n'a pas écrit le dossier.</p>`)
+    + etape('dp_pdf', `Exportez le dossier et le journal en PDF`, '', `<p>Le PDF réunit votre identité, le cadrage, le travail du projet, votre journal, la fiche de contrôle des références, le bilan et l'état du projet.</p>
+      <div class="actions"><button type="button" class="btn plein" data-action="exporter">Exporter en PDF</button><button type="button" class="btn" data-action="enregistrer">Enregistrer le fichier de projet</button></div>
+      <p class="note">Nom du PDF : TNBIM_${esc(cheminNom())}_journal-dossier.pdf. Nom du fichier de projet : ${esc(nomJson())}.</p>`)
+    + etape('dp_teams', `Déposez sur Teams`, '', `<p>Au plus tard ${DEPOTL()}, chaque étudiant dépose dans le dossier Teams de son groupe :</p>` + tirets([`son PDF (journal et dossier)`, `son fichier de projet .json`, `le support de présentation commun au groupe (une seule fois, par la personne chargée du support)`])
+      + `<p class="note">Vérifiez que les fichiers apparaissent bien dans Teams avant de fermer.</p>`)
+}
+];
+const groupes = () => ['Première session', 'Entre les deux sessions', 'Dépôt et oral'];
+
+/* ───────── Travail des quatre projets : calculs faits par la page, vérifiés à la main par le groupe ───────── */
+const PREFIXES = { strategie: 'ps_', chantier: 'pc_', contrats: 'pk_', rh: 'pr_' };
+const estP = id => v('pj_choix') === id;
+const bornes = (x, a, b) => Math.max(a, Math.min(b, x));
+const pct = x => nb(x * 100) + ' %';
+const transverse = (cle, aide, req) => champ(cle, `Ce que votre projet apporte aux autres missions du manager`, { type: 'zone', large: true, requis: !!req, aide: `Une phrase par mission : ` + aide + ` Exemple : « Pour la performance financière, notre scénario coûte … et fait gagner … ».`, ex: `Une phrase par mission` });
+const forcesFaiblesses = (cle, req) => champ(cle, `Forces et faiblesses de ce que vous proposez`, { type: 'zone', lignes: 4, large: true, requis: !!req, aide: `Deux forces, deux faiblesses, en phrases courtes. Le jury attend les deux : une proposition sans faiblesse n'est pas crédible.`, ex: `Force : …  Force : …  Faiblesse : …  Faiblesse : …` });
+
+/* 1. Stratégie : grille pondérée */
+const CRITERES_STRAT = ['Coût de mise en place', 'Délai de mise en place', 'Risque technique et juridique', 'Gain attendu sur le chantier (délais, qualité, sécurité)', 'Compétences à acquérir'];
+const EXEMPLES_SCENARIOS = [`Maquette en conception seulement : la maquette sert aux plans, le chantier reste sur papier`, `Maquette partagée jusqu'au chantier : convention BIM, tablettes sur site, réunions sur la maquette`, `Chantier connecté : maquette partagée, capteurs sur les engins et le béton, IA qui alerte sur les écarts`];
+function calcStrat() {
+  const w = [1, 2, 3, 4, 5].map(i => num('ps_w' + i));
+  const noms = [1, 2, 3].map(o => (String(v('ps_opt' + o)).split(/[:(]/)[0].trim().slice(0, 40)) || ('Scénario ' + o));
+  const sc = [1, 2, 3].map(o => [1, 2, 3, 4, 5].map(i => num('ps_s' + i + '_' + o)));
+  const ok = w.every(x => !isNaN(x) && x >= 0) && sc.every(l => l.every(x => !isNaN(x) && x >= 0 && x <= 10)) && w.reduce((s, x) => s + x, 0) > 0;
+  if (!ok) return { ok: false, noms };
+  const tot = ww => sc.map(l => l.reduce((s, x, i) => s + x * ww[i], 0) / ww.reduce((s, x) => s + x, 0));
+  const t = tot(w), mieux = t.indexOf(Math.max.apply(null, t));
+  const sens = [0, 1, 2, 3, 4].map(i => { const ww = w.slice(); ww[i] = ww[i] * 2; const tt = tot(ww); return { crit: CRITERES_STRAT[i], mieux: tt.indexOf(Math.max.apply(null, tt)) }; });
+  return { ok: true, noms, t, mieux, sens, ecartPremiers: t.slice().sort((a, b) => b - a) };
+}
+function sortieStrat() {
+  const r = calcStrat();
+  if (!r.ok) return `<p class="note">Remplissez les cinq poids (au moins un non nul) et les quinze notes (de 0 à 10) : le calcul s'affiche ici.</p>`;
+  const bascule = r.sens.filter(s => s.mieux !== r.mieux);
+  return tableau(['Option', 'Note pondérée sur 10'], r.noms.map((n, i) => [esc(n), (i === r.mieux ? '<b>' : '') + nb(r.t[i], 2) + (i === r.mieux ? ' · en tête</b>' : '')]))
+    + `<p>${r.ecartPremiers[0] - r.ecartPremiers[1] < 0.5 ? `Les deux premières options sont à moins d'un demi-point : la recommandation est fragile.` : `L'option en tête a plus d'un demi-point d'avance.`}</p>`
+    + `<p>${bascule.length ? `Test de sensibilité : en doublant le poids de « ${bascule.map(b => b.crit).join(' », « ')} », une autre option passe en tête. Dites pourquoi vos poids sont justifiés.` : `Test de sensibilité : doubler le poids d'un seul critère ne change pas l'option en tête.`}</p>`;
+}
+function blocStrategie() {
+  const R = estP('strategie'), r = calcStrat();
+  const entetes = ['Critère', 'Poids (0 à 10)'].concat(r.noms.map((n, i) => `Note ${esc(n)} (0 à 10)`));
+  const lignes = CRITERES_STRAT.map((c, i) => { const n = i + 1;
+    return [c, cel('ps_w' + n, { l: 'Poids ' + c, court: true, requis: R })].concat([1, 2, 3].map(o => cel('ps_s' + n + '_' + o, { l: `Note ${c}, ${r.noms[o - 1]}`, court: true, requis: R && o < 3 }))); });
+  return bloc(`Ce que vous allez faire ici`, `<p>Un <b>scénario</b> est une façon de numériser le chantier. Vous en décrivez deux ou trois. Puis vous les comparez avec cinq critères, comme on compare trois devis. La page calcule une note par scénario. Vous expliquez ensuite lequel vous recommandez, et pourquoi.</p>
+      <p>Trois scénarios possibles, à reprendre ou à remplacer :</p>` + tirets(EXEMPLES_SCENARIOS.map(x => x.replace(/^./, c => c.toLowerCase()))) + `<p class="note">Vous pouvez copier ces exemples dans les champs ci-dessous, puis les adapter. Le troisième scénario est facultatif.</p>`)
+    + etape('ps_cadre', `Décrivez vos scénarios`, '30 min', `<p>Un scénario tient en une phrase : ce que l'on met en place, et jusqu'où. Donnez-lui un nom court, il servira de titre de colonne dans la grille.</p>
+      <div class="champs">${champ('ps_opt1', `Scénario 1 (nom court et description)`, { requis: R, sansMention: true, large: true, ex: EXEMPLES_SCENARIOS[0] })}${champ('ps_opt2', `Scénario 2`, { requis: R, sansMention: true, large: true, ex: EXEMPLES_SCENARIOS[1] })}${champ('ps_opt3', `Scénario 3 (facultatif)`, { sansMention: true, large: true, ex: EXEMPLES_SCENARIOS[2] })}
+      ${champ('ps_hyp', `Vos hypothèses chiffrées, avec leurs sources`, { type: 'zone', lignes: 5, large: true, requis: R, sansMention: true, ex: `Scénario 2 : licence et formation environ … € (source : …, consultée le …). Scénario 3 : capteurs … € (hypothèse du groupe).`, aide: `Un ordre de grandeur par scénario, au moins pour le coût et le délai. Chaque chiffre cite une source ouverte et sa date. Sans source, écrivez « hypothèse du groupe » : c'est permis, à condition de le dire.` })}</div>` + consigne('travail_strategie', `Consigne pour critiquer vos scénarios et vos critères`))
+    + etape('ps_grille', `Notez et pondérez`, '45 min', `<p><b>Le poids</b> dit l'importance du critère pour Rive Nord : 10 pour ce qui compte le plus, 0 pour ce qui ne compte pas. <b>La note</b> dit si le scénario est bon sur ce critère : 10 pour excellent, 0 pour mauvais. Attention : pour le coût, le délai et le risque, un scénario peu coûteux, rapide ou peu risqué reçoit une note élevée.</p>
+      <p>Les colonnes portent les noms de vos scénarios. La page calcule la note pondérée : somme des notes multipliées par les poids, divisée par la somme des poids.</p>`
+      + tableau(entetes, lignes) + `<div data-calc="strat"></div>`
+      + `<div class="champs">${champ('ps_verif', `Calcul refait à la main, pour un scénario`, { type: 'zone', large: true, requis: R, sansMention: true, ex: `Scénario 1 : (7×3 + 5×2 + …) / (3 + 2 + …) = …`, aide: `Écrivez le calcul complet d'un scénario. Si vous ne trouvez pas le même résultat que la page, cherchez l'erreur : c'est ce que le jury demandera.` })}</div>`)
+    + etape('ps_reco', `Recommandez`, '30 min', `<p>Votre recommandation sera la <b>page la plus lue de votre dossier</b> et la diapositive principale de l'oral. Elle tient en cinq à dix lignes, dans cet ordre : le scénario retenu ; les deux chiffres de la grille qui le justifient ; ce que ce scénario coûte ou impose ; ce qu'il faut vérifier avant de décider.</p>
+      <div class="champs">${champ('ps_reco', `Recommandation argumentée (cinq à dix lignes)`, { type: 'zone', lignes: 6, large: true, requis: R, sansMention: true, ex: `Nous recommandons le scénario … Il obtient … sur 10, contre … pour … Il demande … Avant de décider, il faut vérifier …` })}
+      ${forcesFaiblesses('ps_ff', R)}
+      ${champ('ps_limites', `Ce qui ferait changer d'avis`, { type: 'zone', large: true, requis: R, sansMention: true, ex: `Si le coût réel dépassait … ou si l'équipe n'était pas formée avant …`, aide: `Le test de sensibilité de la grille vous aide : quel critère, s'il pesait plus lourd, changerait le classement ?` })}
+      ${transverse('ps_trans', `performance financière, gestion contractuelle, pilotage, management RH.`, R)}</div>`);
+}
+
+/* 2. Suivi de chantier : valeur acquise simplifiée */
+function lignesSuivi() {
+  const m = num('pc_mois');
+  return CHANTIER.lots.map(l => {
+    const av = num('pc_av' + l[0]) / 100, dep = num('pc_dep' + l[0]);
+    const prevu = isNaN(m) ? NaN : bornes((m - l[5]) / l[6], 0, 1);
+    const pv = prevu * l[3], ev = av * l[3];
+    return { n: l[0], lot: l[1], budget: l[3], av, dep, prevu, pv, ev, spi: pv > 0 ? ev / pv : NaN, cpi: dep > 0 ? ev / dep : NaN, ok: !isNaN(av) && !isNaN(dep) && !isNaN(prevu) };
+  });
+}
+function sortieSuivi() {
+  const L = lignesSuivi().filter(x => x.ok);
+  if (isNaN(num('pc_mois'))) return `<p class="note">Indiquez d'abord le mois de suivi (de 1 à ${CHANTIER.duree}).</p>`;
+  if (!L.length) return `<p class="note">Renseignez l'avancement réel (en %) et le montant dépensé (en €) d'au moins un lot.</p>`;
+  const tot = L.reduce((s, x) => ({ pv: s.pv + x.pv, ev: s.ev + x.ev, ac: s.ac + x.dep }), { pv: 0, ev: 0, ac: 0 });
+  const stat = x => (x.spi < 0.9 || x.cpi < 0.9) ? (x.spi < 0.9 && x.cpi < 0.9 ? 'retard et dépassement' : x.spi < 0.9 ? 'en retard' : 'coût dépassé') : 'dans la cible';
+  return tableau(['Lot', 'Prévu (linéaire)', 'Réel', 'Valeur prévue', 'Valeur acquise', 'Dépensé', 'Délai (SPI)', 'Coût (CPI)', 'Lecture'],
+      L.map(x => [`${x.n}. ${x.lot}`, pct(x.prevu), pct(x.av), eur(x.pv), eur(x.ev), eur(x.dep), nb(x.spi, 2), nb(x.cpi, 2), stat(x)])
+        .concat([['<b>Ensemble des lots saisis</b>', '', '', `<b>${eur(tot.pv)}</b>`, `<b>${eur(tot.ev)}</b>`, `<b>${eur(tot.ac)}</b>`, `<b>${nb(tot.ev / tot.pv, 2)}</b>`, `<b>${nb(tot.ev / tot.ac, 2)}</b>`, '']]))
+    + `<p class="note">Lecture : un indice inférieur à 0,9 signale un écart. Délai (SPI) = valeur acquise divisée par valeur prévue. Coût (CPI) = valeur acquise divisée par dépensé. L'avancement prévu est supposé linéaire sur la durée du lot : c'est une hypothèse simplificatrice, à discuter.</p>`;
+}
+function blocChantier() {
+  const R = estP('chantier');
+  const lignes = CHANTIER.lots.map(l => [`${l[0]}. ${l[1]}`, eur(l[3]), `mois ${l[5]} à ${l[5] + l[6]}`, cel('pc_av' + l[0], { l: `Avancement réel lot ${l[0]}`, court: true }), cel('pc_dep' + l[0], { l: `Dépensé lot ${l[0]}`, court: true })]);
+  return bloc(`Ce que vous allez faire ici`, `<p>Un chantier numérisé produit des données chaque jour : avancement pointé sur la maquette, heures des équipes, livraisons, mesures des capteurs. Vous construisez le tableau de bord qu'un manager de projets lirait avec ces données : pour chaque lot, où en est-on par rapport au prévu, et combien a-t-on dépensé.</p>
+      <p>Le chantier Rive Nord est fictif : il n'a pas de relevé réel. Vous <b>inventez un point d'avancement plausible</b>, à un mois donné, pour au moins quatre lots. La page calcule les écarts. Vous dites ensuite d'où ces données viendraient dans un vrai chantier numérisé, et ce que cela change par rapport au suivi sur papier.</p>`)
+    + etape('pc_donnees', `Inventez les données de suivi`, '30 min', `<p>Choisissez un mois entre 1 et ${CHANTIER.duree}. Pour chaque lot en cours à ce mois, décidez un avancement réel et un montant dépensé. Faites des choix variés : un lot en avance, un lot en retard, un lot qui dépasse son budget. Écrivez vos règles d'invention : elles font partie de l'exercice et le jury les lira.</p>
+      <div class="champs">${champ('pc_mois', `Mois de suivi (1 à ${CHANTIER.duree})`, { requis: R, sansMention: true, ex: '9' })}${champ('pc_regles', `Comment avons-nous inventé ces données ?`, { type: 'zone', large: true, requis: R, sansMention: true, ex: `Lot 2 : retard de deux mois à cause du manque de grutiers, dépenses au rythme prévu. Lot 1 : terminé, dépassement de 13 % à cause du réseau enterré.` })}
+      ${champ('pc_sources', `D'où viendraient ces données dans un chantier numérisé ?`, { type: 'zone', large: true, requis: R, sansMention: true, ex: `Avancement : pointage sur la maquette par le chef de chantier chaque vendredi. Dépenses : factures validées dans le logiciel de gestion. Heures : badgeuse de chantier.`, aide: `Une source par type de donnée. C'est le cœur du lien avec la transition numérique.` })}</div>` + consigne('travail_chantier', `Consigne pour construire des données plausibles`))
+    + etape('pc_suivi', `Tableau de bord des écarts`, '45 min', `<p>Saisissez l'avancement réel en pourcentage (0 à 100) et le montant déjà dépensé en euros, lot par lot.</p>`
+      + tableau(['Lot', 'Budget', 'Période prévue', 'Avancement réel (%)', 'Dépensé (€)'], lignes) + `<div data-calc="chantier"></div>
+      <div class="champs">${champ('pc_verif', `Calcul refait à la main sur un lot`, { type: 'zone', large: true, requis: R, sansMention: true })}</div>`)
+    + etape('pc_actions', `Actions correctives et apport du numérique`, '40 min', `<p>Reprenez un aléa du chantier et traitez-le : quelles actions, qui les porte, sous quel délai. Puis dites ce que le tableau de bord numérique change par rapport au suivi sur papier.</p><div class="champs">
+      ${champ('pc_alea', `Aléa traité`, { type: 'liste', options: CHANTIER.aleas.map((a, i) => [String(i + 1), a]), requis: R, sansMention: true })}
+      ${champ('pc_indic', `Trois indicateurs clés retenus, et pourquoi`, { type: 'zone', large: true, requis: R, sansMention: true })}
+      ${champ('pc_actions', `Actions correctives, responsables, délais`, { type: 'zone', lignes: 4, large: true, requis: R, sansMention: true, ex: `Action 1 : … Responsable : … Délai : …` })}
+      ${champ('pc_numerique', `Ce que le numérique change par rapport au suivi sur papier`, { type: 'zone', lignes: 3, large: true, requis: R, sansMention: true, ex: `Écart connu le vendredi au lieu de la fin du mois. Mais : il faut que le chef de chantier pointe vraiment, et que les factures soient saisies à temps.` })}
+      ${forcesFaiblesses('pc_ff', R)}
+      ${transverse('pc_trans', `stratégie, gestion contractuelle, management RH.`, R)}</div>`);
+}
+
+/* 3. Veille contractuelle : fiches */
+const CAS_VEILLE = [
+  `Convention BIM : une erreur dans la maquette partagée fait percer un mur porteur au mauvais endroit. Qui est responsable ?`,
+  `Propriété de la maquette : après la réception, le maître d'ouvrage veut réutiliser la maquette pour l'exploitation. Qui la possède, qui peut la modifier ?`,
+  `Mise à jour de la maquette : le bureau d'études change le plan de réservations des fluides. Qui paie les reprises sur le chantier ?`,
+  `Chantier connecté : badges, caméras et capteurs sur les engins. Quelles données personnelles, quelles obligations envers les salariés ?`,
+  `Pièces contractuelles rédigées avec une IA générative : un avenant est écrit par Claude. Qui vérifie, qui engage l'entreprise ?`,
+  `Cybersécurité : la plateforme qui héberge la maquette est attaquée et le chantier s'arrête deux jours. Quelles obligations, quels recours ?`
+];
+function blocContrats() {
+  const R = estP('contrats');
+  const fiches = [1, 2, 3, 4].map(n => {
+    const k = c => 'ck' + n + '_' + c, req = R && n <= 2;
+    return `<section class="bloc ligne-journal"><h3>Fiche de veille ${n}</h3><div class="champs">
+      ${champ(k('cas'), `Cas du chantier`, { type: 'liste', options: CAS_VEILLE.map((c, i) => [String(i + 1), c]), requis: req, sansMention: true, large: true })}
+      ${champ(k('risque'), `Le risque, et pour qui`, { type: 'zone', lignes: 2, large: true, requis: req, sansMention: true })}
+      ${champ(k('ref'), `Référence examinée`, { requis: req, sansMention: true })}${champ(k('src'), `Source officielle consultée`, { requis: req, sansMention: true })}
+      ${champ(k('date'), `Date de consultation`, { requis: req, sansMention: true })}${champ(k('statut'), `Statut`, { type: 'liste', options: [['verifie', 'Vérifié sur la source officielle'], ['averifier', 'À vérifier']], requis: req, sansMention: true })}
+      ${champ(k('action'), `Ce que fait le manager de projets`, { type: 'zone', lignes: 2, large: true, requis: req, sansMention: true })}</div></section>`; }).join('');
+  return bloc(`Ce que vous allez faire ici`, `<p>Le numérique ajoute des risques juridiques au chantier : qui est responsable d'une erreur dans la maquette, à qui appartient la maquette, que deviennent les données des salariés d'un chantier connecté, qui engage l'entreprise quand une IA rédige un document. Vous traitez ces cas un par un, comme un manager de projets qui prépare une réunion avec son juriste.</p>
+      <p>Pour chaque cas, vous cherchez la <b>référence officielle</b> qui s'applique : un texte sur Légifrance, une fiche de la CNIL, un règlement sur EUR-Lex. Claude vous donne des pistes, parfois fausses. Vous ouvrez la source, vous notez la date, et vous écrivez ce que fait le manager.</p>`)
+    + etape('pk_cadre', `Décrivez le cadre contractuel`, '30 min', `<p>Le chantier fictif n'a pas de contrat réel. Décrivez en quelques lignes les documents que vous supposez : un marché privé de travaux par lot, un cahier des charges, une convention BIM. Puis dites ce que vous savez du cadre qui s'applique, et ce qu'il faudra vérifier.</p>
+      <div class="champs">${champ('pk_docs', `Documents contractuels supposés`, { type: 'zone', large: true, requis: R, sansMention: true })}
+      ${champ('pk_cadre', `Cadre applicable (marché privé ou public, norme, cahier des clauses) : ce que vous savez, ce qu'il faut vérifier`, { type: 'zone', large: true, requis: R, sansMention: true })}</div>` + consigne('travail_contrats', `Consigne pour lister les clauses sensibles`))
+    + etape('pk_fiches', `Fiches de veille`, '60 min', `<p>Une fiche par cas. Au moins deux fiches complètes. Une fiche « vérifié » indique la source officielle ouverte et sa date. Sinon, elle reste « à vérifier ».</p>` + fiches)
+    + etape('pk_reco', `Synthèse`, '20 min', `<p>Trois points de vigilance : ce qu'un manager de projets doit faire avant de numériser le chantier, en une phrase chacun. Ils iront dans le dossier et sur la diapositive principale.</p><div class="champs">${champ('pk_synthese', `Les trois points de vigilance du manager de projets`, { type: 'zone', lignes: 4, large: true, requis: R, sansMention: true, ex: `1. Signer la convention BIM avant … 2. Informer les salariés de … 3. Faire relire par … tout document rédigé avec une IA.` })}
+      ${forcesFaiblesses('pk_ff', R)}
+      ${transverse('pk_trans', `stratégie, performance financière, pilotage, management RH.`, R)}</div>`);
+}
+
+/* 4. Planning des équipes */
+function effectifsMois() {
+  return Array.from({ length: CHANTIER.duree }, (_, i) => { const m = i + 1; let tot = 0; const actifs = [];
+    CHANTIER.lots.forEach(l => { if (m > l[5] && m <= l[5] + l[6]) { tot += l[4]; actifs.push(l[0]); } });
+    return { m, tot, actifs }; });
+}
+function sortiePlanning() {
+  const E = effectifsMois(), pic = E.reduce((a, b) => b.tot > a.tot ? b : a), dispo = num('pr_dispo'), max = pic.tot;
+  const barres = E.map(e => `<div class="mois"><span class="m">${dateMois(e.m - 1).replace(' 20', ' ’')}</span><span class="b"><i style="width:${Math.round(e.tot / max * 100)}%"${!isNaN(dispo) && e.tot > dispo ? ' class="sur"' : ''}></i></span><span class="n">${e.tot}</span></div>`).join('');
+  const moy = E.reduce((s, e) => s + e.tot, 0) / E.length;
+  const sur = isNaN(dispo) ? [] : E.filter(e => e.tot > dispo);
+  return `<div class="mois-liste">${barres}</div><p>Pointe : <b>${pic.tot} personnes</b> au mois ${pic.m} (${dateMois(pic.m - 1)}), lots ${pic.actifs.join(', ')}. Moyenne : ${nb(moy, 1)} personnes. Hypothèse : chaque lot emploie son effectif maximal pendant toute sa durée, ce qui surestime la charge.</p>`
+    + (isNaN(dispo) ? '' : `<p>${sur.length ? `Avec ${dispo} personnes disponibles, ${sur.length} mois dépassent la capacité (du mois ${sur[0].m} au mois ${sur[sur.length - 1].m}).` : `Avec ${dispo} personnes disponibles, aucun mois ne dépasse la capacité.`}</p>`);
+}
+function blocRh() {
+  const R = estP('rh');
+  const comp = [1, 2, 3, 4].map(n => [cel('rc' + n + '_nom', { l: 'Compétence', court: true }), cel('rc' + n + '_lots', { l: 'Lots ou métiers concernés', court: true }), cel('rc' + n + '_besoin', { l: 'Besoin et moment', court: true }), cel('rc' + n + '_mesure', { l: 'Mesure : recruter, former, sous-traiter' })]);
+  return bloc(`Ce que vous allez faire ici`, `<p>Numériser un chantier change les métiers : le conducteur de travaux lit la maquette sur une tablette, un coordinateur BIM fait vivre la maquette, quelqu'un répond des données. Vous lisez d'abord la charge des équipes sur les ${CHANTIER.duree} mois, pour voir quand le chantier est le plus tendu. Puis vous dites quelles <b>compétences numériques</b> manquent, pour quels métiers, et comment les obtenir : recruter, former ou sous-traiter, avec un coût et un délai.</p>
+      <p class="note">Aucune donnée sur de vraies personnes : vous raisonnez par métier et par compétence.</p>`)
+    + etape('pr_planning', `Lisez la charge d'ensemble`, '30 min', `<p>La page additionne les effectifs maximaux des onze lots, mois par mois. Indiquez combien de personnes votre entreprise peut mobiliser en même temps : la page signale les mois en dépassement. Ces pointes sont les moments où former quelqu'un est le plus difficile.</p>
+      <div class="champs">${champ('pr_dispo', `Personnes mobilisables en même temps`, { requis: R, sansMention: true, ex: '120' })}</div><div data-calc="rh"></div>` + consigne('travail_rh', `Consigne pour critiquer le planning`)
+      + `<div class="champs">${champ('pr_lecture', `Notre lecture : pointes, creux, lots qui se chevauchent`, { type: 'zone', large: true, requis: R, sansMention: true })}
+      ${champ('pr_verif', `Calcul refait à la main (un mois)`, { type: 'zone', large: true, requis: R, sansMention: true })}</div>`)
+    + etape('pr_comp', `Compétences numériques et mesures`, '45 min', `<p>Au moins deux compétences, une par ligne. Exemples : coordination BIM (faire vivre la maquette, tous lots, dès le mois 0) ; lecture de la maquette sur tablette (chefs de chantier des lots 2, 4, 7, 8, dès le mois 3) ; gestion des données du chantier (pointages, capteurs, du mois 0 à la réception). Pour chacune, une mesure : recruter, former ou sous-traiter.</p>`
+      + tableau(['Compétence', 'Lots ou métiers concernés', 'Besoin et moment', 'Mesure'], comp)
+      + `<div class="champs">${champ('pr_mesures', `Trois mesures de gestion des ressources humaines, avec leur coût et leur délai`, { type: 'zone', lignes: 4, large: true, requis: R, sansMention: true, ex: `1. Former les quatre chefs de chantier à la lecture de la maquette : 2 jours chacun, environ … € (source : …), avant le mois 3. 2. … 3. …`, aide: `Un coût et un délai par mesure. Sans source, écrivez « hypothèse du groupe ».` })}
+      ${champ('pr_metiers', `Ce qui change dans les métiers du chantier`, { type: 'zone', lignes: 3, large: true, requis: R, sansMention: true, ex: `Le conducteur de travaux passe … heures par semaine sur la maquette au lieu de … Le chef de chantier pointe l'avancement sur tablette. Un nouveau rôle apparaît : …` })}
+      ${forcesFaiblesses('pr_ff', R)}
+      ${transverse('pr_trans', `stratégie, performance financière, gestion contractuelle.`, R)}</div>`);
+}
+
+function projetTravail() {
+  const blocs = { strategie: blocStrategie(), chantier: blocChantier(), contrats: blocContrats(), rh: blocRh() };
+  const P = projetChoisi();
+  if (!P) return bloc(`Choisissez d'abord un projet`, `<p class="verrou">Cette étape s'ouvre quand le groupe a choisi son projet, à l'étape précédente.</p>`);
+  return `<p class="note" style="margin-bottom:12px">Projet choisi : <b>${P.t}</b>. ${P.but}</p>` + blocs[P.id];
+}
+function majCalculs() {
+  document.querySelectorAll('[data-calc]').forEach(z => {
+    const k = z.getAttribute('data-calc');
+    z.innerHTML = k === 'strat' ? sortieStrat() : k === 'chantier' ? sortieSuivi() : k === 'rh' ? sortiePlanning() : '';
+    typoNoeuds(z);
+  });
+}
+
+/* Résumés pour le support et le dossier */
+function resultatCle() {
+  const p = v('pj_choix');
+  if (p === 'strategie') { const r = calcStrat(); return r.ok ? `Option en tête : ${r.noms[r.mieux]} (${nb(r.t[r.mieux], 2)} sur 10).` : ''; }
+  if (p === 'chantier') { const L = lignesSuivi().filter(x => x.ok); if (!L.length) return ''; const e = L.filter(x => x.spi < 0.9 || x.cpi < 0.9).length; return `${L.length} lots suivis, ${e} en écart.`; }
+  if (p === 'contrats') { const f = [1, 2, 3, 4].filter(n => rempli('ck' + n + '_cas')); const ver = f.filter(n => v('ck' + n + '_statut') === 'verifie').length; return `${f.length} fiches de veille, ${ver} vérifiées sur source officielle.`; }
+  if (p === 'rh') { const E = effectifsMois(), pic = E.reduce((a, b) => b.tot > a.tot ? b : a); return `Pointe de ${pic.tot} personnes au mois ${pic.m}.`; }
+  return '';
+}
+function planSupport() {
+  const P = projetChoisi(), lj = lignesJournal().filter(l => l.rempli), rej = lj.filter(l => l.decision === 'rejete' || l.decision === 'modifie').length;
+  const ver = THEMES_JURIDIQUES.filter((t, i) => v('fc' + (i + 1) + '_verdict')).length;
+  const n = (cle, d) => rempli(cle) ? String(v(cle)).trim() : (d || VIDE);
+  const S = [
+    [`Titre`, `${P ? P.t : VIDE}. Groupe ${rempli('id_groupe') ? v('id_groupe') : VIDE}, classe ${nomClasse()}${dateChamp('id_seance2') ? ', ' + S2L() : ''}. Membres : ${ou('id_membres').replace(/\n+/g, ', ')}.`],
+    [`Le chantier et la mission`, `Rive Nord (fictif) : ${nb(CHANTIER.surface)} m², ${eur(CHANTIER.budget)} HT, ${CHANTIER.duree} mois. Missions couvertes : ${P ? P.missions.join(', ') : VIDE}.`],
+    [`Le problème et notre cadrage`, n('cad_comprehension')],
+    [`Notre méthode`, n('p_plan')],
+    [`Le résultat principal`, resultatCle() || VIDE],
+    [`La mise en œuvre : contrôles, tests, modifications`, `Ce que nous avons vérifié à la main : ` + n(P ? ({ strategie: 'ps_verif', chantier: 'pc_verif', contrats: 'pk_synthese', rh: 'pr_verif' })[P.id] : 'p_plan') + ` Les modifications importantes en cours de route : ` + (lj.filter(l => l.decision === 'modifie').map(l => l.objectif).filter(Boolean).join(' ; ') || VIDE) + `.`],
+    [`L'usage de l'IA`, `${lj.length} usage${lj.length > 1 ? 's' : ''} tracé${lj.length > 1 ? 's' : ''} dans le journal, dont ${rej} gardé${rej > 1 ? 's' : ''} après modification ou rejeté${rej > 1 ? 's' : ''}. Source : journal de bord, ${dateFr(new Date())}.`],
+    [`Les références juridiques`, `${ver} thème${ver > 1 ? 's' : ''} sur ${THEMES_JURIDIQUES.length} avec verdict (fiche de contrôle). Citez la source officielle et la date de consultation pour chaque référence.`],
+    [`Limites, contraintes, forces et faiblesses`, n(P ? ({ strategie: 'ps_ff', chantier: 'pc_ff', contrats: 'pk_ff', rh: 'pr_ff' })[P.id] : 'bi_pasconfie') + ` Non confié à l'IA : ` + n('bi_pasconfie')],
+    [`La suite et les questions`, n('bi_gagne')]
+  ];
+  return S;
+}
+Object.assign(CONSIGNES, {
+  plan_support: () => [planSupport().map((s, i) => `Diapositive ${i + 1} – ${s[0]}\n${s[1]}`).join('\n\n')],
+  travail_strategie: () => [`Nous comparons des scénarios de transition numérique pour le chantier fictif Rive Nord : ${ou('ps_opt1')} ; ${ou('ps_opt2')}${rempli('ps_opt3') ? ' ; ' + v('ps_opt3') : ''}.
+Critères actuels : ${CRITERES_STRAT.join(' ; ')}.
+
+Critique ces scénarios et ces critères : lesquels manquent, lesquels se recoupent, lesquels sont mesurables ? Pour chaque ordre de grandeur de coût ou de délai que tu avances, dis d'où il vient, ton niveau de certitude, et où nous pourrions le vérifier. Ne choisis pas à notre place.`],
+  travail_chantier: () => [`Nous inventons un point d'avancement pour le chantier fictif Rive Nord au mois ${ou('pc_mois')}. Propose-nous des règles pour produire des avancements et des dépenses plausibles pour quatre lots au moins, avec des écarts crédibles (un lot en retard, un lot qui dépasse son budget). Explique chaque règle. Nous saisirons les chiffres nous-mêmes.`],
+  travail_contrats: () => [`Nous faisons la veille juridique de la transition numérique du chantier fictif Rive Nord. Voici les cas à étudier :
+${CAS_VEILLE.map((c, i) => (i + 1) + '. ' + c).join('\n')}
+
+Pour chaque cas, dis quel type de clause ou de texte s'applique et ce qu'un manager de projets doit demander à la maîtrise d'œuvre, à l'entreprise ou au juriste. Pour toute référence juridique, donne le nom exact du texte, marque ton niveau de certitude et écris « à vérifier » quand tu n'es pas sûr. Nous ouvrirons chaque source officielle.`],
+  travail_rh: () => [`Voici le planning de charge du chantier fictif Rive Nord, calculé en additionnant les effectifs maximaux des onze lots. Il surestime la charge, car chaque lot n'emploie pas son maximum pendant toute sa durée.
+
+Pointes et creux : ${effectifsMois().map(e => `mois ${e.m} : ${e.tot}`).join(' ; ')}.
+
+Critique cette hypothèse. Propose trois façons de lisser la charge, puis trois compétences numériques (maquette, données, outils de chantier) que l'entreprise devra acquérir, avec pour chacune un moyen : recruter, former ou sous-traiter. Dis ce que tu supposes. N'invente aucune donnée sur de vraies personnes.`]
+});
+
+/* ───────── Diagnostic, manques, dossier ───────── */
+function diagnostic(C) {
+  const j = C.j, d = C.drap, faibles = [];
+  if (j.risque >= 65) faibles.push('le risque juridique');
+  if (j.charge >= 65) faibles.push('la charge de travail');
+  if (j.fiabilite <= 35) faibles.push('la fiabilité des sources');
+  if (j.tracabilite <= 35) faibles.push('la traçabilité de l\'IA');
+  const nbChoix = Object.keys(DECISIONS).filter(k => S.choix[k]).length;
+  let titre;
+  if (nbChoix < 3) titre = `Diagnostic provisoire : faites d'abord vos choix`;
+  else if (!faibles.length) titre = `Projet maîtrisé`;
+  else if (faibles.length === 1) titre = `Projet solide, avec un point faible : ${faibles[0]}`;
+  else titre = `Projet à reprendre sur ${faibles.length} points`;
+  const ph = [];
+  ph.push(j.risque <= 30 ? `Risque juridique : le projet reste dans un cadre que vous savez expliquer.` : j.risque < 65 ? `Risque juridique : des points restent à sécuriser avant le dépôt.` : `Risque juridique : le dossier expose le groupe. Reprenez les données et les références.`);
+  ph.push(j.charge <= 50 ? `Charge de travail : le périmètre tient dans le temps disponible.` : j.charge < 65 ? `Charge de travail : le périmètre est tendu. Chaque ajout se paie.` : `Charge de travail : le périmètre dépasse le temps disponible.`);
+  ph.push(j.fiabilite >= 70 ? `Fiabilité : les références ont été ouvertes et les chiffres refaits à la main.` : j.fiabilite > 35 ? `Fiabilité : elle tient, mais des références restent à ouvrir.` : `Fiabilité : trop de références reposent sur la seule parole de l'outil.`);
+  ph.push(j.tracabilite >= 70 ? `Traçabilité : le journal montre ce que l'IA a apporté, et ce que vous avez rejeté.` : j.tracabilite > 35 ? `Traçabilité : le journal existe, il manque des lignes ou des rejets.` : `Traçabilité : le journal est trop pauvre pour être crédible.`);
+  if (nbChoix < 3) { ph.length = 0; ph.push(`Vous n'avez pas encore fait assez de choix pour un diagnostic. Avancez dans les étapes 1 à 4, puis revenez ici.`); }
+  const lignes = lignesJournal().filter(l => l.rempli).length;
+  const verdicts = THEMES_JURIDIQUES.filter((t, i) => v('fc' + (i + 1) + '_verdict')).length;
+  const pool = [
+    [0, d.donneesReelles, `Retirer les données réelles de vos conversations et repartir sur le chantier fictif.`],
+    [0, d.cadrageIA, `Réécrire le cadrage initial à la main et le dater.`],
+    [0, d.sansVerif, `Ouvrir chaque référence sur sa source officielle et noter le verdict.`],
+    [0, lignes < 3, `Remplir le journal : au moins trois usages significatifs, dont un rejeté ou modifié.`],
+    [0, true, `Enregistrer le fichier de projet et le ranger dans le dossier Teams du groupe.`],
+    [1, verdicts < 3, `Terminer la fiche de contrôle : un verdict pour chaque thème traité.`],
+    [1, j.charge >= 60, `Réduire le périmètre au livrable minimal et le terminer.`],
+    [1, true, `Refaire à la main un calcul de chaque tableau ou indicateur du projet.`],
+    [1, true, `Préparer le support : dix diapositives au plus, avec sources et dates.`],
+    [2, true, `Relire le journal et la fiche de contrôle avec une personne extérieure au groupe.`],
+    [2, true, `Préparer l'oral : qui présente quoi, et la réponse à la question du jury.`],
+    [2, true, `Déposer les fichiers sur Teams au plus tard ${DEPOT()}.`]
+  ];
+  const temps = [`Cette semaine`, `Avant le dépôt`, `Avant l'oral`].map((t, i) => ({ t, a: pool.filter(x => x[0] === i && x[1]).slice(0, 3).map(x => x[2].replace(/\.$/, '')) }));
+  return { titre, phrases: ph, alertes: alertes(C).filter(a => a[0] !== 'info').map(a => a[1]), temps };
+}
+
+function manques(C) {
+  const m = [];
+  Object.keys(REG.champs).forEach(k => {
+    const c = REG.champs[k]; if (!c.requis || k.indexOf('j_') === 0) return;
+    if (!rempli(k)) m.push({ l: c.l.replace(/<[^>]+>/g, ''), ch: c.ch });
+  });
+  Object.keys(DECISIONS).forEach(id => {
+    if (!S.choix[id]) { m.push({ l: 'Choix : ' + DECISIONS[id].q, ch: REG.decisions[id] }); m.push({ l: 'Justification : ' + DECISIONS[id].q, ch: REG.decisions[id] }); }
+    else if (!rempli('j_' + id)) m.push({ l: 'Justification : ' + DECISIONS[id].q, ch: REG.decisions[id] });
+  });
+  Object.keys(SCENES).forEach(id => { const va = C.variantes[id]; if (!va || !(S.scenes[id] && S.scenes[id][va.id])) m.push({ l: 'Scène : ' + SCENES[id].titre, ch: REG.scenes[id] }); });
+  const parChapitre = {}; m.forEach(x => { parChapitre[x.ch] = (parChapitre[x.ch] || 0) + 1; });
+  const total = Object.keys(REG.champs).filter(k => REG.champs[k].requis && k.indexOf('j_') !== 0).length + 2 * Object.keys(DECISIONS).length + Object.keys(SCENES).length;
+  return { liste: m, parChapitre, taux: Math.max(0, Math.min(100, Math.round((total - m.length) / total * 100))) };
+}
+
+const LIB_DECISION = { garde: 'Gardé', modifie: 'Modifié', rejete: 'Rejeté' };
+const LIB_VERDICT = { exacte: 'Exacte', inexacte: 'Inexacte', introuvable: 'Introuvable', perimee: 'Périmée' };
+/* Le dossier : même contenu à l'écran et à l'impression */
+function travailDossier() {
+  const t = cle => rempli(cle) ? esc(String(v(cle)).trim()).replace(/\n/g, '<br>') : `<span class="vide">à compléter</span>`;
+  const qr = (l, cle) => `<h3>${l}</h3><p>${t(cle)}</p>`;
+  const p = v('pj_choix');
+  if (p === 'strategie') { const r = calcStrat(); return `<h3>Options</h3><p>${[1, 2, 3].filter(o => rempli('ps_opt' + o)).map(o => esc(v('ps_opt' + o))).join(' ; ') || '<span class="vide">à compléter</span>'}</p>` + qr('Hypothèses chiffrées et sources', 'ps_hyp')
+      + `<h3>Grille pondérée</h3>` + (r.ok ? `<table><tr><th>Critère</th><th>Poids</th>${r.noms.map(n => `<th>${esc(n)}</th>`).join('')}</tr>${CRITERES_STRAT.map((c, i) => `<tr><td>${c}</td><td>${esc(v('ps_w' + (i + 1)))}</td>${[1, 2, 3].map(o => `<td>${esc(v('ps_s' + (i + 1) + '_' + o))}</td>`).join('')}</tr>`).join('')}<tr><td><b>Note pondérée sur 10</b></td><td></td>${r.t.map(x => `<td><b>${nb(x, 2)}</b></td>`).join('')}</tr></table>` : `<p><span class="vide">grille à compléter</span></p>`)
+      + qr('Calcul refait à la main', 'ps_verif') + qr('Recommandation', 'ps_reco') + qr('Forces et faiblesses', 'ps_ff') + qr('Ce qui ferait changer d\'avis', 'ps_limites') + qr('Ce que le projet apporte aux autres missions', 'ps_trans'); }
+  if (p === 'chantier') { const L = lignesSuivi().filter(x => x.ok); return `<p><b>Mois de suivi.</b> ${t('pc_mois')}</p>` + qr('Règles d\'invention des données', 'pc_regles') + qr('D\'où viendraient ces données dans un chantier numérisé', 'pc_sources')
+      + (L.length ? `<table><tr><th>Lot</th><th>Prévu</th><th>Réel</th><th>Dépensé</th><th>SPI</th><th>CPI</th></tr>${L.map(x => `<tr><td>${x.n}. ${x.lot}</td><td>${pct(x.prevu)}</td><td>${pct(x.av)}</td><td>${eur(x.dep)}</td><td>${nb(x.spi, 2)}</td><td>${nb(x.cpi, 2)}</td></tr>`).join('')}</table>` : `<p><span class="vide">suivi à compléter</span></p>`)
+      + qr('Calcul refait à la main', 'pc_verif') + `<h3>Aléa traité</h3><p>${CHANTIER.aleas[parseInt(v('pc_alea'), 10) - 1] || '<span class="vide">à compléter</span>'}</p>` + qr('Indicateurs clés', 'pc_indic') + qr('Actions correctives', 'pc_actions') + qr('Ce que le numérique change', 'pc_numerique') + qr('Forces et faiblesses', 'pc_ff') + qr('Ce que le projet apporte aux autres missions', 'pc_trans'); }
+  if (p === 'contrats') { return qr('Documents contractuels supposés', 'pk_docs') + qr('Cadre applicable', 'pk_cadre')
+      + `<table><tr><th>Cas</th><th>Risque</th><th>Référence</th><th>Source officielle</th><th>Date</th><th>Statut</th><th>Action</th></tr>${[1, 2, 3, 4].filter(n => rempli('ck' + n + '_cas')).map(n => { const g = c => rempli('ck' + n + '_' + c) ? esc(v('ck' + n + '_' + c)) : '–'; return `<tr><td>${CAS_VEILLE[parseInt(v('ck' + n + '_cas'), 10) - 1] || g('cas')}</td><td>${g('risque')}</td><td>${g('ref')}</td><td>${g('src')}</td><td>${g('date')}</td><td>${v('ck' + n + '_statut') === 'verifie' ? 'Vérifié' : 'À vérifier'}</td><td>${g('action')}</td></tr>`; }).join('')}</table>`
+      + qr('Points de vigilance', 'pk_synthese') + qr('Forces et faiblesses', 'pk_ff') + qr('Ce que le projet apporte aux autres missions', 'pk_trans'); }
+  if (p === 'rh') { const E = effectifsMois(), pic = E.reduce((a, b) => b.tot > a.tot ? b : a); return `<p><b>Pointe de charge.</b> ${pic.tot} personnes au mois ${pic.m}. <b>Personnes mobilisables.</b> ${t('pr_dispo')}.</p>` + qr('Notre lecture du planning', 'pr_lecture') + qr('Calcul refait à la main', 'pr_verif')
+      + `<table><tr><th>Compétence</th><th>Lots</th><th>Besoin</th><th>Mesure</th></tr>${[1, 2, 3, 4].filter(n => rempli('rc' + n + '_nom')).map(n => `<tr><td>${esc(v('rc' + n + '_nom'))}</td><td>${esc(v('rc' + n + '_lots'))}</td><td>${esc(v('rc' + n + '_besoin'))}</td><td>${esc(v('rc' + n + '_mesure'))}</td></tr>`).join('')}</table>` + qr('Trois mesures RH', 'pr_mesures') + qr('Ce qui change dans les métiers', 'pr_metiers') + qr('Forces et faiblesses', 'pr_ff') + qr('Ce que le projet apporte aux autres missions', 'pr_trans'); }
+  return `<p><span class="vide">projet à choisir</span></p>`;
+}
+function dossierHtml(C) {
+  const t = cle => rempli(cle) ? esc(String(v(cle)).trim()).replace(/\n/g, '<br>') : `<span class="vide">à compléter</span>`;
+  const qr = (l, cle) => `<h3>${l}</h3><p>${t(cle)}</p>`;
+  const D = diagnostic(C), P = projetChoisi();
+  const choix = Object.keys(DECISIONS).map(id => { const o = DECISIONS[id].options.find(x => x.id === S.choix[id]);
+    return `<tr><td>${DECISIONS[id].q}</td><td>${o ? o.l : '<span class="vide">à choisir</span>'}</td><td>${t('j_' + id)}</td></tr>`; }).join('');
+  const scenes = Object.keys(SCENES).map(id => { const va = C.variantes[id]; if (!va) return '';
+    const rep = va.reps.find(x => x.id === (S.scenes[id] && S.scenes[id][va.id]));
+    return `<tr><td>${SCENES[id].titre}</td><td>${va.texte}</td><td>${rep ? rep.l : '<span class="vide">sans réponse</span>'}</td></tr>`; }).join('');
+  const jauges = Object.keys(JAUGES).map(k => { const n = niveau(k, C.j[k]); const on = Math.round(C.j[k] / 10);
+    return `<div class="jg"><span>${JAUGES[k].l}</span><span class="seg ${n[0]}">${Array.from({ length: 10 }, (_, i) => `<i${i < on ? ' class="on"' : ''}></i>`).join('')}</span><span>${C.j[k]} sur 100, ${n[1]}</span></div>`; }).join('');
+  const lj = lignesJournal();
+  const journal = lj.filter(l => l.rempli || l.n === 1).map(l => `<tr><td>${l.date ? esc(l.date) : '–'}</td><td>${l.outil ? esc(l.outil) : '–'}</td><td>${l.objectif ? esc(l.objectif) : '<span class="vide">à compléter</span>'}</td><td>${l.consigne ? esc(l.consigne) : '–'}</td><td>${l.resultat ? esc(l.resultat) : '–'}</td><td>${l.decision ? '<b>' + LIB_DECISION[l.decision] + '</b>. ' : ''}${l.pourquoi ? esc(l.pourquoi) : '–'}</td><td>${l.verif ? esc(l.verif) : '–'}</td></tr>`).join('');
+  const refs = THEMES_JURIDIQUES.map((th, i) => { const n = i + 1, g = c => rempli('fc' + n + '_' + c) ? esc(v('fc' + n + '_' + c)) : '–';
+    return `<tr><td>${th}</td><td>${g('ref')}</td><td>${g('src')}</td><td>${g('date')}</td><td>${LIB_VERDICT[v('fc' + n + '_verdict')] || '–'}</td></tr>`; }).join('');
+  const roles = ROLES.map(r => `<tr><td>${r[1]}</td><td>${t(r[0])}</td></tr>`).join('');
+  return `<div class="couv"><p>Module « ${CONFIG.module} » – ${CONFIG.formation}</p>
+      <h1>Journal de bord IA et dossier – groupe ${rempli('id_groupe') ? esc(String(v('id_groupe')).trim()) : '…'}</h1>
+      <p><b>${t('id_nom')}</b> – classe ${esc(nomClasse())} – chantier fictif ${CHANTIER.nom}</p><p>Projet : ${P ? P.t : '<span class="vide">à choisir</span>'}</p>
+      <p>Dossier exporté le ${dateFr(new Date())}. Dépôt sur Teams avec le support, au plus tard ${DEPOTL()}.</p></div>
+    <h2>1. Le groupe</h2><p><b>Page tenue par.</b> ${t('id_nom')}</p><p><b>Membres.</b> ${t('id_membres')}</p><table><tr><th>Rôle</th><th>Responsable</th></tr>${roles}</table>
+    <h2>2. Le projet</h2>${P ? `<p><b>${P.t}.</b> ${P.but}</p><p><b>Livrable minimal.</b> ${P.livrable}</p><p><b>Angle principal.</b> ${P.missions.join(', ')}.</p>` : ''}${rempli('ch_manque') ? qr('Ce qui manque à la fiche du chantier : nos hypothèses', 'ch_manque') : ''}${qr('Plan retenu par le groupe', 'p_plan')}${rempli('p_consigne') ? qr('Consigne de démarrage, améliorée dans l\'entraîneur de prompt', 'p_consigne') : ''}
+    <h2>3. Le travail du projet</h2>${travailDossier()}
+    <h2>4. Cadrage initial, écrit sans IA le ${t('cad_date')}</h2>${qr('Notre compréhension du problème', 'cad_comprehension')}${qr('Nos hypothèses', 'cad_hypotheses')}${qr('Ce que nous attendons de l\'outil', 'cad_attentes')}
+    <h2>5. Journal de bord IA</h2><p>Module TNBIM – groupe ${rempli('id_groupe') ? esc(String(v('id_groupe')).trim()) : '…'} – chantier fictif ${CHANTIER.nom}. Aucune donnée confidentielle ou personnelle.</p>
+    <table class="journal"><tr><th>Date</th><th>Outil</th><th>Objectif</th><th>Consigne clé</th><th>Résultat obtenu</th><th>Gardé, modifié ou rejeté, et pourquoi</th><th>Vérification (source consultée, date)</th></tr>${journal}</table>
+    <h2>6. Fiche de contrôle des références juridiques</h2><table><tr><th>Thème</th><th>Référence examinée</th><th>Source officielle consultée</th><th>Date</th><th>Verdict</th></tr>${refs}</table>
+    <p class="note">${VERIFIE() ? `Repères relus le ${VERIFIE()}.` : `Aucune référence n'est présentée comme vérifiée si la ligne reste vide.`}</p>
+    <h2>7. Bilan</h2>${qr('Ce que nous aurions perdu en travaillant sans IA', 'bi_perdu')}${qr('Ce que nous aurions gagné', 'bi_gagne')}${qr('Ce que nous avons volontairement pas confié à l\'outil', 'bi_pasconfie')}
+    <h2>8. Nos choix et leurs justifications</h2><table><tr><th>Question</th><th>Notre choix</th><th>Notre justification</th></tr>${choix}</table>
+    ${scenes ? `<h3>La scène rencontrée</h3><table><tr><th>Scène</th><th>Situation</th><th>Notre réponse</th></tr>${scenes}</table>` : ''}
+    <h2>9. État du projet et diagnostic</h2><div class="jauges">${jauges}</div><h3>${D.titre}</h3>${D.phrases.map(p => `<p>${p}</p>`).join('')}
+    ${D.alertes.length ? `<h3>Alertes</h3><ul>${D.alertes.map(a => `<li>${a}</li>`).join('')}</ul>` : ''}<h3>Plan d'action, en trois temps</h3>${D.temps.map(x => `<p class="tt"><b>${x.t}</b></p><ul>${x.a.map(a => `<li>${a}</li>`).join('')}</ul>`).join('')}
+    <h3>La question du jury</h3><p>« ${QUESTIONS_JURY[C.faible]} »</p><p>${t('jury_reponse')}</p>
+    <h2>Annexes</h2><h3>Plan du support de présentation (dix diapositives au plus)</h3><pre>${esc(texteConsigne('plan_support'))}</pre>
+    <h3>Grille de la soutenance (${CONFIG.soutenance.total} minutes par groupe : ${CONFIG.soutenance.expose} d'exposé, ${CONFIG.soutenance.questions} de questions)</h3><table><tr><th>Critère</th><th>Points</th><th>Ce que le jury regarde</th></tr>${GRILLE.map(g => `<tr><td>${g.c}</td><td>${g.pts}</td><td>${g.q}</td></tr>`).join('')}</table>
+    <h3>Instructions de mon projet Claude</h3><pre>${esc(texteConsigne('instructions'))}</pre>`;
+}
+
+/* ───────── Interface ───────── */
+const $ = id => document.getElementById(id);
+const chapitre = id => CHAPITRES.find(c => c.id === id) || CHAPITRES[0];
+
+function majNav(C) {
+  let html = '', tf = 0, tt = 0;
+  groupes().forEach((g, gi) => {
+    html += `<h2>${g}</h2>`;
+    CHAPITRES.filter(c => c.groupe === gi).forEach(c => {
+      const [f, t] = progression(c.id, C); tf += f; tt += t;
+      html += `<a href="#${c.id}"${c.id === S.chapitre ? ' aria-current="page"' : ''}${t && f === t ? ' class="complet"' : ''}><span>${c.nav}</span>${t ? `<small>${f === t ? 'fait' : f + '/' + t}</small>` : ''}</a>`;
+    });
+  });
+  const pc = tt ? Math.round(tf / tt * 100) : 0;
+  html += `<div class="nav-global"><b>${pc} %</b> du parcours<div class="filet"><i style="width:${pc}%"></i></div></div>`;
+  $('nav').innerHTML = html; typoNoeuds($('nav'));
+}
+function majEtat(C) {
+  const a = alertes(C);
+  let html = `<h2>État du projet<button type="button" class="btn" data-action="volet-etat">Fermer</button></h2>`, past = '';
+  Object.keys(JAUGES).forEach(k => {
+    const x = C.j[k], n = niveau(k, x), on = Math.round(x / 10);
+    past += `<i class="${n[0]}"></i>`;
+    html += `<div class="jauge"><div class="jauge-l"><b>${JAUGES[k].l}</b><span>${x} sur 100, ${n[1]}</span></div>
+      <div class="seg ${n[0]}" role="img" aria-label="${JAUGES[k].l} : ${x} sur 100">${Array.from({ length: 10 }, (_, i) => `<i${i < on ? ' class="on"' : ''}></i>`).join('')}</div><small>${JAUGES[k].aide}</small></div>`;
+  });
+  html += `<h3>Alertes</h3>` + (a.length ? `<div class="alertes">${a.map(x => x[2] ? `<a class="alerte ${x[0]}" href="#${x[2]}">${x[1]}</a>` : `<span class="alerte ${x[0]}">${x[1]}</span>`).join('')}</div>` : `<p class="calme">Aucune alerte. Vos choix feront bouger ces jauges.</p>`);
+  $('etat').innerHTML = html; typoNoeuds($('etat'));
+  $('pastilles').innerHTML = past;
+}
+function majBarre() {
+  const z = $('barre-etat'); if (!z) return;
+  let t, alerte = false;
+  if (!stockageOk) { t = `Sauvegarde automatique impossible ici : enregistrez le fichier.`; alerte = true; }
+  else if (!S.maj) t = `Prêt. Le travail du groupe s'enregistre seul sur cet appareil.`;
+  else { t = `Enregistré sur cet appareil à ${heure(S.maj)}.`; if (!S.exportLe) { t += ` Fichier de projet : jamais enregistré.`; alerte = S.modifs > 15; } else t += ` Fichier : ${dateFr(new Date(S.exportLe))} à ${heure(S.exportLe)}.`; }
+  z.className = 'barre-etat' + (alerte ? ' alerte' : '');
+  z.querySelector('span').textContent = typo(t);
+}
+function majConsignes() {
+  document.querySelectorAll('pre[data-consigne]').forEach(p => {
+    const t = texteConsigne(p.getAttribute('data-consigne'));
+    p.innerHTML = esc(t).split(VIDE).join(`<span class="vide">${VIDE}</span>`);
+  });
+}
+function majProchaine(C) {
+  const z = $('prochaine'); if (!z) return;
+  const r = restants(C), p = r[0];
+  if (!p) { z.className = 'prochaine fini'; z.innerHTML = `<div><span class="lib">Prochaine étape du groupe</span><b>Tout l'obligatoire est fait.</b><span class="ou">Relisez le dossier, puis exportez-le.</span></div><button type="button" class="btn plein" data-aller-ch="depot" data-aller-ancre="#e-dp_pdf">Aller à l'export</button>`; typoNoeuds(z); return; }
+  const c = chapitre(p.ch), n = r.length;
+  z.className = 'prochaine';
+  z.innerHTML = `<div><span class="lib">Prochaine étape du groupe</span><b>${esc(p.titre)}</b><span class="ou">${esc(c.nav.replace(/^\d\. /, ''))}${p.detail ? ' · ' + esc(p.detail) : ''}</span></div>
+    <button type="button" class="btn plein" data-aller-ch="${p.ch}" data-aller-ancre="${esc(p.ancre)}">Y aller</button>
+    <span class="reste">Il reste ${n} point${n > 1 ? 's' : ''} obligatoire${n > 1 ? 's' : ''}.</span>`;
+  typoNoeuds(z);
+}
+function majCompteurs() {
+  document.querySelectorAll('.etape[data-requis]').forEach(s => {
+    const n = s.getAttribute('data-requis').split(',').filter(k => !rempli(k)).length, z = s.querySelector('[data-compteur]'); if (!z) return;
+    z.className = 'compteur ' + (n ? 'reste' : 'ok'); z.textContent = typo(texteCompteur(n));
+  });
+}
+function allerAncre(ch, ancre) {
+  if (S.chapitre !== ch) allerA(ch, false);
+  const el = document.querySelector(ancre); if (!el) return;
+  el.scrollIntoView({ block: 'start' });
+  const f = el.matches('input,textarea,select') ? el : el.querySelector('input:not([type=checkbox]):not([type=radio]),textarea,select');
+  if (f) f.focus({ preventScroll: true });
+  const bloc = el.closest('.bloc') || el; bloc.classList.add('flash'); setTimeout(() => bloc.classList.remove('flash'), 1700);
+}
+function majLeger() { const C = calcul(); majNav(C); majEtat(C); majConsignes(); majCalculs(); majBarre(); majProchaine(C); majCompteurs(); verifierRappel(); }
+
+function rendre(haut) {
+  const C = calcul(), ch = chapitre(S.chapitre), i = CHAPITRES.indexOf(ch), y = window.scrollY;
+  CH = ch.id;
+  const prec = CHAPITRES[i - 1], suiv = CHAPITRES[i + 1];
+  $('page').innerHTML = `<header class="tete"><p class="seance">${typeof ch.seance === 'function' ? ch.seance() : ch.seance}</p><h1>${ch.titre}</h1><p class="chapo">${ch.chapo}</p></header><div id="prochaine" class="prochaine"></div>${ch.rendu(C)}
+    <div class="pied">${prec ? `<a class="btn" href="#${prec.id}">Étape précédente</a>` : '<span></span>'}${suiv ? `<a class="btn plein" href="#${suiv.id}">Étape suivante</a>` : ''}</div>`;
+  typoNoeuds($('page'));
+  document.title = typo(ch.nav.replace(/^\d\. /, '') + ' – TNBIM, ESCT Nantes');
+  majLeger();
+  if (haut) { window.scrollTo(0, 0); } else window.scrollTo(0, y);
+}
+function allerA(id, depuisHash) {
+  const cible = chapitre(id).id;
+  S.chapitre = cible; sauver();
+  fermerVolets();
+  rendre(true);
+  if (!depuisHash && location.hash !== '#' + cible) history.replaceState(null, '', '#' + cible);
+}
+
+/* Messages brefs, dialogue, volets */
+let minuteurBref = null;
+function bref(t) { const z = $('bref'); z.textContent = typo(t); z.hidden = false; clearTimeout(minuteurBref); minuteurBref = setTimeout(() => { z.hidden = true; }, Math.max(2600, t.length * 60)); }
+function demander(titre, texte, oui, non) {
+  return new Promise(res => {
+    const d = $('dlg'); $('dlg-t').textContent = typo(titre); $('dlg-p').textContent = typo(texte); $('dlg-oui').textContent = oui || 'Continuer'; $('dlg-non').textContent = typo(non || 'Annuler');
+    if (!d.showModal) { res(window.confirm(titre + '\n\n' + texte)); return; }
+    d.returnValue = 'non';
+    d.onclose = () => res(d.returnValue === 'oui');
+    d.showModal();
+  });
+}
+function fermerVolets() {
+  $('nav').classList.remove('ouvert'); $('etat').classList.remove('ouvert');
+  document.querySelectorAll('[data-action^="volet-"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+function basculer(id) {
+  const autre = id === 'nav' ? 'etat' : 'nav';
+  $(autre).classList.remove('ouvert');
+  const ouvert = $(id).classList.toggle('ouvert');
+  document.querySelectorAll('[data-action="volet-' + id + '"]').forEach(b => b.setAttribute('aria-expanded', String(ouvert)));
+}
+
+/* Fichiers */
+function telecharger(nom, contenu, type) {
+  const b = new Blob([contenu], { type: type }), u = URL.createObjectURL(b), a = document.createElement('a');
+  a.href = u; a.download = nom; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 2000);
+}
+const slug = x => String(x).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase();
+const nomGroupe = () => (rempli('id_groupe') ? 'G' + String(v('id_groupe')).trim().replace(/^g/i, '') : 'groupe');
+const cheminNom = () => nomGroupe() + (rempli('id_nom') ? '_' + slug(v('id_nom')) : '');
+function copier(texte, message) {
+  const fin = () => bref(message || 'Copié.');
+  const secours = () => { const z = document.createElement('textarea'); z.value = texte; z.style.position = 'fixed'; z.style.opacity = '0'; document.body.appendChild(z); z.select(); try { document.execCommand('copy'); fin(); } catch (e) { bref('Copie impossible : sélectionne le texte à la main.'); } z.remove(); };
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(texte).then(fin, secours); else secours();
+}
+const nomJson = () => 'TNBIM_' + cheminNom() + '_' + (S.exportLe || new Date().toISOString()).slice(0, 10) + '.json';
+function enregistrer() {
+  S.exportLe = new Date().toISOString(); S.modifsExport = S.modifs;
+  telecharger(nomJson(), JSON.stringify(S, null, 1), 'application/json');
+  sauver(); $('rappel').hidden = true; majBarre(); bref('Fichier enregistré dans les téléchargements. Rangez-le aussi dans le dossier Teams du groupe.');
+}
+function preparerImpression() {
+  const C = calcul(); $('impression').innerHTML = dossierHtml(C); typoNoeuds($('impression'));
+  /* Pied de page du PDF : nom de l'étudiant et numéro de page (navigateurs qui gèrent les marges de page) */
+  let st = $('style-impression');
+  if (!st) { st = document.createElement('style'); st.id = 'style-impression'; document.head.appendChild(st); }
+  const nom = ('Groupe ' + (rempli('id_groupe') ? String(v('id_groupe')).trim() : '…') + (rempli('id_nom') ? ' \u2013 ' + String(v('id_nom')).trim() : '')).replace(/[\\"\n\r]/g, ' ');
+  const police = 'font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;font-size:8.5pt;color:#64748B;';
+  st.textContent = '@page{@bottom-left{content:"' + nom + ' \u2013 mini-dossier IA et vente";' + police + '}@bottom-right{content:counter(page) " / " counter(pages);' + police + '}}';
+}
+async function exporter() {
+  const C = calcul(), M = manques(C), n = M.liste.length;
+  if (n) {
+    const ou = CHAPITRES.filter(c => M.parChapitre[c.id]).map(c => c.nav.replace(/^\d\. /, '') + ' (' + M.parChapitre[c.id] + ')').join(', ');
+    const ok = await demander('Le dossier est rempli à ' + M.taux + ' %', 'Il manque ' + (n === 1 ? 'un élément' : n + ' éléments') + ' : ' + ou + '. Le PDF affichera « à compléter » à ces endroits.', 'Exporter quand même', 'Voir ce qui manque');
+    if (!ok) { const premier = CHAPITRES.find(c => M.parChapitre[c.id]); if (premier && S.chapitre !== premier.id) location.hash = '#' + premier.id; return; }
+  }
+  preparerImpression();
+  const ancien = document.title; document.title = 'TNBIM_' + cheminNom() + '_journal-dossier';
+  window.print();
+  setTimeout(() => { document.title = ancien; }, 1500);
+}
+/* Filet de sécurité : un projet effacé reste récupérable sur l'appareil, et son fichier part dans les téléchargements */
+const CLE_SECOURS = CLE + '-secours';
+function secours() { try { const b = localStorage.getItem(CLE_SECOURS); const d = b ? JSON.parse(b) : null; return d && d.etat && d.etat.app === APP.id ? d : null; } catch (e) { return null; } }
+function blocSecours() {
+  const d = secours(); if (!d || S.maj) return '';
+  const quand = new Date(d.le);
+  return `<section class="bloc repere"><h2>Un projet effacé peut être récupéré</h2><p>Un projet a été effacé le ${dateFr(quand)} à ${heure(d.le)}. Il reste disponible sur cet appareil.</p><div class="actions"><button type="button" class="btn plein" data-action="recuperer">Récupérer ce projet</button></div></section>`;
+}
+function recuperer() {
+  const d = secours(); if (!d) return;
+  S = Object.assign(nouvelEtat(), d.etat); sauver();
+  history.replaceState(null, '', '#' + chapitre(S.chapitre).id); rendre(true); bref('Projet récupéré.');
+}
+async function nouveau() {
+  const travail = !!S.maj;
+  const texte = travail ? 'Le fichier de projet part d\'abord dans les téléchargements. Tout le travail affiché est ensuite effacé de cet appareil.' : 'La page repart d\'un projet vide.';
+  if (!(await demander('Repartir de zéro ?', texte, 'Tout effacer'))) return;
+  if (travail) {
+    const le = new Date().toISOString();
+    try { localStorage.setItem(CLE_SECOURS, JSON.stringify({ le: le, etat: S })); } catch (e) {}
+    telecharger('TNBIM_' + cheminNom() + '_avant-effacement_' + le.slice(0, 10) + '.json', JSON.stringify(S, null, 1), 'application/json');
+  }
+  S = nouvelEtat(); try { localStorage.removeItem(CLE); } catch (e) {}
+  history.replaceState(null, '', '#depart'); rendre(true); bref(travail ? 'Nouveau projet. L\'ancien est dans les téléchargements.' : 'Nouveau projet.');
+}
+function ouvrir() { $('fichier').value = ''; $('fichier').click(); }
+function lireFichier(f) {
+  const l = new FileReader();
+  l.onload = async () => {
+    let d; try { d = JSON.parse(l.result); } catch (e) { d = null; }
+    if (!d || d.app !== APP.id || typeof d.champs !== 'object') { bref('Ce fichier n\'est pas un fichier de projet de ce module.'); return; }
+    if (S.maj && !(await demander('Ouvrir ce fichier ?', 'Il remplace le travail affiché sur cet appareil.', 'Ouvrir'))) return;
+    S = Object.assign(nouvelEtat(), d); sauver();
+    history.replaceState(null, '', '#' + chapitre(S.chapitre).id); rendre(true); bref('Projet rouvert.');
+  };
+  l.readAsText(f);
+}
+
+/* Glisser-déposer : le fichier de projet n'importe où sur la page, un fichier de données dans la zone d'essai */
+const porteFichier = e => !!(e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') >= 0);
+const dansDepot = e => null;
+function finDepose() { $('depose').hidden = true; document.querySelectorAll('.depot.survol').forEach(x => x.classList.remove('survol')); }
+let minuteDepose = 0;
+document.addEventListener('dragover', e => {
+  if (!porteFichier(e)) return;
+  e.preventDefault(); clearTimeout(minuteDepose);
+  const z = dansDepot(e);
+  document.querySelectorAll('.depot.survol').forEach(x => { if (x !== z) x.classList.remove('survol'); });
+  if (z) z.classList.add('survol');
+  $('depose').hidden = !!z || !!document.querySelector('dialog[open]');
+});
+/* Safari ne renseigne pas relatedTarget : on masque après une courte pause sans survol */
+document.addEventListener('dragleave', () => { clearTimeout(minuteDepose); minuteDepose = setTimeout(finDepose, 150); });
+document.addEventListener('drop', e => {
+  if (!porteFichier(e)) return;
+  e.preventDefault(); clearTimeout(minuteDepose); const z = dansDepot(e); finDepose();
+  const f = e.dataTransfer.files && e.dataTransfer.files[0]; if (!f) return;
+  if (document.querySelector('dialog[open]')) return;
+  if (/\.json$/i.test(f.name)) return lireFichier(f);
+  bref('Fichier non reconnu. Pour reprendre le travail, déposez un fichier de projet .json.');
+});
+/* Rappel d'enregistrement : après beaucoup de modifications, et en fin de demi-journée */
+let rappelRepousse = 0;
+function verifierRappel() {
+  const depuis = (S.modifs || 0) - (S.modifsExport || 0);
+  const h = new Date(), m = h.getHours() * 60 + h.getMinutes();
+  const finDeSeance = (m >= 735 && m <= 755);
+  const montrer = Date.now() > rappelRepousse && ((depuis > 0 && (depuis >= 60 || finDeSeance)) || (finDeSeance && (S.modifs || 0) > 0));
+  const fin = montrer && finDeSeance;
+  $('rappel-texte').textContent = typo(fin ? `Fin de séance : enregistrez le fichier, puis rangez-le dans le dossier Teams du groupe. Sans lui, vous ne retrouvez pas votre travail à la prochaine session.` : 'Enregistrez le fichier de projet avant de fermer. Le navigateur peut tout perdre.');
+  $('rappel-fait').hidden = !fin;
+  $('rappel').hidden = !montrer;
+}
+
+document.addEventListener('toggle', e => { const d = e.target; if (d.matches && d.matches('details[data-aide]')) AIDES[d.getAttribute('data-aide')] = d.open; }, true);
+
+/* ───────── Événements ───────── */
+let minuteurLeger = null;
+document.addEventListener('input', e => {
+  const c = e.target.getAttribute && e.target.getAttribute('data-champ');
+  if (!c) return;
+  S.champs[c] = e.target.value; toucher();
+  clearTimeout(minuteurLeger); minuteurLeger = setTimeout(majLeger, 180);
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.type === 'date' && t.hasAttribute('data-champ')) { S.champs[t.getAttribute('data-champ')] = t.value; toucher(); rendre(false); return; }
+  if (t.hasAttribute('data-champ') && /^ps_opt/.test(t.getAttribute('data-champ'))) { rendre(false); return; }
+  if (t.id === 'fichier') { if (t.files[0]) lireFichier(t.files[0]); return; }
+  if (t.hasAttribute('data-decision')) {
+    const id = t.getAttribute('data-decision'); S.choix[id] = t.value; toucher(); rendre(false);
+    const r = document.querySelector('[data-decision="' + id + '"][value="' + t.value + '"]'); if (r) r.focus({ preventScroll: true });
+    return;
+  }
+  if (t.hasAttribute('data-fait')) { const id = t.getAttribute('data-fait'); S.faits[id] = t.checked; toucher(); t.closest('.etape').classList.toggle('faite', t.checked); majLeger(); return; }
+  if (t.hasAttribute('data-coche')) { S.champs[t.getAttribute('data-coche')] = t.checked ? 'oui' : 'non'; toucher(); majLeger(); return; }
+  if (t.tagName === 'SELECT' && t.hasAttribute('data-champ')) {
+    const c = t.getAttribute('data-champ'); S.champs[c] = t.value; toucher();
+    if (c === 'id_classe') rendre(false); else majLeger();
+  }
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('button,[data-action]'); if (!b) return;
+  const a = b.getAttribute('data-action');
+  if (a === 'nouveau') return nouveau();
+  if (a === 'fiche-md') { telecharger('fiche-chantier-rive-nord.md', cahierChantierMd(), 'text/markdown;charset=utf-8'); return bref('Fiche téléchargée. Vous l\'ajouterez au projet Claude à l\'étape « Régler Claude ».'); }
+  if (a === 'fiche-csv') { telecharger('lots-chantier-rive-nord.csv', '\ufeff' + ficheChantierCsv(), 'text/csv;charset=utf-8'); return bref('Fichier des lots téléchargé.'); }
+  if (a === 'jb-plus') { S.champs.jb_n = String(Math.min(40, nJournal() + 1)); toucher(); rendre(false); return; }
+  if (a === 'ouvrir') return ouvrir();
+  if (b.hasAttribute('data-aller-ch')) return allerAncre(b.getAttribute('data-aller-ch'), b.getAttribute('data-aller-ancre'));
+  if (a === 'enregistrer') return enregistrer();
+  if (a === 'exporter') return exporter();
+  if (a === 'recuperer') return recuperer();
+  if (a === 'volet-nav') return basculer('nav');
+  if (a === 'volet-etat') return basculer('etat');
+  if (a === 'copie-faite') { rappelRepousse = Date.now() + 90 * 60000; $('rappel').hidden = true; return bref('Parfait. Le travail est en sécurité.'); }
+  if (a === 'plus-tard') { rappelRepousse = Date.now() + 20 * 60000; $('rappel').hidden = true; return; }
+  if (b.hasAttribute('data-copier')) {
+    const idc = b.getAttribute('data-copier');
+    const t = texteConsigne(idc);
+    return copier(t, t.indexOf(VIDE) >= 0 ? 'Copié. Attention : il reste des passages à compléter.' : 'Consigne copiée. Collez-la dans Claude.');
+  }
+  if (b.hasAttribute('data-scene')) {
+    const id = b.getAttribute('data-scene'), va = b.getAttribute('data-variante'), rep = b.getAttribute('data-rep');
+    S.scenes[id] = S.scenes[id] || {}; S.scenes[id][va] = rep; toucher(); rendre(false);
+    const r = document.querySelector('[data-scene="' + id + '"][data-rep="' + rep + '"]'); if (r) r.focus({ preventScroll: true });
+    return;
+  }
+  if (b.hasAttribute('data-radio')) {
+    const c = b.getAttribute('data-radio'), val = b.getAttribute('data-valeur'); S.champs[c] = val; toucher(); rendre(false);
+    const r = document.querySelector('[data-radio="' + c + '"][data-valeur="' + val + '"]'); if (r) r.focus({ preventScroll: true });
+    return;
+  }
+});
+document.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('depot')) { e.preventDefault(); e.target.click(); return; }
+  const mod = e.ctrlKey || e.metaKey;
+  if (mod && !e.altKey && e.code === 'KeyS') { e.preventDefault(); enregistrer(); }
+  else if (mod && !e.altKey && e.code === 'KeyE') { e.preventDefault(); exporter(); }
+  else if (e.altKey && !mod && e.code === 'KeyN') { e.preventDefault(); nouveau(); }
+  else if (e.altKey && !mod && e.code === 'KeyO') { e.preventDefault(); ouvrir(); }
+  else if (e.key === 'Escape') fermerVolets();
+});
+window.addEventListener('hashchange', () => { const id = location.hash.slice(1); if (CHAPITRES.some(c => c.id === id)) { if (id !== S.chapitre) allerA(id, true); } });
+window.addEventListener('beforeprint', preparerImpression);
+/* À la fermeture : dernières saisies écrites tout de suite, et avertissement si le fichier de projet a du retard */
+function sauverMaintenant() { if (!aSauver) return; clearTimeout(minuteur); aSauver = false; try { localStorage.setItem(CLE, JSON.stringify(S)); } catch (e) {} }
+window.addEventListener('pagehide', sauverMaintenant);
+window.addEventListener('beforeunload', e => {
+  sauverMaintenant();
+  if ((S.modifs || 0) - (S.modifsExport || 0) >= 10) { e.preventDefault(); e.returnValue = ''; }
+});
+setInterval(verifierRappel, 60000);
+
+/* ───────── Démarrage ───────── */
+charger();
+/* Premier passage : chaque chapitre déclare ses étapes, ses champs et ses choix */
+(function () { const C = calcul(); CHAPITRES.forEach(c => { CH = c.id; c.rendu(C); }); })();
+(function () { const id = location.hash.slice(1); if (CHAPITRES.some(c => c.id === id)) S.chapitre = id; })();
+typoNoeuds(document.querySelector('.barre')); typoNoeuds($('rappel'));
+document.querySelectorAll('[title]').forEach(e => e.setAttribute('title', typo(e.getAttribute('title'))));
+rendre(true);
+
+})();
+</script>
+</body>
+</html>

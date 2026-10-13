@@ -1314,9 +1314,58 @@ async function lireTableur(fichier) {
       const debut = e.local + 30 + vue.getUint16(e.local + 26, true) + vue.getUint16(e.local + 28, true);
       const brut = o.subarray(debut, debut + e.taille);
       if (e.methode === 0) return dec.decode(brut);
-      if (e.methode !== 8 || typeof DecompressionStream === 'undefined') throw erreur('Ce navigateur ne sait pas décompresser le fichier. Utilise un navigateur récent ou un export CSV.');
-      const flux = new Blob([brut]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
-      return dec.decode(await new Response(flux).arrayBuffer());
+      if (e.methode !== 8) throw erreur('Ce classeur utilise une compression non prise en charge. Enregistre-le en CSV.');
+      if (typeof DecompressionStream !== 'undefined') {
+        try {
+          const flux = new Blob([brut]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+          return dec.decode(await new Response(flux).arrayBuffer());
+        } catch (x) { /* navigateur sans « deflate-raw » : on décompresse à la main */ }
+      }
+      try { return dec.decode(inflate(brut)); } catch (x) { throw erreur('Ce fichier ne peut pas être décompressé. Enregistre-le en CSV.'); }
+    }
+    /* Décompression « deflate » sans bibliothèque, pour les navigateurs qui ne savent pas le faire seuls */
+    function inflate(data) {
+      let p = 0, b = 0, n = 0, out = new Uint8Array(Math.max(1024, data.length * 4)), o = 0;
+      const place = k => { if (o + k > out.length) { const t = new Uint8Array(Math.max(out.length * 2, o + k)); t.set(out); out = t; } };
+      const bits = k => { while (n < k) { if (p >= data.length) throw new Error('fin'); b |= data[p++] << n; n += 8; } const r = b & ((1 << k) - 1); b >>>= k; n -= k; return r; };
+      const table = lens => { const count = new Uint16Array(16), symbol = new Uint16Array(lens.length), offs = new Uint16Array(16); for (const l of lens) count[l]++; count[0] = 0; for (let i = 1; i < 15; i++) offs[i + 1] = offs[i] + count[i]; lens.forEach((l, s) => { if (l) symbol[offs[l]++] = s; }); return { count, symbol }; };
+      const lire1 = h => { let code = 0, first = 0, index = 0; for (let len = 1; len < 16; len++) { code |= bits(1); const c = h.count[len]; if (code - c < first) return h.symbol[index + (code - first)]; index += c; first += c; first <<= 1; code <<= 1; } throw new Error('code'); };
+      const LB = [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258], LE = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0];
+      const DB = [1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577], DE = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13];
+      let fixe = null;
+      for (let dernier = 0; !dernier;) {
+        dernier = bits(1); const type = bits(2);
+        if (type === 0) {
+          b = 0; n = 0; const l = data[p] | (data[p + 1] << 8); p += 4; place(l); out.set(data.subarray(p, p + l), o); o += l; p += l;
+        } else if (type === 1 || type === 2) {
+          let lit, dis;
+          if (type === 1) {
+            if (!fixe) { const l = []; for (let i = 0; i < 288; i++) l.push(i < 144 ? 8 : i < 256 ? 9 : i < 280 ? 7 : 8); fixe = [table(l), table(new Array(30).fill(5))]; }
+            lit = fixe[0]; dis = fixe[1];
+          } else {
+            const nl = bits(5) + 257, nd = bits(5) + 1, nc = bits(4) + 4, ordre = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15], lc = new Array(19).fill(0);
+            for (let i = 0; i < nc; i++) lc[ordre[i]] = bits(3);
+            const hc = table(lc), lens = [];
+            while (lens.length < nl + nd) {
+              const s = lire1(hc);
+              if (s < 16) lens.push(s);
+              else { let rep, val = 0; if (s === 16) { val = lens[lens.length - 1]; rep = 3 + bits(2); } else if (s === 17) rep = 3 + bits(3); else rep = 11 + bits(7); while (rep--) lens.push(val); }
+            }
+            lit = table(lens.slice(0, nl)); dis = table(lens.slice(nl, nl + nd));
+          }
+          for (;;) {
+            const s = lire1(lit);
+            if (s < 256) { place(1); out[o++] = s; }
+            else if (s === 256) break;
+            else {
+              const i = s - 257, long = LB[i] + bits(LE[i]), j = lire1(dis), dist = DB[j] + bits(DE[j]);
+              if (dist > o) throw new Error('distance'); place(long);
+              for (let k = 0; k < long; k++) { out[o] = out[o - dist]; o++; }
+            }
+          }
+        } else throw new Error('type');
+      }
+      return out.subarray(0, o);
     }
     const entite = t => t.replace(/&#x([0-9a-f]+);/gi, (m, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (m, d) => String.fromCodePoint(+d))
       .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, '\'').replace(/&amp;/g, '&');
@@ -2382,18 +2431,20 @@ function lireFichier(f) {
 const porteFichier = e => !!(e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') >= 0);
 const dansDepot = e => (e.target && e.target.closest ? e.target.closest('.depot') : null);
 function finDepose() { $('depose').hidden = true; document.querySelectorAll('.depot.survol').forEach(x => x.classList.remove('survol')); }
+let minuteDepose = 0;
 document.addEventListener('dragover', e => {
   if (!porteFichier(e)) return;
-  e.preventDefault();
+  e.preventDefault(); clearTimeout(minuteDepose);
   const z = dansDepot(e);
   document.querySelectorAll('.depot.survol').forEach(x => { if (x !== z) x.classList.remove('survol'); });
   if (z) z.classList.add('survol');
   $('depose').hidden = !!z || !!document.querySelector('dialog[open]');
 });
-document.addEventListener('dragleave', e => { if (!e.relatedTarget) finDepose(); });
+/* Safari ne renseigne pas relatedTarget : on masque après une courte pause sans survol */
+document.addEventListener('dragleave', () => { clearTimeout(minuteDepose); minuteDepose = setTimeout(finDepose, 150); });
 document.addEventListener('drop', e => {
   if (!porteFichier(e)) return;
-  e.preventDefault(); const z = dansDepot(e); finDepose();
+  e.preventDefault(); clearTimeout(minuteDepose); const z = dansDepot(e); finDepose();
   const f = e.dataTransfer.files && e.dataTransfer.files[0]; if (!f) return;
   if (document.querySelector('dialog[open]')) return;
   if (z) return deposerDonnees(f);

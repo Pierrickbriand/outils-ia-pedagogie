@@ -89,6 +89,12 @@ Page HTML unique (`index.html`, environ 160 Ko) pour le module « Stratégies av
 - Étape « Auto-évalue ton dossier » avant l'export du PDF : six critères (outil clair et borné, outil testé, gain chiffré avec prudence, éthique et cadre légal, choix justifiés, dossier propre et complet), trois niveaux sans chiffre (acquis, à renforcer, pas encore), lien « Reprendre cette partie ». Réponses enregistrées dans le fichier de projet sous `ae1` à `ae6`, non comptées dans la progression.
 - Les critères sont un premier jet, sans barème officiel. À recaler quand le barème sera fixé : liste `CRITERES_AE` dans `05-chapitres.js`.
 
+## Livraison 1 septies (13 octobre 2026) : compatibilité Safari et Firefox
+- Safari et Firefox n'ont pas pu être lancés dans l'environnement de travail (seul Chromium est installé, téléchargement bloqué). Revue du code : aucune fonction récente à risque repérée (pas de lookbehind, `at`, `replaceAll`, `:has`).
+- Lecture des .xlsx : si le navigateur ne sait pas décompresser seul (`DecompressionStream` absent ou sans `deflate-raw`), une décompression écrite à la main prend le relais. Résultat identique au mode natif sur un classeur de 4 000 lignes. Le même code est copié dans la consigne de construction.
+- Glisser-déposer : Safari ne renseigne pas `relatedTarget` à la sortie ; le masque de dépôt attend désormais 150 ms sans survol.
+- Reste à faire à la main sur un Mac : test de la liste ci-dessous.
+
 ## Repères juridiques vérifiés le 12 octobre 2026
 - Règlement sur l'IA : pratiques interdites depuis le 2 février 2025, transparence (article 50) depuis le 2 août 2026, haut risque reporté au 2 décembre 2027 par le règlement (UE) 2026/1744. Source : Commission européenne.
 - RGPD : profilage et article 22, droit d'opposition. Source : CNIL.
@@ -108,6 +114,6 @@ Page HTML unique (`index.html`, environ 160 Ko) pour le module « Stratégies av
 - Aide repliable « Clé API » dans la Fabrique (si validée).
 - Livraison 2 avant le 27 novembre : atelier 3 (prévision des ventes, jeu de 24 mois), atelier 4 (évolution du métier, plan de compétences), deuxième fonction de l'application, déroulé de la présentation.
 - Ajouter les deux autres outils de la suite (détecteur de biais, simulateur de confidentialité) quand leurs adresses seront connues.
-- Tester sur Safari et Firefox : seuls les tests sur Chromium sont faits (1 440, 1 100 et 390 pixels de large).
+- Tester sur Safari et Firefox, à la main : seuls les tests sur Chromium sont faits (1 440, 1 100 et 390 pixels de large).
 - Option : suivi de classe en direct par Google Sheets et Apps Script.
 - Pour toute modification, repartir du fichier `atelier-ia-vente/index.html` du dépôt `outils-ia-pedagogie`.

@@ -1678,6 +1678,27 @@ function blocQualif(q) {
   </div>`;
 }
 
+/* Auto-évaluation avant l'export : niveaux sans chiffre, rien n'est compté dans la progression */
+const CRITERES_AE = [
+  ['ae1', `L'outil est clair et borné`, `Problème, utilisateur, données, résultat et « ce que l'outil ne fait pas » sont précis.`, 'fabrique'],
+  ['ae2', `L'outil est testé`, `Trois tests faits, un calcul vérifié à la main, un retour d'usage de deux personnes.`, 'dossier'],
+  ['ae3', `Le gain est chiffré avec prudence`, `Temps avant et après, hypothèse basse, délai de retour sur investissement.`, 'dossier'],
+  ['ae4', `L'éthique et le cadre légal sont traités`, `Risques identifiés, source citée, aucune donnée réelle dans Claude.`, 'dossier'],
+  ['ae5', `Les choix sont justifiés`, `Chaque décision importante a sa raison, écrite avec tes mots.`, 'dossier'],
+  ['ae6', `Le dossier est propre et complet`, `Aucun « à compléter », limites et suite indiquées, texte relu.`, 'dossier']
+];
+const NIVEAUX_AE = [['acquis', 'Acquis'], ['renforcer', 'À renforcer'], ['pas', 'Pas encore']];
+function blocAutoEval() {
+  const rep = CRITERES_AE.map(c => v(c[0]));
+  const n = k => rep.filter(x => x === k).length, faits = rep.filter(Boolean).length;
+  const lignes = CRITERES_AE.map((c, i) => `<div class="qualif" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--trait)">
+    <h3 style="margin-top:0">${c[1]}</h3><p class="note" style="margin-top:4px">${c[2]}</p>
+    <div class="actions" role="radiogroup" aria-label="${esc(c[1])}">${NIVEAUX_AE.map(o => `<button type="button" class="btn${rep[i] === o[0] ? ' ok' : ''}" role="radio" aria-checked="${rep[i] === o[0]}" data-radio="${c[0]}" data-valeur="${o[0]}">${o[1]}</button>`).join('')}</div>
+    ${rep[i] === 'renforcer' || rep[i] === 'pas' ? `<p class="note" style="margin-top:6px"><a href="#${c[3]}">Reprendre cette partie</a></p>` : ''}</div>`).join('');
+  const bilan = faits === 0 ? '' : `<p class="suite"><b>Ton bilan.</b> ${n('acquis')} critère${n('acquis') > 1 ? 's' : ''} acquis, ${n('renforcer')} à renforcer, ${n('pas')} pas encore${faits < CRITERES_AE.length ? ` (${CRITERES_AE.length - faits} sans réponse)` : ''}.</p>`;
+  return `<p>Avant d'exporter, relis ton dossier avec ces six critères. Réponds honnêtement : c'est un repère pour toi, pas une note. Ton formateur applique son propre barème.</p>` + lignes + bilan;
+}
+
 const CHAPITRES = [
 /* ── Départ ── */
 { id: 'depart', nav: 'Départ', groupe: 0, seance: `Module de 14 heures – ${S1} et ${S2L}`,
@@ -1962,6 +1983,7 @@ const CHAPITRES = [
     + bloc(`Ce qui manque à ton dossier`, M.liste.length ? `<p>Ton dossier est rempli à ${M.taux} %. Voici où il reste du travail :</p><ul class="tirets">${CHAPITRES.filter(c => M.parChapitre[c.id]).map(c => `<li><a href="#${c.id}">${c.nav.replace(/^\d\. /, '')}</a> : ${M.parChapitre[c.id] === 1 ? 'un élément' : M.parChapitre[c.id] + ' éléments'}</li>`).join('')}</ul>` : `<p>Ton dossier est complet. Relis-le avant de l'exporter.</p>`)
     + etape('dg_fichier', `Enregistre ton fichier de projet`, '', `<p>Ce fichier contient tout ton travail. Il te permet de reprendre le ${S2}, ou sur un autre ordinateur. Garde-le dans ton dossier « Atelier vente » et sur un espace en ligne. Ce n'est pas ton rendu : le rendu, c'est le PDF de l'étape suivante.</p>
       <div class="actions"><button type="button" class="btn plein" data-action="enregistrer">Enregistrer le fichier de projet</button></div>`)
+    + etape('dg_autoeval', `Auto-évalue ton dossier`, '', blocAutoEval())
     + etape('dg_pdf', `Exporte ton dossier en PDF`, '', pas([`Clique sur « Exporter le dossier ».`, `Dans la fenêtre d'impression, choisis « Enregistrer au format PDF ».`, PAR_MAIL ? `Garde le PDF : tu l'ajouteras à ton e-mail à l'étape suivante.` : `Dépose le fichier sur le LMS, avant la date donnée par ton formateur.`])
       + `<div class="actions"><button type="button" class="btn plein" data-action="exporter">Exporter le dossier</button></div>`)
     + (PAR_MAIL ? etape('dg_envoi', `Envoie ton travail à ton formateur`, '', `<p>Ce bouton ouvre ta messagerie avec un message prêt à partir : adresse, objet et texte sont remplis. Il ne peut pas joindre les fichiers lui-même. Tu ajoutes donc deux pièces jointes : ton PDF et ton fichier de projet.</p>`

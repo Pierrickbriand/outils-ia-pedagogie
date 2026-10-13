@@ -84,6 +84,11 @@ Page HTML unique (`index.html`, environ 160 Ko) pour le module « Stratégies av
 3. Relire la page « Départ » (déroulé indicatif) et le texte « Ce qui est noté ».
 4. Reconstruire, tester, publier.
 
+## Livraison 1 sexies (13 octobre 2026) : aide sur les règles de calcul, auto-évaluation
+- Aide repliable sous « Règles de calcul » du cahier de commande (trois questions, exemples, cas « aucun calcul »).
+- Étape « Auto-évalue ton dossier » avant l'export du PDF : six critères (outil clair et borné, outil testé, gain chiffré avec prudence, éthique et cadre légal, choix justifiés, dossier propre et complet), trois niveaux sans chiffre (acquis, à renforcer, pas encore), lien « Reprendre cette partie ». Réponses enregistrées dans le fichier de projet sous `ae1` à `ae6`, non comptées dans la progression.
+- Les critères sont un premier jet, sans barème officiel. À recaler quand le barème sera fixé : liste `CRITERES_AE` dans `05-chapitres.js`.
+
 ## Repères juridiques vérifiés le 12 octobre 2026
 - Règlement sur l'IA : pratiques interdites depuis le 2 février 2025, transparence (article 50) depuis le 2 août 2026, haut risque reporté au 2 décembre 2027 par le règlement (UE) 2026/1744. Source : Commission européenne.
 - RGPD : profilage et article 22, droit d'opposition. Source : CNIL.
@@ -98,6 +103,9 @@ Page HTML unique (`index.html`, environ 160 Ko) pour le module « Stratégies av
 - Le barème : la page renvoie au formateur.
 
 ## Backlog
+- Page « correcteur » pour le formateur : glisser les .json des étudiants, tableau de remplissage et des auto-évaluations (idée du 13 octobre).
+- Bouton « Je suis bloqué » : e-mail prérempli avec l'étape en cours.
+- Aide repliable « Clé API » dans la Fabrique (si validée).
 - Livraison 2 avant le 27 novembre : atelier 3 (prévision des ventes, jeu de 24 mois), atelier 4 (évolution du métier, plan de compétences), deuxième fonction de l'application, déroulé de la présentation.
 - Ajouter les deux autres outils de la suite (détecteur de biais, simulateur de confidentialité) quand leurs adresses seront connues.
 - Tester sur Safari et Firefox : seuls les tests sur Chromium sont faits (1 440, 1 100 et 390 pixels de large).

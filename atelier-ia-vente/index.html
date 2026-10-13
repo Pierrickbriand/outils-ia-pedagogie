@@ -355,6 +355,20 @@ dialog .actions{justify-content:flex-end;margin-top:20px}
 .bloc.entrainement{border-style:dashed}
 @media print{.statut,.partie{display:none!important}}
 
+/* Aide repliable */
+details.aide{padding:0}
+details.aide>summary{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;list-style:none;font-weight:700;font-size:16px;color:var(--encre)}
+details.aide>summary::-webkit-details-marker{display:none}
+details.aide>summary::before{content:"";flex:none;width:8px;height:8px;border-right:2px solid var(--accent-fonce);border-bottom:2px solid var(--accent-fonce);transform:rotate(-45deg);transition:transform .12s}
+details.aide[open]>summary::before{transform:rotate(45deg)}
+details.aide>summary:hover{background:var(--creux)}
+details.aide>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.aide-corps{padding:2px 16px 16px}
+.aide-corps>:first-child{margin-top:0}
+details.aide-schema{margin-top:14px;border:1px solid var(--trait-fort);background:#fff}
+details.aide-schema>summary{font-size:15px}
+details.aide-schema .schema{margin:0;padding:0 16px 16px}
+
 </style>
 </head>
 <body>
@@ -985,6 +999,12 @@ function etape(id, titre, duree, corps) {
     <label class="fait"><input type="checkbox" data-fait="${id}"${fait ? ' checked' : ''}>Fait</label></div>
     ${corps}</section>`;
 }
+/* Aide contextuelle repliable : l'état ouvert ou fermé est gardé en mémoire pendant la visite, pas dans le projet */
+const AIDES = {};
+function aide(titre, corps, id) {
+  id = id || titre;
+  return `<details class="bloc aide" data-aide="${esc(id)}"${AIDES[id] ? ' open' : ''}><summary><span>${titre}</span></summary><div class="aide-corps">${corps}</div></details>`;
+}
 function partie(obligatoire, titre, texte) {
   return `<div class="partie ${obligatoire ? 'obligatoire' : 'facultatif'}"><span class="statut ${obligatoire ? 'obligatoire' : 'facultatif'}">${obligatoire ? 'Obligatoire' : 'Facultatif'}</span><h2>${titre}</h2><p>${texte}</p></div>`;
 }
@@ -1143,8 +1163,8 @@ const SCHEMAS = {
 function schema(id) {
   const s = SCHEMAS[id];
   const h = id === 'sheets' ? 300 : id === 'appsscript' ? 320 : 340;
-  return `<figure class="schema" data-capture="captures/${s.capture}"><svg viewBox="0 0 640 ${h}" role="img" aria-label="${esc(s.titre)}"><rect width="640" height="${h}" fill="#fff"/>${s.svg()}<rect x=".5" y=".5" width="639" height="${h - 1}" fill="none" stroke="#CBD5E1"/></svg>
-    <figcaption><ol>${s.legende.map(x => `<li>${x}</li>`).join('')}</ol><p class="note">Schéma simplifié : la disposition peut différer sur ton écran.</p></figcaption></figure>`;
+  return `<details class="aide aide-schema" data-aide="schema_${id}"${AIDES['schema_' + id] ? ' open' : ''}><summary><span>Voir le schéma : ${esc(s.titre)}</span></summary><figure class="schema" data-capture="captures/${s.capture}"><svg viewBox="0 0 640 ${h}" role="img" aria-label="${esc(s.titre)}"><rect width="640" height="${h}" fill="#fff"/>${s.svg()}<rect x=".5" y=".5" width="639" height="${h - 1}" fill="none" stroke="#CBD5E1"/></svg>
+    <figcaption><ol>${s.legende.map(x => `<li>${x}</li>`).join('')}</ol><p class="note">Schéma simplifié : la disposition peut différer sur ton écran.</p></figcaption></figure></details>`;
 }
 const capturesVues = {};
 function chargerCaptures(racine) {
@@ -1551,7 +1571,7 @@ const CHAPITRES = [
       <div class="champs">${champ('id_nom', 'Prénom et nom', { requis: true, sansMention: true })}${champ('id_equipe', `Nom de ton équipe`, { requis: true, sansMention: true })}
       ${champ('id_coequipiers', `Tes coéquipiers`, { ex: 'Prénoms', requis: true, sansMention: true })}${champ('id_poste', `Ton poste en alternance`, { ex: 'Chargé de clientèle', requis: true, sansMention: true })}
       ${champ('id_entreprise', `Ton entreprise`, { ex: 'Nom réel ou « Entreprise X »', requis: true, sansMention: true })}${champ('id_secteur', `Son secteur`, { ex: 'Négoce de matériaux', requis: true, sansMention: true })}</div>`)
-    + bloc(`Comment marche cette page`, tirets([
+    + aide(`Comment marche cette page`, tirets([
         `chaque étape contient des actions à cocher et des consignes à copier dans Claude`,
         `chaque choix modifie l'état de ton projet : risque juridique, charge de travail, confiance, sobriété`,
         `tes choix sont ceux d'un ingénieur d'affaires : cibler, qualifier, répondre, chiffrer, suivre, prévoir`,
@@ -1573,9 +1593,9 @@ const CHAPITRES = [
         `<b>Aucune donnée réelle dans Claude.</b> Ni client, ni prospect, ni collègue. Tu travailles avec des données fictives.`,
         `<b>Une version fait une chose, et la fait bien.</b> La complexité vient ensuite, fonction après fonction.`,
         `<b>Tu vérifies chaque calcul à la main, au moins une fois.</b> Un outil qui se trompe avec assurance coûte cher.`]))
-    + bloc(`Ce qui est noté`, `<p>Tu rends un mini-dossier en PDF sur le LMS. Il montre ce que ton application apporte : retour d'usage, retour sur investissement, éthique, cadre légal.</p>
+    + aide(`Ce qui est noté`, `<p>Tu rends un mini-dossier en PDF sur le LMS. Il montre ce que ton application apporte : retour d'usage, retour sur investissement, éthique, cadre légal.</p>
       <p>Le 27 novembre, tu présentes ton application au groupe, avec une simulation si besoin. Ton formateur te donnera le barème.</p>`)
-    + bloc(`Déroulé indicatif du 13 octobre`, tableau(['Heure', 'Étape'], [
+    + aide(`Déroulé indicatif du 13 octobre`, tableau(['Heure', 'Étape'], [
         ['8 h 30', 'Départ et constitution des équipes'], ['9 h 00', 'Régler Claude'], ['9 h 45', 'Ton fil rouge'],
         ['10 h 45', 'Atelier « Cibler et personnaliser »'], ['13 h 00', 'Atelier « Soigner l\'expérience client »'],
         ['14 h 15', 'Ta fabrique : première version'], ['16 h 00', 'État du projet et enregistrement du fichier']]))
@@ -1610,7 +1630,7 @@ const CHAPITRES = [
       + `<p>Colle ce texte dans la zone « Instructions » de ton projet. C'est une base : relis-la et réécris ce qui ne te ressemble pas.</p>`)
     + etape('c_test', `Vérifie que Claude a compris`, '5 min', `<p>Ouvre une conversation dans ton projet et envoie cette consigne.</p>` + consigne('test_instructions', `Consigne de vérification`)
       + `<div class="champs">${champ('c_test', `Ce que Claude a mal compris, et ta correction`, { type: 'zone', large: true })}</div>`)
-    + bloc(`Pour progresser : l'entraîneur de consignes`, `<p>Tu veux mieux rédiger tes consignes ? L'outil « Entraîneur de prompt » analyse tes essais et te fait recommencer jusqu'au bon résultat.</p>
+    + aide(`Pour progresser : l'entraîneur de consignes`, `<p>Tu veux mieux rédiger tes consignes ? L'outil « Entraîneur de prompt » analyse tes essais et te fait recommencer jusqu'au bon résultat.</p>
       <div class="actions"><a class="btn" href="${OUTILS.entraineur}" target="_blank" rel="noopener">Ouvrir l'entraîneur</a></div>`)
 },
 
@@ -1648,7 +1668,7 @@ const CHAPITRES = [
 { id: 'atelier1', nav: '3. Cibler et personnaliser', groupe: 0, seance: 'Séance du 13 octobre – atelier de 75 min',
   titre: `Cible tes comptes et personnalise tes messages`,
   chapo: `L'IA sait regrouper des comptes et adapter un message. Elle sait aussi se tromper avec assurance. Tu vas mesurer les deux.`,
-  rendu: C => bloc(`Avant de commencer : à quoi sert cet atelier`, `<p>Cet atelier est un terrain d'entraînement commun à tout le groupe. Tu n'y construis pas encore ton projet. Tu y apprends cinq gestes que tu réutiliseras ensuite :</p>` + tirets([
+  rendu: C => aide(`Avant de commencer : à quoi sert cet atelier`, `<p>Cet atelier est un terrain d'entraînement commun à tout le groupe. Tu n'y construis pas encore ton projet. Tu y apprends cinq gestes que tu réutiliseras ensuite :</p>` + tirets([
         `faire segmenter des données par Claude, et exiger la règle de calcul`, `vérifier deux cas à la main`, `repérer les anomalies, et ce que Claude a inventé`,
         `construire un petit outil à partir d'une règle écrite`, `cadrer des messages personnalisés par segment`])
       + `<h3>Quelles données utiliser</h3>
@@ -1660,7 +1680,7 @@ const CHAPITRES = [
       + `<p>Le dernier point relie l'atelier à ton projet : dis ce que tu reprends, et ce que tu changes.</p>
       <h3>Ce qui est facultatif</h3><p>La segmentation, la vérification, le « Segmenteur » et les messages sont de l'entraînement. Ils t'aident à mieux décider, mais le dossier ne les exige pas.</p>`)
     + partie(false, `Partie 1 : entraînement`, `Ces exercices t'apprennent les gestes. Si tu les maîtrises déjà, saute-les et passe à la partie 2. Ils ne comptent pas dans le taux de remplissage du dossier.`)
-    + repere(`Ce que l'IA fait bien, ce qu'elle fait mal`, `<p>Elle fait bien trois choses :</p>` + tirets([
+    + aide(`Ce que l'IA fait bien, ce qu'elle fait mal`, `<p>Elle fait bien trois choses :</p>` + tirets([
         `segmenter : regrouper des clients qui se ressemblent`, `personnaliser : adapter un message à un segment`, `lire des avis : classer des textes par thème et par ton`])
       + `<p>Elle a trois faiblesses :</p>` + tirets([`elle invente des raisons quand les données manquent`, `elle lit mal l'ironie`, `elle reproduit les déséquilibres de tes données`]))
     + etape('a1_jeu', `Récupère ton jeu de données`, '5 min', `<p>Ce jeu de 36 clients est fictif. Il contient au moins trois anomalies, glissées exprès.</p>` + jeu('clients'))
@@ -2232,6 +2252,8 @@ async function retirerIdee() {
   delete S.champs.cc_idee; S.faits.fab_idee = false; toucher(); rendre(false);
   bref(gardes.length ? 'Idée retirée. Tes modifications sont conservées.' : 'Idée retirée. Le cahier de commande est vide.');
 }
+
+document.addEventListener('toggle', e => { const d = e.target; if (d.matches && d.matches('details[data-aide]')) AIDES[d.getAttribute('data-aide')] = d.open; }, true);
 
 /* ───────── Événements ───────── */
 let minuteurLeger = null;

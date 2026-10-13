@@ -1626,7 +1626,18 @@ const CHAPITRES = [
 { id: 'atelier1', nav: '3. Cibler et personnaliser', groupe: 0, seance: 'Séance du 13 octobre – atelier de 75 min',
   titre: `Cible tes comptes et personnalise tes messages`,
   chapo: `L'IA sait regrouper des comptes et adapter un message. Elle sait aussi se tromper avec assurance. Tu vas mesurer les deux.`,
-  rendu: C => repere(`Ce que l'IA fait bien, ce qu'elle fait mal`, `<p>Elle fait bien trois choses :</p>` + tirets([
+  rendu: C => bloc(`Avant de commencer : à quoi sert cet atelier`, `<p>Cet atelier est un terrain d'entraînement commun à tout le groupe. Tu n'y construis pas encore ton projet. Tu y apprends cinq gestes que tu réutiliseras ensuite :</p>` + tirets([
+        `faire segmenter des données par Claude, et exiger la règle de calcul`, `vérifier deux cas à la main`, `repérer les anomalies, et ce que Claude a inventé`,
+        `construire un petit outil à partir d'une règle écrite`, `cadrer des messages personnalisés par segment`])
+      + `<h3>Quelles données utiliser</h3>
+      <p>Utilise le jeu fourni à l'étape suivante. Ses anomalies sont connues : ta vérification est fiable, et ses colonnes correspondent à l'outil que tu vas construire.</p>
+      <p>Tu préfères un jeu proche de ton activité ? Fais-en fabriquer un par Claude avec l'option du chapitre « Ton fil rouge ». Ses anomalies seront celles de Claude : colle ensuite ton jeu à la place des données dans les consignes.</p>
+      <p><b>Jamais de donnée réelle de ton entreprise dans Claude</b> : ni client, ni prospect, ni collègue.</p>
+      <h3>Ce que tu rends dans ton dossier</h3>` + tirets([
+        `la segmentation retenue, avec sa règle de calcul`, `le résultat de ta vérification à la main`, `les anomalies trouvées, et ce que Claude a supposé`,
+        `trois choix justifiés et une scène d'appel d'offres`, `ce que tu en retiens pour ton application`])
+      + `<p>Le dernier point relie l'atelier à ton projet : dis ce que tu reprends, et ce que tu changes.</p>`)
+    + repere(`Ce que l'IA fait bien, ce qu'elle fait mal`, `<p>Elle fait bien trois choses :</p>` + tirets([
         `segmenter : regrouper des clients qui se ressemblent`, `personnaliser : adapter un message à un segment`, `lire des avis : classer des textes par thème et par ton`])
       + `<p>Elle a trois faiblesses :</p>` + tirets([`elle invente des raisons quand les données manquent`, `elle lit mal l'ironie`, `elle reproduit les déséquilibres de tes données`]))
     + etape('a1_jeu', `Récupère ton jeu de données`, '5 min', `<p>Ce jeu de 36 clients est fictif. Il contient au moins trois anomalies, glissées exprès.</p>` + jeu('clients'))

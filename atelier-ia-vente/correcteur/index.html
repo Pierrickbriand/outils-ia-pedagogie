@@ -330,6 +330,8 @@ dialog .actions{justify-content:flex-end;margin-top:20px}
 .depot:hover,.depot:focus-visible,.depot.survol{border-color:var(--accent);background:#D1FAE5;outline:none}
 .depot-resultat{margin-top:12px}
 .depot-bilan{margin:0 0 8px}
+.depot-resultat h3{margin:18px 0 6px}
+.desc-depot{margin:8px 0 10px;padding:12px 14px;border:1px solid var(--trait);background:#F8FAFC;font-size:14.5px;line-height:1.55;white-space:pre-wrap}
 .alerte-depot{margin:8px 0;padding:9px 12px;border:1px solid var(--ambre-trait);background:var(--ambre-pale);color:var(--ambre);font-weight:600;font-size:14px}
 #depose{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:rgba(248,250,252,.78);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);pointer-events:none}
 #depose[hidden]{display:none}
@@ -1942,7 +1944,7 @@ const CHAPITRES = [
       ${champ('cc_humain', `Place de l'humain`, { type: 'zone', requis: true, sansMention: true, ex: `Le commercial valide la liste et peut écarter un devis.` })}</div>
       <div class="actions"><button type="button" class="btn" data-action="cahier-md">Télécharger le cahier (.md)</button><button type="button" class="btn" data-action="cahier-effacer">Effacer tous les champs</button></div>
       <p class="note">Ajoute ce fichier aux fichiers de ton projet Claude : il reste disponible dans toutes tes conversations du projet. Après une modification du cahier, télécharge-le de nouveau et remplace l'ancien.</p>`)
-    + bloc(`Teste un fichier de données`, `<p>Ton outil lira peut-être un fichier Excel ou CSV, comme une base de fournisseurs ou de clients. Glisse un fichier ici pour voir ce que ton outil recevra : colonnes, lignes, cellules vides. Le fichier reste sur ton appareil et n'est pas enregistré dans ton projet.</p>
+    + bloc(`Teste un fichier de données`, `<p>Ton outil lira peut-être un fichier Excel ou CSV, comme une base de fournisseurs ou de clients. Glisse un fichier ici. Tu obtiens ce que ton outil recevra, les défauts à prévoir et une description à coller dans ton cahier. Le fichier reste sur ton appareil et n'est pas enregistré dans ton projet.</p>
       <div class="depot" tabindex="0" role="button" aria-label="Zone de dépôt : glisse un fichier Excel ou CSV, ou appuie sur Entrée pour en choisir un" data-action="choisir-donnees">
         <b>Glisse un fichier .xlsx ou .csv ici</b><span>ou clique pour le choisir</span></div>
       <div class="depot-resultat" aria-live="polite"></div>

@@ -331,6 +331,8 @@ dialog .actions{justify-content:flex-end;margin-top:20px}
 .depot:hover,.depot:focus-visible,.depot.survol{border-color:var(--accent);background:#D1FAE5;outline:none}
 .depot-resultat{margin-top:12px}
 .depot-bilan{margin:0 0 8px}
+.depot-resultat h3{margin:18px 0 6px}
+.desc-depot{margin:8px 0 10px;padding:12px 14px;border:1px solid var(--trait);background:#F8FAFC;font-size:14.5px;line-height:1.55;white-space:pre-wrap}
 .alerte-depot{margin:8px 0;padding:9px 12px;border:1px solid var(--ambre-trait);background:var(--ambre-pale);color:var(--ambre);font-weight:600;font-size:14px}
 #depose{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:rgba(248,250,252,.78);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);pointer-events:none}
 #depose[hidden]{display:none}
@@ -1955,7 +1957,7 @@ const CHAPITRES = [
       ${champ('cc_humain', `Place de l'humain`, { type: 'zone', requis: true, sansMention: true, ex: `Le commercial valide la liste et peut écarter un devis.` })}</div>
       <div class="actions"><button type="button" class="btn" data-action="cahier-md">Télécharger le cahier (.md)</button><button type="button" class="btn" data-action="cahier-effacer">Effacer tous les champs</button></div>
       <p class="note">Ajoute ce fichier aux fichiers de ton projet Claude : il reste disponible dans toutes tes conversations du projet. Après une modification du cahier, télécharge-le de nouveau et remplace l'ancien.</p>`)
-    + bloc(`Teste un fichier de données`, `<p>Ton outil lira peut-être un fichier Excel ou CSV, comme une base de fournisseurs ou de clients. Glisse un fichier ici pour voir ce que ton outil recevra : colonnes, lignes, cellules vides. Le fichier reste sur ton appareil et n'est pas enregistré dans ton projet.</p>
+    + bloc(`Teste un fichier de données`, `<p>Ton outil lira peut-être un fichier Excel ou CSV, comme une base de fournisseurs ou de clients. Glisse un fichier ici. Tu obtiens ce que ton outil recevra, les défauts à prévoir et une description à coller dans ton cahier. Le fichier reste sur ton appareil et n'est pas enregistré dans ton projet.</p>
       <div class="depot" tabindex="0" role="button" aria-label="Zone de dépôt : glisse un fichier Excel ou CSV, ou appuie sur Entrée pour en choisir un" data-action="choisir-donnees">
         <b>Glisse un fichier .xlsx ou .csv ici</b><span>ou clique pour le choisir</span></div>
       <div class="depot-resultat" aria-live="polite"></div>
@@ -2453,20 +2455,74 @@ document.addEventListener('drop', e => {
   bref('Fichier non reconnu. Pour reprendre ton travail, dépose un fichier de projet .json.');
 });
 const COLONNES_PERSO = /nom|pr[ée]nom|mail|t[ée]l|phone|mobile|iban|adresse|naissance|salaire|sécu|secu/i;
+/* Diagnostic d'un fichier de données : types de colonnes, défauts à prévoir, description à coller dans le cahier */
+const RE_NOMBRE = /^[-+]?(?:\d{1,3}(?:[   ]\d{3})+|\d+)(?:[.,]\d+)?$/;
+const RE_UNITE = /^[-+]?[\d\s  .,]+\s*(?:€|eur|euros|%|k€|kg|h|j)$/i;
+const RE_DATE_ISO = /^\d{4}-\d{2}-\d{2}(?:[T ].*)?$/, RE_DATE_FR = /^\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}$/;
+const RE_DATE_TXT = /^\d{1,2}(?:er)?\s+(?:janv|févr|fevr|mars|avr|mai|juin|juil|août|aout|sept|oct|nov|déc|dec)\w*\.?\s+\d{2,4}$/i;
+const sansAccent = x => String(x).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+let DESCRIPTION_DONNEES = '';
+function diagnostiquerDonnees(r, nomFichier) {
+  const n = r.lignes.length, pl = (k, mot) => k + ' ' + mot + (k > 1 ? 's' : '');
+  const colonnes = r.colonnes.map((nom, i) => {
+    const vals = r.lignes.map(l => l[i]), pleins = vals.filter(x => x !== '');
+    const k = { n: 0, u: 0, di: 0, df: 0, dt: 0, t: 0 };
+    pleins.forEach(x => { if (RE_NOMBRE.test(x)) k.n++; else if (RE_UNITE.test(x)) k.u++; else if (RE_DATE_ISO.test(x)) k.di++; else if (RE_DATE_FR.test(x)) k.df++; else if (RE_DATE_TXT.test(x)) k.dt++; else k.t++; });
+    const m = pleins.length || 1, nb_ = k.n + k.u, dates = k.di + k.df + k.dt;
+    const type = !pleins.length ? 'vide' : nb_ / m >= 0.8 ? 'nombre' : dates / m >= 0.8 ? 'date' : (nb_ + dates) / m > 0.3 ? 'mixte' : 'texte';
+    return { nom, i, vals, pleins, k, type, vides: vals.length - pleins.length, exemple: pleins[0] || '' };
+  });
+  const defauts = [], points = [];
+  const ajoute = (court, long, col) => { defauts.push([col || '', court]); points.push(long); };
+  colonnes.forEach(c => {
+    const aj = (court, long) => ajoute(court, long, c.nom);
+    if (c.vides) aj(`${pl(c.vides, 'cellule')} vide${c.vides > 1 ? 's' : ''}`, `<b>${esc(c.nom)}</b> : ${pl(c.vides, 'cellule')} vide${c.vides > 1 ? 's' : ''} sur ${n}. Décide ce que fait l'outil quand la donnée manque.`);
+    const m = c.pleins.length || 1;
+    if ((c.k.n + c.k.u) / m >= 0.6) {
+      if (c.k.u) aj(`unités ou symboles dans les nombres`, `<b>${esc(c.nom)}</b> : des nombres portent une unité ou un symbole, par exemple « ${esc(c.pleins.find(x => RE_UNITE.test(x)))} ». Ils seront lus comme du texte.`);
+      const virg = c.pleins.filter(x => /,\d+$/.test(x) && RE_NOMBRE.test(x)).length, pt = c.pleins.filter(x => /\.\d+$/.test(x) && RE_NOMBRE.test(x)).length;
+      if (virg && pt) aj(`virgule et point mélangés`, `<b>${esc(c.nom)}</b> : la virgule et le point servent tous deux de séparateur décimal. Un calcul peut se tromper d'un facteur dix ou mille.`);
+      if (c.k.t) aj(`${c.k.t > 1 ? c.k.t + ' valeurs ne sont pas des nombres' : '1 valeur n\'est pas un nombre'}`, `<b>${esc(c.nom)}</b> : ${c.k.t > 1 ? c.k.t + ' valeurs ne sont pas des nombres' : '1 valeur n\'est pas un nombre'}, par exemple « ${esc(c.pleins.find(x => !RE_NOMBRE.test(x) && !RE_UNITE.test(x)))} ».`);
+    }
+    const formats = [c.k.di, c.k.df, c.k.dt].filter(x => x > 0).length;
+    if ((c.k.di + c.k.df + c.k.dt) / m >= 0.6 && (formats > 1 || c.k.t)) aj(`formats de date mélangés`, `<b>${esc(c.nom)}</b> : les dates n'ont pas toutes le même format${c.k.t ? ' ou ne sont pas des dates' : ''}. Le tri par date sera faux.`);
+    if (c.type === 'texte' && c.pleins.length >= 5) {
+      const g = {}; c.pleins.forEach(x => { (g[sansAccent(x)] = g[sansAccent(x)] || new Set()).add(x); });
+      const dbl = Object.keys(g).filter(k => g[k].size > 1);
+      if (dbl.length && Object.keys(g).length <= 60) aj(`écritures variables`, `<b>${esc(c.nom)}</b> : une même valeur est écrite de plusieurs façons, par exemple « ${esc(Array.from(g[dbl[0]]).slice(0, 2).join(' » et « '))} ». L'outil les comptera comme deux valeurs.`);
+    }
+  });
+  const freq = {}; r.lignes.forEach(l => { const k = l.join('\u0001'); freq[k] = (freq[k] || 0) + 1; });
+  const doubles = Object.keys(freq).reduce((s, k) => s + freq[k] - 1, 0);
+  if (doubles) ajoute(`${pl(doubles, 'ligne')} en double`, `${pl(doubles, 'ligne')} en double, identique${doubles > 1 ? 's' : ''} à une autre. Les doublons gonflent les totaux.`);
+  const c0 = colonnes[0];
+  if (c0 && c0.pleins.length) { const dist = new Set(c0.pleins).size; if (dist < c0.pleins.length && dist >= 0.7 * c0.pleins.length) ajoute(`valeurs répétées`, `<b>${esc(c0.nom)}</b> : ${pl(c0.pleins.length - dist, 'valeur')} répétée${c0.pleins.length - dist > 1 ? 's' : ''} dans la première colonne. Si c'est un identifiant, il devrait être unique.`, c0.nom); }
+  const perso = r.colonnes.filter(x => COLONNES_PERSO.test(x));
+  const lib = { nombre: 'nombre', date: 'date', texte: 'texte', mixte: 'types mélangés', vide: 'vide' };
+  const liste = colonnes.slice(0, 12).map(c => `${c.nom} (${lib[c.type]})`).join(', ') + (colonnes.length > 12 ? ` et ${colonnes.length - 12} autres` : '');
+  const parCol = {}, ordreCol = []; defauts.forEach(d => { if (!parCol[d[0]]) { parCol[d[0]] = []; ordreCol.push(d[0]); } parCol[d[0]].push(d[1]); });
+  const groupes = ordreCol.map(k => (k ? k + ' (' : '') + parCol[k].join(', ') + (k ? ')' : ''));
+  const desc = typo(`Fichier « ${nomFichier} » (${r.format === 'Excel' ? 'Excel, première feuille' : 'CSV'}) : ${pl(n, 'ligne')} de données, ${pl(colonnes.length, 'colonne')}. Colonnes : ${liste}. `
+    + (defauts.length ? `Défauts à prévoir : ${groupes.join(' ; ')}.` : `Aucun défaut repéré à l'ouverture.`) + ` Le fichier doit être fictif ou anonymisé.`);
+  return { colonnes, points, perso, desc, lib };
+}
 async function deposerDonnees(f) {
   const z = document.querySelector('.depot-resultat'); if (!z) return;
   z.innerHTML = '<p class="note">Lecture du fichier…</p>';
   try {
     const r = await lireTableur(f), n = r.lignes.length, c = r.colonnes.length;
-    const vides = r.lignes.reduce((s, l) => s + l.filter(x => x === '').length, 0);
+    const D = diagnostiquerDonnees(r, f.name); DESCRIPTION_DONNEES = D.desc;
     const pl = (k, mot) => k + ' ' + mot + (k > 1 ? 's' : '');
-    const perso = r.colonnes.filter(x => COLONNES_PERSO.test(x));
     const apercu = r.lignes.slice(0, 5);
-    z.innerHTML = `<p class="depot-bilan"><b>${esc(f.name)}</b> : ${r.format}, ${pl(n, 'ligne')} de données, ${pl(c, 'colonne')}, ${pl(vides, 'cellule')} vide${vides > 1 ? 's' : ''}.</p>`
-      + (perso.length ? `<p class="alerte-depot">${esc(typo('À vérifier : ' + (perso.length > 1 ? 'ces colonnes peuvent contenir' : 'cette colonne peut contenir') + ' des données personnelles (' + perso.join(', ') + '). Ne donne pas ce fichier à Claude tel quel : anonymise-le ou travaille sur un fichier fictif.'))}</p>` : '')
-      + (vides ? `<p class="note">${esc(typo('Les cellules vides faussent les calculs : décide ce que fait ton outil quand une donnée manque.'))}</p>` : '')
-      + `<div class="defile"><table class="tab donnees"><thead><tr>${r.colonnes.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${apercu.map(l => `<tr>${l.map(x => `<td>${esc(x)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`
-      + `<p class="note">${esc(typo('Aperçu : ' + apercu.length + ' ligne' + (apercu.length > 1 ? 's' : '') + ' sur ' + n + '.' + (r.format === 'Excel' ? ' Un fichier Excel est lu sur sa première feuille. Les dates arrivent au format AAAA-MM-JJ.' : '')))}</p>`;
+    z.innerHTML = `<p class="depot-bilan"><b>${esc(f.name)}</b> : ${r.format}, ${pl(n, 'ligne')} de données, ${pl(c, 'colonne')}.</p>`
+      + (D.perso.length ? `<p class="alerte-depot">${esc(typo('À vérifier : ' + (D.perso.length > 1 ? 'ces colonnes peuvent contenir' : 'cette colonne peut contenir') + ' des données personnelles (' + D.perso.join(', ') + '). Ne donne pas ce fichier à Claude tel quel : anonymise-le ou travaille sur un fichier fictif.'))}</p>` : '')
+      + `<h3>Ce que ton outil recevra</h3><div class="defile"><table class="tab donnees"><thead><tr><th>Colonne</th><th>Type</th><th>Cellules vides</th><th>Exemple</th></tr></thead><tbody>${D.colonnes.map(x => `<tr><td>${esc(x.nom)}</td><td>${D.lib[x.type]}</td><td>${x.vides}</td><td>${esc(x.exemple)}</td></tr>`).join('')}</tbody></table></div>`
+      + `<div class="defile" style="margin-top:10px"><table class="tab donnees"><thead><tr>${r.colonnes.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${apercu.map(l => `<tr>${l.map(x => `<td>${esc(x)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`
+      + `<p class="note">${esc(typo('Aperçu : ' + apercu.length + ' ligne' + (apercu.length > 1 ? 's' : '') + ' sur ' + n + '.' + (r.format === 'Excel' ? ' Un fichier Excel est lu sur sa première feuille. Les dates arrivent au format AAAA-MM-JJ.' : '')))}</p>`
+      + `<h3>Les points d'attention</h3>` + (D.points.length ? `<ul class="tirets">${D.points.map(x => `<li>${x}</li>`).join('')}</ul>` : `<p>Rien d'anormal repéré. Vérifie quand même trois lignes à la main.</p>`)
+      + `<h3>Ta description, prête à coller</h3><p class="note">Colle-la dans « Données en entrée » du cahier de commande, puis corrige ce qui est faux. Elle ne s'écrit jamais toute seule dans ton cahier.</p><p class="desc-depot">${esc(D.desc)}</p>`
+      + `<div class="actions"><button type="button" class="btn plein" data-copier-desc>Copier la description</button><button type="button" class="btn" data-aller-ch="fabrique" data-aller-ancre='[data-champ="cc_entrees"]'>Aller au champ « Données en entrée »</button></div>`;
+    typoNoeuds(z);
   } catch (e) {
     z.innerHTML = `<p class="alerte-depot">${esc(typo(e && e.lisible ? e.message : 'Ce fichier ne peut pas être lu. Essaie de l\'enregistrer en CSV depuis Excel.'))}</p>`;
   }
@@ -2583,6 +2639,7 @@ document.addEventListener('click', e => {
     const r = document.querySelector('[data-radio="' + c + '"][data-valeur="' + val + '"]'); if (r) r.focus({ preventScroll: true });
     return;
   }
+  if (b.hasAttribute('data-copier-desc')) return copier(DESCRIPTION_DONNEES, 'Description copiée. Colle-la dans « Données en entrée ».');
   if (b.hasAttribute('data-retirer-idee')) return retirerIdee();
   if (b.hasAttribute('data-idee')) return choisirIdee(b.getAttribute('data-idee'));
 });

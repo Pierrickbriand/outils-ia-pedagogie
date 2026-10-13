@@ -101,6 +101,12 @@ Page HTML unique (`index.html`, environ 160 Ko) pour le module « Stratégies av
 - Détail par étudiant : ce qui manque par chapitre, alertes, auto-évaluation, dossier complet, notes de correction (gardées dans le navigateur du formateur) et export CSV du tableau avec les notes.
 - Les calculs reprennent ceux de l'application : si un champ obligatoire change dans l'application, le correcteur doit être reconstruit.
 
+## Livraison 2 ter (13 octobre 2026) : zone d'essai du fichier de données
+- Après le dépôt d'un .xlsx ou .csv : tableau « Ce que ton outil recevra » (type de chaque colonne, cellules vides, exemple), aperçu, « Les points d'attention » (cellules vides, unités dans les nombres, virgule et point mélangés, valeurs non numériques, formats de date mélangés, écritures variables, lignes en double, valeurs répétées dans la première colonne, colonnes personnelles) et description prête à coller.
+- Le bouton « Copier la description » copie le texte ; rien n'est écrit dans le cahier sans l'étudiant. Un second bouton mène au champ « Données en entrée ».
+- Le fichier n'est toujours pas conservé : il n'y a donc pas de bouton d'enregistrement.
+- Limites : détection par règles simples sur toutes les lignes, première feuille seulement ; une colonne d'identifiants numériques peut être classée « nombre ».
+
 ## Repères juridiques vérifiés le 12 octobre 2026
 - Règlement sur l'IA : pratiques interdites depuis le 2 février 2025, transparence (article 50) depuis le 2 août 2026, haut risque reporté au 2 décembre 2027 par le règlement (UE) 2026/1744. Source : Commission européenne.
 - RGPD : profilage et article 22, droit d'opposition. Source : CNIL.

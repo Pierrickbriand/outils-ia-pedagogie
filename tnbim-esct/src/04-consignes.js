@@ -12,6 +12,15 @@ const FORMATS = {
   tableau: `Quand tu compares des options, utilise un tableau. Sinon, réponds en prose courte.`,
   etapes: `Réponds par étapes numérotées : une action par étape, dans l'ordre où nous la ferons.`
 };
+const REGLES_FRANCAIS = `RÈGLES DE FRANÇAIS
+– Français simple : phrases de vingt mots au plus, voix active. Aucun mot comme « durable », « innovant » ou « éthique » sans preuve. Bannis « n'hésitez pas à », « il est important de noter », « véritable », « levier », « plongeons ».
+– Guillemets français « » avec une espace à l'intérieur, jamais de guillemets droits. Espace avant : ; ! ? et avant ». Aucune espace avant la virgule et le point.
+– Tiret demi-cadratin (–) pour les incises et les listes, jamais le tiret long. Écris « et », jamais le signe &.
+– Nombres : espace des milliers (1 000), virgule décimale (3,14), espace avant % et € (15 %, 20 €).
+– Majuscules accentuées (É, À, Ç). Dans un titre, seule la première lettre prend une majuscule, sans point final.
+– Dates et heures : « 4 novembre 2026 », « 9 h 30 », « 1er », « 2e », jamais « 2ème ». Points de suspension en un seul caractère (…), jamais suivis de « etc. ».
+– Listes : introduites par deux-points, un tiret par élément, minuscule au début, point-virgule à la fin, point au dernier.
+– Traduis les anglicismes : brief → cahier de commande ; prompt → consigne ; feedback → retour ; template → modèle ; workflow → chaîne de production ; KPI → indicateurs clés ; dashboard → tableau de bord ; reporting → compte rendu ; deadline → date limite. Garde les noms d'outils, de normes et de marques.`;
 const LIB_FORMATS = [['prose', 'Prose courte, pas de tableau ni de longue liste'], ['listes', 'Listes courtes, une idée par ligne'], ['tableau', 'Tableau pour comparer, prose sinon'], ['etapes', 'Étapes numérotées, une action par étape']];
 function ficheChantierTexte() {
   const C = CHANTIER, lots = C.lots;
@@ -70,10 +79,9 @@ GARDE-FOUS
 – Ne fais jamais ceci : ${ou('ip_jamais', DEF_JAMAIS)}
 
 STYLE
-– Réponds en français, en phrases de vingt mots au plus, à la voix active, avec le vouvoiement.
+– Réponds en français, avec le vouvoiement.
 – ${FORMATS[v('ip_format')] || FORMATS.prose}
-– Guillemets français « », espace avant : ; ! ?, nombres avec espace des milliers (1 000) et virgule décimale (3,14), espace avant % et €.
-– Notre façon de travailler : ${ou('ip_travail', DEF_TRAVAIL)}`];
+– Notre façon de travailler : ${ou('ip_travail', DEF_TRAVAIL)}${estCoche('ip_typo', true) ? '\n\n' + REGLES_FRANCAIS : ''}`];
   },
   test_instructions: () => [`Avant de commencer, réponds point par point, en une ligne chacun.
 1. Quel est ton rôle dans ce projet, et pour qui travailles-tu ?

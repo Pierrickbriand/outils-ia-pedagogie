@@ -32,6 +32,11 @@ Recentrage sur les objectifs du module (stratégie de transition numérique : ca
 - Publication dans le dépôt `outils-ia-pedagogie`, dossier `tnbim-esct/` (index.html, journal, sources).
 Tests : six écrans, quatre projets, export, sans erreur dans un navigateur de test.
 
+## Livraison 3 ter – 14 octobre 2026 (188 Ko)
+- Instructions du projet Claude : case « Appliquer les règles de français du formateur » (cochée par défaut) qui ajoute un bloc complet, adapté aux étudiants : français simple et formules à bannir, guillemets et espaces, tirets, nombres, majuscules accentuées, dates et heures, listes, anglicismes à traduire (brief, prompt, feedback, template, workflow, KPI, dashboard, reporting, deadline).
+- Page indépendante : dépôt `tnbim-esct`, https://pierrickbriand.github.io/tnbim-esct/ ; la copie dans `outils-ia-pedagogie/tnbim-esct/` deviendra un renvoi. Les deux adresses partagent le même domaine : la sauvegarde du navigateur reste lisible de l'une à l'autre.
+Aucun identifiant de champ modifié : le travail des étudiants de la session du 14 octobre est conservé.
+
 ## Réglages (bloc CONFIG de src/01-donnees.js)
 - nbGroupes : 6 (aide à la saisie).
 - soutenance : 20 minutes par groupe (12 + 8).

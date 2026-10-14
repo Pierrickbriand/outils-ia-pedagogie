@@ -169,7 +169,8 @@ const CHAPITRES = [
     + etape('c_instructions', `Collez les instructions`, '10 min', `<p>Les instructions sont déjà rédigées ci-dessous : copiez-les telles quelles dans votre projet. Les cases et les champs sont là pour les adapter. Dans les deux champs de texte, remplacez ce qui est entre accolades { } par votre situation.</p>
       <div class="coches">${coche('ip_questions', `Poser au plus trois questions avant de produire`, true)}${coche('ip_plan', `Proposer un plan court avant de rédiger ou de calculer`, true)}
       ${coche('ip_sources', `Marquer « à vérifier » toute référence dont il n'est pas sûr`, true)}${coche('ip_doutes', `Signaler ses doutes et les calculs à refaire à la main`, true)}
-      ${coche('ip_change', `Dire en une phrase ce qui a changé`, true)}${coche('ip_contredire', `Nous contredire quand notre idée est trop large ou risquée`, true)}</div>
+      ${coche('ip_change', `Dire en une phrase ce qui a changé`, true)}${coche('ip_contredire', `Nous contredire quand notre idée est trop large ou risquée`, true)}
+      ${coche('ip_typo', `Appliquer les règles de français du formateur : typographie, listes, dates, anglicismes à traduire`, true)}</div>
       <div class="champs">${champ('ip_format', `Format d'écriture des réponses`, { type: 'liste', options: LIB_FORMATS, sansMention: true, aide: `Sans choix, Claude répond en prose courte.` })}
       ${champ('ip_travail', `Qui nous sommes et notre façon de travailler`, { type: 'zone', lignes: 5, large: true, defaut: DEF_TRAVAIL, sansMention: true, aide: `Remplacez les accolades. Vous pouvez tout réécrire.` })}
       ${champ('ip_jamais', `Ce que Claude ne doit jamais faire`, { type: 'zone', lignes: 4, large: true, defaut: DEF_JAMAIS, sansMention: true, aide: `Remplacez les accolades. Ajoutez ce qui vous a déjà agacé chez une IA.` })}</div>`

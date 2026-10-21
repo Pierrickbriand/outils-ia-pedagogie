@@ -133,3 +133,8 @@ Page HTML unique (`index.html`, environ 160 Ko) pour le module « Stratégies av
 - Tester sur Safari et Firefox, à la main : seuls les tests sur Chromium sont faits (1 440, 1 100 et 390 pixels de large).
 - Option : suivi de classe en direct par Google Sheets et Apps Script.
 - Pour toute modification, repartir du fichier `atelier-ia-vente/index.html` du dépôt `outils-ia-pedagogie`.
+
+## Livraison 2 quinquies – 21 octobre 2026 (soir) : fenêtre « Bon retour »
+- Après 30 minutes d'absence (rechargement ou retour sur l'onglet), une fenêtre rappelle la dernière visite, l'endroit où l'étudiant s'était arrêté, l'avancement du parcours, sa prochaine étape (même calcul que le bandeau « Ta prochaine étape ») et l'état de son fichier de projet. Boutons « Reprendre où je m'étais arrêté », « Aller à la prochaine étape », « Fermer ».
+- Code ajouté à la fin du script de `atelier-ia-vente/index.html` (fonction `bonRetour`). Seule écriture : l'heure de la dernière visite sous la clé `atelier-ia-vente-v1-derniere-visite`. Aucun identifiant, choix, effet ni jeu de données modifié ; le correcteur n'est pas touché.
+- Testé dans un navigateur (Chromium) : pas de fenêtre sans travail, fenêtre après une absence simulée de deux heures, pas de nouvelle fenêtre au rechargement immédiat, état de l'étudiant identique. Publié (dépôt outils-ia-pedagogie, commit b43912e), avant la séance du 27 novembre.

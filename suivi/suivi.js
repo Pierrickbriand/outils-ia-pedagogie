@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3.1).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3.2).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -12,7 +12,8 @@
  *  – version 3 : pour un étudiant identifié, il envoie au plus une fois par minute un signal de progression
  *    (séance, diapositive, avancement affiché par la page, onglet visible ou non). Jamais le contenu des réponses.
  *    L'étudiant en est informé (fenêtre « Qui êtes-vous ? », puis un message unique pour ceux déjà identifiés) ;
- *  – version 3.1 : à l'ouverture, les fenêtres du cours et du suivi s'affichent l'une après l'autre.
+ *  – version 3.1 : à l'ouverture, les fenêtres du cours et du suivi s'affichent l'une après l'autre ;
+ *  – version 3.2 : faute de frappe probable dans l'e-mail (outloook.fr, gmial.com…) : correction proposée avant l'envoi.
  * Les anciens liens personnels (?e=…) et ?p=… restent reconnus. Si ce script ne se charge pas, le cours fonctionne comme avant.
  */
 (function () {
@@ -111,6 +112,19 @@
   }
   function fermer() { var v = document.querySelector('.suivi-voile'); if (v) v.remove(); }
   function msg(t) { var m = document.querySelector('.suivi-fen .m'); if (m) m.textContent = t; }
+  var DOMAINES = ['gmail.com', 'outlook.fr', 'outlook.com', 'hotmail.fr', 'hotmail.com', 'live.fr', 'live.com', 'yahoo.fr', 'yahoo.com', 'icloud.com', 'orange.fr', 'free.fr', 'sfr.fr', 'laposte.net', 'wanadoo.fr', 'msn.com', 'gmx.fr', 'proton.me', 'protonmail.com'];
+  function distance(a, b) {
+    var d = []; for (var i = 0; i <= a.length; i++) { d[i] = [i]; for (var k = 1; k <= b.length; k++) d[i][k] = i ? Math.min(d[i - 1][k] + 1, d[i][k - 1] + 1, d[i - 1][k - 1] + (a[i - 1] === b[k - 1] ? 0 : 1)) : k; }
+    return d[a.length][b.length];
+  }
+  function suggestionEmail(e) {
+    var m = /^([^@\s]+)@([^@\s]+)$/.exec(String(e || '').trim().toLowerCase()); if (!m) return '';
+    var dom = m[2]; if (DOMAINES.indexOf(dom) >= 0) return '';
+    if (dom === 'gmail.fr') return m[1] + '@gmail.com';
+    var mieux = '', md = 3;
+    for (var i = 0; i < DOMAINES.length; i++) { var k = distance(dom, DOMAINES[i]); if (k < md) { md = k; mieux = DOMAINES[i]; } }
+    return mieux ? m[1] + '@' + mieux : '';
+  }
 
   /* ---------- « Qui êtes-vous ? » ---------- */
   var LISTE = null;
@@ -127,8 +141,17 @@
       var a = e.target.getAttribute && e.target.getAttribute('data-a'); if (!a) return;
       if (a === 'absent') { var L = lire(); L.absent = Date.now(); ecrire(L); fermer(); return; }
       if (a === 'code') return saisirCode('');
+      if (a === 'corr') { v.querySelector('#s-mail').value = e.target.getAttribute('data-v'); v._mailVu = ''; return msg('Adresse corrigée. Cliquez sur « C’est moi ».'); }
       var id = v.querySelector('#s-nom').value, mail = v.querySelector('#s-mail').value.trim();
       if (!id) return msg('Choisissez votre nom dans la liste.');
+      // Version 3.2 : faute de frappe probable. Un second clic sur « C’est moi » garde l’adresse telle quelle.
+      var sg = suggestionEmail(mail);
+      if (sg && v._mailVu !== mail) {
+        v._mailVu = mail;
+        var m = v.querySelector('.m');
+        if (m) m.innerHTML = 'Vouliez-vous dire <b>' + esc(sg) + '</b>\u00a0? <button class="l" type="button" data-a="corr" data-v="' + esc(sg) + '">Oui, corriger</button><br>Sinon, cliquez de nouveau sur « C’est moi ».';
+        return;
+      }
       var x = LISTE.filter(function (y) { return y.id === id; })[0];
       if (x && x.pris) return saisirCode(id);
       e.target.disabled = true; msg('Un instant…');

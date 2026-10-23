@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 2).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -8,7 +8,10 @@
  *  – il ajoute ce code et la promotion à chaque envoi vers COURS.envoi_url, avec le titre et l'adresse du cours ;
  *  – il demande les dates des séances de la promotion de l'étudiant ;
  *  – il propose les noms de la classe dans les champs « NOM Prénom » du groupe ;
- *  – il affiche « Mes notes » (avec « Nouvelle note ») quand l'étudiant est identifié.
+ *  – il affiche « Mes notes » (avec « Nouvelle note ») quand l'étudiant est identifié ;
+ *  – version 3 : pour un étudiant identifié, il envoie au plus une fois par minute un signal de progression
+ *    (séance, diapositive, avancement affiché par la page, onglet visible ou non). Jamais le contenu des réponses.
+ *    L'étudiant en est informé (fenêtre « Qui êtes-vous ? », puis un message unique pour ceux déjà identifiés).
  * Les anciens liens personnels (?e=…) et ?p=… restent reconnus. Si ce script ne se charge pas, le cours fonctionne comme avant.
  */
 (function () {
@@ -83,7 +86,9 @@
       '.suivi-fen .b.s{background:#fff;color:#1F3D66}.suivi-fen .l{background:none;border:0;padding:0;margin:12px 14px 0 0;font:inherit;font-size:13px;color:#1D6F69;text-decoration:underline;cursor:pointer}' +
       '.suivi-fen .code{font:700 30px/1 ui-monospace,Menlo,monospace;letter-spacing:.18em;background:#F3F3F6;border-radius:10px;padding:14px;text-align:center;margin:12px 0}' +
       '.suivi-fen .m{min-height:1.2em;color:#A8425A;font-size:13px;margin-top:10px}.suivi-fen .n{border-top:1px solid #D8DCE6;padding:12px 0}.suivi-fen .v{font-size:18px;font-weight:700}' +
-      '@media print{#suivi-notes,.suivi-voile{display:none!important}}';
+      '#suivi-info{position:fixed;left:16px;right:16px;bottom:96px;z-index:9000;max-width:380px;background:#fff;color:#1B2740;border:1px solid #D8DCE6;border-radius:12px;padding:12px 14px;font:14px/1.45 Inter,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.18)}' +
+      '#suivi-info p{margin:0 0 8px}#suivi-info button{font:inherit;font-weight:600;border:1px solid #1F3D66;background:#1F3D66;color:#fff;border-radius:8px;padding:6px 14px;cursor:pointer}' +
+      '@media print{#suivi-notes,.suivi-voile,#suivi-info{display:none!important}}';
     document.head.appendChild(st);
   }
   function fenetre(html) {
@@ -100,7 +105,7 @@
   var LISTE = null;
   function accueil() {
     var opts = LISTE.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.label) + (x.pris ? ' (déjà choisi)' : '') + '</option>'; }).join('');
-    var v = fenetre('<h2>Qui êtes-vous ?</h2><p class="p">Choisissez votre nom une seule fois. Il identifie votre travail auprès de votre enseignant.</p>' +
+    var v = fenetre('<h2>Qui êtes-vous ?</h2><p class="p">Choisissez votre nom une seule fois. Il identifie votre travail auprès de votre enseignant, qui voit aussi votre avancement dans le cours (séance, diapositive, temps passé), jamais le contenu de vos réponses.</p>' +
       '<label for="s-nom">Votre nom</label><select id="s-nom"><option value="">choisir…</option>' + opts + '</select>' +
       '<label for="s-mail">Votre e-mail (conseillé)</label><input id="s-mail" type="email" autocomplete="email" placeholder="prenom.nom@exemple.fr">' +
       '<p class="p">Il sert uniquement à vous envoyer votre code personnel et vos notes. Il est effacé en fin d’année. Sans e-mail, vous ne pourrez pas récupérer un code perdu.</p>' +
@@ -124,7 +129,7 @@
     };
   }
   function montrerCode(r, avecMail) {
-    var L = lire(); L.c = r.code; L.label = r.label; if (r.promo) L.p = r.promo; delete L.absent; ecrire(L);
+    var L = lire(); L.c = r.code; L.label = r.label; if (r.promo) L.p = r.promo; L.infoPg = 1; delete L.absent; ecrire(L);
     var v = fenetre('<h2>Bienvenue, ' + esc(String(r.label).split(' ')[0]) + '</h2><p>Votre code personnel :</p><div class="code">' + esc(r.code) + '</div>' +
       '<p class="p">' + (avecMail ? 'Il vient de vous être envoyé par e-mail. ' : 'Notez-le : il vous sera demandé sur un autre appareil. ') + 'Ce navigateur s’en souviendra. Il protège vos notes : ne le partagez pas.</p>' +
       '<button class="b" type="button">Continuer</button>');
@@ -197,9 +202,56 @@
     document.body.appendChild(b);
   }
 
+  /* ---------- Version 3 : progression ---------- */
+  var PG = { dernier: 0, sig: '' };
+  function etatPage() {
+    var sl = document.querySelectorAll('.slide'); if (!sl.length) return null;
+    var i = -1; for (var k = 0; k < sl.length; k++) if (sl[k].classList.contains('on')) { i = k; break; }
+    if (i < 0) return null;
+    var cnt = (document.getElementById('cnt') || {}).textContent || '';
+    var s = (/^[^\d·]+?(\d+)\s*·/.exec(cnt) || [])[1]; // « Séance 2 · … », « Partie 2 · … »
+    var sc = [], pcs = document.querySelectorAll('[data-pc]');
+    for (k = 0; k < pcs.length; k++) { var n = +pcs[k].getAttribute('data-pc'), v = parseInt(pcs[k].textContent, 10); if (n > 0 && n <= 20 && !isNaN(v)) sc[n - 1] = v; }
+    for (k = 0; k < sc.length; k++) if (sc[k] == null) sc[k] = 0;
+    var mm = /(\d+)\s*%/.exec((document.getElementById('bProg') || {}).textContent || '');
+    return { s: s ? +s : null, i: i + 1, n: sl.length, ti: String(sl[i].getAttribute('data-title') || '').slice(0, 80), sc: sc, m: mm ? +mm[1] : null };
+  }
+  function signal(fin) {
+    try {
+      var L = lire(), c = C();
+      if ((!L.c && !L.e) || !E() || !c.app_id || c.dash || c.code_enseignant) return;
+      var e = etatPage(); if (!e) return;
+      var cache = document.visibilityState === 'hidden', sig = JSON.stringify(e) + cache, now = Date.now();
+      if (cache && !fin) { if (!PG.hd) PG.hd = now; if (now - PG.hd > 20 * 60000) return; } else PG.hd = 0; // onglet caché plus de 20 min : silence
+      if (fin) { if (!PG.dernier) return; }
+      else if (now - PG.dernier < 55000 || (sig === PG.sig && now - PG.dernier < 3 * 60000)) return; // rien de neuf : un signal de présence toutes les 3 min
+      var corps = { action: 'trace', app: c.app_id, s: e.s, i: e.i, n: e.n, ti: e.ti, sc: e.sc, m: e.m };
+      if (L.c) corps.code = L.c; else corps.etu = L.e;
+      if (L.p) corps.promo = L.p;
+      if (cache) corps.h = 1;
+      if (fin) corps.fin = 1;
+      PG.sig = sig; PG.dernier = now;
+      var txt = JSON.stringify(corps);
+      if (fin && navigator.sendBeacon) { navigator.sendBeacon(E(), new Blob([txt], { type: 'text/plain;charset=utf-8' })); return; }
+      f0.call(window, E(), { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: txt, keepalive: true }).catch(function () {});
+    } catch (x) { /* le suivi ne doit jamais gêner le cours */ }
+  }
+  function infoProgression() {
+    var L = lire(); if (!(L.c || L.e) || L.infoPg || document.getElementById('suivi-info')) return;
+    style();
+    var d = document.createElement('div'); d.id = 'suivi-info'; d.setAttribute('role', 'status');
+    d.innerHTML = '<p>Votre enseignant voit votre avancement dans ce cours\u00a0: la séance, la diapositive où vous êtes et le temps passé. Jamais le contenu de vos réponses.</p><button type="button">Compris</button>';
+    document.body.appendChild(d);
+    d.querySelector('button').onclick = function () { var L2 = lire(); L2.infoPg = 1; ecrire(L2); d.remove(); };
+  }
+
   function demarrer() {
     if (!E() || typeof f0 !== 'function') return;
+    setInterval(function () { signal(false); }, 15000);
+    setTimeout(function () { signal(false); }, 5000);
+    window.addEventListener('pagehide', function () { signal(true); });
     var L = lire();
+    if ((L.c || L.e) && !L.infoPg) setTimeout(infoProgression, 2500);
     if (L.cNeuf && L.cNeuf !== L.c) { verifierCode(L.cNeuf, false); }
     var secret = L.c || L.e;
     if (secret) {

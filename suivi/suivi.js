@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3.3).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3.4).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -15,6 +15,7 @@
  *  – version 3.1 : à l'ouverture, les fenêtres du cours et du suivi s'affichent l'une après l'autre ;
  *  – version 3.2 : faute de frappe probable dans l'e-mail (outloook.fr, gmial.com…) : correction proposée avant l'envoi ;
  *  – version 3.3 : envoi réessayé tout seul quand l'Atelier est occupé (fin de séance) ; « Mes notes » limité au cours ; ancien code valable jusqu'à l'usage du nouveau.
+ *  – version 3.4 : sur téléphone, le bouton « Mes notes » passe en bas à gauche (il ne cache plus le haut de la page).
  * Les anciens liens personnels (?e=…) et ?p=… restent reconnus. Si ce script ne se charge pas, le cours fonctionne comme avant.
  */
 (function () {
@@ -102,6 +103,7 @@
       '.suivi-fen .m{min-height:1.2em;color:#A8425A;font-size:13px;margin-top:10px}.suivi-fen .n{border-top:1px solid #D8DCE6;padding:12px 0}.suivi-fen .v{font-size:18px;font-weight:700}' +
       '#suivi-info{position:fixed;left:16px;right:16px;bottom:96px;z-index:9000;max-width:380px;background:#fff;color:#1B2740;border:1px solid #D8DCE6;border-radius:12px;padding:12px 14px;font:14px/1.45 Inter,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.18)}' +
       '#suivi-info p{margin:0 0 8px}#suivi-info button{font:inherit;font-weight:600;border:1px solid #1F3D66;background:#1F3D66;color:#fff;border-radius:8px;padding:6px 14px;cursor:pointer}' +
+      '@media (max-width:600px){#suivi-notes{top:auto;right:auto;left:12px;bottom:calc(72px + env(safe-area-inset-bottom,0px));padding:7px 12px}}' +
       '@media print{#suivi-notes,.suivi-voile,#suivi-info{display:none!important}}';
     document.head.appendChild(st);
   }

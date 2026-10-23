@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3.1).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -11,7 +11,8 @@
  *  – il affiche « Mes notes » (avec « Nouvelle note ») quand l'étudiant est identifié ;
  *  – version 3 : pour un étudiant identifié, il envoie au plus une fois par minute un signal de progression
  *    (séance, diapositive, avancement affiché par la page, onglet visible ou non). Jamais le contenu des réponses.
- *    L'étudiant en est informé (fenêtre « Qui êtes-vous ? », puis un message unique pour ceux déjà identifiés).
+ *    L'étudiant en est informé (fenêtre « Qui êtes-vous ? », puis un message unique pour ceux déjà identifiés) ;
+ *  – version 3.1 : à l'ouverture, les fenêtres du cours et du suivi s'affichent l'une après l'autre.
  * Les anciens liens personnels (?e=…) et ?p=… restent reconnus. Si ce script ne se charge pas, le cours fonctionne comme avant.
  */
 (function () {
@@ -98,12 +99,23 @@
     v.innerHTML = '<div class="suivi-fen" role="dialog" aria-modal="true">' + html + '</div>';
     return v;
   }
+  // Version 3.1 : une seule fenêtre à la fois à l'ouverture de la page.
+  // Ordre : « Qui êtes-vous ? », puis « Bon retour » ou « Vous reprenez… » (moteur du cours), puis « Quoi de neuf », puis l'information sur le suivi.
+  // Les cartes du moteur restent dans la page, seulement masquées tant qu'une fenêtre passe avant elles : rien n'est perdu.
+  function file() {
+    if (document.getElementById('suivi-file')) return;
+    var st = document.createElement('style'); st.id = 'suivi-file';
+    st.textContent = 'body:has(.suivi-voile) #where,body:has(.suivi-voile) #news,body:has(#where) #news{display:none!important}' +
+      'body:has(.suivi-voile) #suivi-info,body:has(#where) #suivi-info,body:has(#news) #suivi-info{display:none!important}';
+    document.head.appendChild(st);
+  }
   function fermer() { var v = document.querySelector('.suivi-voile'); if (v) v.remove(); }
   function msg(t) { var m = document.querySelector('.suivi-fen .m'); if (m) m.textContent = t; }
 
   /* ---------- « Qui êtes-vous ? » ---------- */
   var LISTE = null;
   function accueil() {
+    var nw = document.getElementById('news'); if (nw) nw.remove(); // un nouvel étudiant n'a pas besoin des nouveautés
     var opts = LISTE.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.label) + (x.pris ? ' (déjà choisi)' : '') + '</option>'; }).join('');
     var v = fenetre('<h2>Qui êtes-vous ?</h2><p class="p">Choisissez votre nom une seule fois. Il identifie votre travail auprès de votre enseignant, qui voit aussi votre avancement dans le cours (séance, diapositive, temps passé), jamais le contenu de vos réponses.</p>' +
       '<label for="s-nom">Votre nom</label><select id="s-nom"><option value="">choisir…</option>' + opts + '</select>' +
@@ -246,6 +258,7 @@
   }
 
   function demarrer() {
+    file();
     if (!E() || typeof f0 !== 'function') return;
     setInterval(function () { signal(false); }, 15000);
     setTimeout(function () { signal(false); }, 5000);

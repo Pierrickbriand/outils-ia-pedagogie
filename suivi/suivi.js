@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3.2).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3.3).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -13,7 +13,8 @@
  *    (séance, diapositive, avancement affiché par la page, onglet visible ou non). Jamais le contenu des réponses.
  *    L'étudiant en est informé (fenêtre « Qui êtes-vous ? », puis un message unique pour ceux déjà identifiés) ;
  *  – version 3.1 : à l'ouverture, les fenêtres du cours et du suivi s'affichent l'une après l'autre ;
- *  – version 3.2 : faute de frappe probable dans l'e-mail (outloook.fr, gmial.com…) : correction proposée avant l'envoi.
+ *  – version 3.2 : faute de frappe probable dans l'e-mail (outloook.fr, gmial.com…) : correction proposée avant l'envoi ;
+ *  – version 3.3 : envoi réessayé tout seul quand l'Atelier est occupé (fin de séance) ; « Mes notes » limité au cours ; ancien code valable jusqu'à l'usage du nouveau.
  * Les anciens liens personnels (?e=…) et ?p=… restent reconnus. Si ce script ne se charge pas, le cours fonctionne comme avant.
  */
 (function () {
@@ -64,7 +65,18 @@
           }
         }
       } catch (e) { /* en cas de doute, l'envoi part tel quel */ }
-      return f0.call(window, url, opt);
+      // Version 3.3 : quand l'Atelier répond « occupé » (toute la classe envoie en même temps), on réessaie tout seul, 4 fois au plus.
+      var envoi = E() && typeof url === 'string' && url.indexOf(E()) === 0 && opt && String(opt.method).toUpperCase() === 'POST';
+      if (!envoi) return f0.call(window, url, opt);
+      var essai = function (n) {
+        return f0.call(window, url, opt).then(function (r) {
+          return r.clone().json().then(function (j) {
+            if (j && j.retry && n < 4) return new Promise(function (ok) { setTimeout(ok, 2000 + Math.random() * 6000); }).then(function () { return essai(n + 1); });
+            return r;
+          }, function () { return r; });
+        });
+      };
+      return essai(1);
     };
   }
 
@@ -181,21 +193,21 @@
       if (a === 'oubli') {
         msg('Un instant…');
         return poster({ action: 'oubli', app: C().app_id, id: id }).then(function (r) {
-          if (r && r.ok) msg('Un nouveau code vient d’être envoyé à ' + r.masque + '. L’ancien ne fonctionne plus.');
+          if (r && r.ok) msg('Un nouveau code vient d’être envoyé à ' + r.masque + '. Votre ancien code reste valable jusqu’à ce que vous utilisiez le nouveau.');
           else if (r && r.err === 'sans e-mail') msg('Aucun e-mail n’est enregistré pour ce nom. Demandez à votre enseignant de libérer votre nom, puis choisissez-le de nouveau.');
-          else if (r && r.err === 'patienter') msg('Un code vient déjà d’être envoyé. Vérifiez vos e-mails, y compris les indésirables, ou réessayez dans dix minutes.');
+          else if (r && r.err === 'patienter') msg('Un code vient déjà d’être envoyé, ou trop de demandes ont été faites aujourd’hui. Vérifiez vos e-mails, y compris les indésirables, ou réessayez plus tard.');
           else msg('Impossible pour l’instant. Réessayez plus tard.');
         }).catch(function () { msg('Impossible pour l’instant. Vérifiez votre connexion.'); });
       }
       var code = v.querySelector('#s-code').value.trim().toUpperCase();
-      if (code.length < 6) return msg('Le code compte six caractères.');
+      if (code.length < 6) return msg('Le code compte au moins six caractères.');
       verifierCode(code, true);
     };
   }
   function verifierCode(code, interactif) {
     return poster({ action: 'code', app: C().app_id, code: code }).then(function (r) {
       if (r && r.ok) { var L = lire(); L.c = code; L.label = r.label; if (r.promo) L.p = r.promo; delete L.cNeuf; delete L.absent; ecrire(L); location.reload(); return; }
-      if (interactif) msg('Ce code n’est pas reconnu pour ce cours.');
+      if (interactif) msg(r && r.err === 'patienter' ? 'Trop d’essais en peu de temps. Réessayez dans une demi-heure.' : 'Ce code n’est pas reconnu pour ce cours.');
     }).catch(function () { if (interactif) msg('Impossible pour l’instant. Vérifiez votre connexion.'); });
   }
 
@@ -230,7 +242,7 @@
           return '<div class="n"><div>' + esc(n.livrable) + '</div><div class="v">' + nombre(n.note) + ' / ' + nombre(n.sur) + '</div>' +
             (n.commentaire ? '<div style="white-space:pre-wrap;margin-top:4px">' + esc(String(n.commentaire).replace(/^'/, '')) + '</div>' : '') + '</div>';
         }).join('') : '<p>Aucune note publiée pour l’instant. Elles apparaîtront ici dès que votre enseignant les aura publiées.</p>') +
-        '<p class="p">Connecté en tant que ' + esc(L.label || r.prenom || '') + '.</p><button class="b s" type="button">Fermer</button>');
+        '<p class="p">Connecté en tant que ' + esc(String(L.label || r.prenom || '').replace(/\.$/, '')) + '.</p><button class="b s" type="button">Fermer</button>');
       v.querySelector('.b').onclick = fermer;
       v.onclick = function (e) { if (e.target === v) fermer(); };
     };
@@ -291,7 +303,7 @@
     if (L.cNeuf && L.cNeuf !== L.c) { verifierCode(L.cNeuf, false); }
     var secret = L.c || L.e;
     if (secret) {
-      lireGet('retour=' + encodeURIComponent(secret)).then(function (r) { if (r && r.ok) bouton(r, L); }).catch(function () {});
+      lireGet('retour=' + encodeURIComponent(secret) + '&app=' + encodeURIComponent(C().app_id || '')).then(function (r) { if (r && r.ok) bouton(r, L); }).catch(function () {});
     }
     var besoinListe = !secret || document.getElementById('bt-m0');
     if (!besoinListe) return;

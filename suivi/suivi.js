@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3.4).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3.5).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -16,6 +16,7 @@
  *  – version 3.2 : faute de frappe probable dans l'e-mail (outloook.fr, gmial.com…) : correction proposée avant l'envoi ;
  *  – version 3.3 : envoi réessayé tout seul quand l'Atelier est occupé (fin de séance) ; « Mes notes » limité au cours ; ancien code valable jusqu'à l'usage du nouveau.
  *  – version 3.4 : sur téléphone, le bouton « Mes notes » passe en bas à gauche (il ne cache plus le haut de la page).
+ *  – version 3.5 : « C’est mon nom » (l’enseignant est prévenu) ; « Ce n’est pas moi » dans « Mes notes » ; durée de conservation annoncée.
  * Les anciens liens personnels (?e=…) et ?p=… restent reconnus. Si ce script ne se charge pas, le cours fonctionne comme avant.
  */
 (function () {
@@ -145,7 +146,7 @@
   function accueil() {
     var nw = document.getElementById('news'); if (nw) nw.remove(); // un nouvel étudiant n'a pas besoin des nouveautés
     var opts = LISTE.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.label) + (x.pris ? ' (déjà choisi)' : '') + '</option>'; }).join('');
-    var v = fenetre('<h2>Qui êtes-vous ?</h2><p class="p">Choisissez votre nom une seule fois. Il identifie votre travail auprès de votre enseignant, qui voit aussi votre avancement dans le cours (séance, diapositive, temps passé), jamais le contenu de vos réponses.</p>' +
+    var v = fenetre('<h2>Qui êtes-vous ?</h2><p class="p">Choisissez votre nom une seule fois. Il identifie votre travail auprès de votre enseignant, qui voit aussi votre avancement dans le cours (séance, diapositive, temps passé), jamais le contenu de vos réponses. Ces informations sont effacées à la fin de l’année scolaire.</p>' +
       '<label for="s-nom">Votre nom</label><select id="s-nom"><option value="">choisir…</option>' + opts + '</select>' +
       '<label for="s-mail">Votre e-mail (conseillé)</label><input id="s-mail" type="email" autocomplete="email" placeholder="prenom.nom@exemple.fr">' +
       '<p class="p">Il sert uniquement à vous envoyer votre code personnel et vos notes. Il est effacé en fin d’année. Sans e-mail, vous ne pourrez pas récupérer un code perdu.</p>' +
@@ -188,10 +189,19 @@
     var v = fenetre('<h2>Votre code personnel</h2>' + (id ? '<p class="p">Ce nom a déjà été choisi. Si c’est bien le vôtre, saisissez votre code.</p>' : '<p class="p">Saisissez le code reçu à votre première connexion.</p>') +
       '<label for="s-code">Code</label><input id="s-code" autocomplete="off" maxlength="12" style="text-transform:uppercase;letter-spacing:.15em">' +
       '<button class="b" type="button" data-a="ok">Valider</button><button class="b s" type="button" data-a="retour">Retour</button>' +
-      (id ? '<br><button class="l" type="button" data-a="oubli">Code oublié ?</button>' : '') + '<div class="m" aria-live="polite"></div>');
+      (id ? '<br><button class="l" type="button" data-a="oubli">Code oublié ?</button><br><button class="l" type="button" data-a="signaler">C’est mon nom, mais je ne l’ai jamais choisi</button>' : '') + '<div class="m" aria-live="polite"></div>');
     v.onclick = function (e) {
       var a = e.target.getAttribute && e.target.getAttribute('data-a'); if (!a) return;
       if (a === 'retour') return accueil();
+      // Version 3.5 : quelqu'un a choisi ce nom à la place de l'étudiant ; l'enseignant est prévenu et libérera le nom.
+      if (a === 'signaler') {
+        msg('Un instant…');
+        return poster({ action: 'signaler', app: C().app_id, id: id }).then(function (r) {
+          if (r && r.ok && r.libre) msg('Ce nom est de nouveau libre. Cliquez sur « Retour » et choisissez-le.');
+          else if (r && r.ok) msg('Votre enseignant est prévenu. Il libérera votre nom\u00a0; vous pourrez alors le choisir de nouveau. En attendant, travaillez normalement\u00a0: rien n’est perdu.');
+          else msg('Impossible pour l’instant. Prévenez directement votre enseignant.');
+        }).catch(function () { msg('Impossible pour l’instant. Prévenez directement votre enseignant.'); });
+      }
       if (a === 'oubli') {
         msg('Un instant…');
         return poster({ action: 'oubli', app: C().app_id, id: id }).then(function (r) {
@@ -244,8 +254,18 @@
           return '<div class="n"><div>' + esc(n.livrable) + '</div><div class="v">' + nombre(n.note) + ' / ' + nombre(n.sur) + '</div>' +
             (n.commentaire ? '<div style="white-space:pre-wrap;margin-top:4px">' + esc(String(n.commentaire).replace(/^'/, '')) + '</div>' : '') + '</div>';
         }).join('') : '<p>Aucune note publiée pour l’instant. Elles apparaîtront ici dès que votre enseignant les aura publiées.</p>') +
-        '<p class="p">Connecté en tant que ' + esc(String(L.label || r.prenom || '').replace(/\.$/, '')) + '.</p><button class="b s" type="button">Fermer</button>');
+        '<p class="p">Connecté en tant que ' + esc(String(L.label || r.prenom || '').replace(/\.$/, '')) + '. <button class="l" type="button" data-a="pasmoi">Ce n’est pas moi</button></p><div class="m" aria-live="polite"></div><button class="b s" type="button">Fermer</button>');
       v.querySelector('.b').onclick = fermer;
+      // Version 3.5 : mauvais nom choisi (ou ordinateur partagé) : le nom est libéré s'il a été choisi depuis peu, sinon l'enseignant est prévenu.
+      v.querySelector('[data-a="pasmoi"]').onclick = function () {
+        if (!window.confirm('Vous déconnecter de ce nom\u00a0? Si vous l’avez choisi par erreur ces derniers jours, il sera libéré pour son vrai titulaire.')) return;
+        var code = lire().c;
+        var sortir = function (t) { var M3 = lire(); delete M3.c; delete M3.label; delete M3.e; delete M3.vu; ecrire(M3); msg(t); setTimeout(function () { location.reload(); }, 2500); };
+        if (!code) return sortir('Vous êtes déconnecté.');
+        poster({ action: 'liberer', app: C().app_id, code: code }).then(function (r) {
+          sortir(r && r.ok && r.libere ? 'Nom libéré. Choisissez maintenant votre vrai nom.' : r && r.ok ? 'Vous êtes déconnecté. Votre enseignant est prévenu et vérifiera.' : 'Vous êtes déconnecté. Prévenez votre enseignant si vous aviez choisi un mauvais nom.');
+        }).catch(function () { sortir('Vous êtes déconnecté. Prévenez votre enseignant si vous aviez choisi un mauvais nom.'); });
+      };
       v.onclick = function (e) { if (e.target === v) fermer(); };
     };
     document.body.appendChild(b);

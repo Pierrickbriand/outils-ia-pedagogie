@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3.5).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3.6).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -17,6 +17,7 @@
  *  – version 3.3 : envoi réessayé tout seul quand l'Atelier est occupé (fin de séance) ; « Mes notes » limité au cours ; ancien code valable jusqu'à l'usage du nouveau.
  *  – version 3.4 : sur téléphone, le bouton « Mes notes » passe en bas à gauche (il ne cache plus le haut de la page).
  *  – version 3.5 : « C’est mon nom » (l’enseignant est prévenu) ; « Ce n’est pas moi » dans « Mes notes » ; durée de conservation annoncée.
+ *  – version 3.6 : guidage par le formateur : quand il allume « Guider les étudiants », la page suit sa diapositive ; « Naviguer seul » pour décrocher.
  * Les anciens liens personnels (?e=…) et ?p=… restent reconnus. Si ce script ne se charge pas, le cours fonctionne comme avant.
  */
 (function () {
@@ -105,7 +106,9 @@
       '#suivi-info{position:fixed;left:16px;right:16px;bottom:96px;z-index:9000;max-width:380px;background:#fff;color:#1B2740;border:1px solid #D8DCE6;border-radius:12px;padding:12px 14px;font:14px/1.45 Inter,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.18)}' +
       '#suivi-info p{margin:0 0 8px}#suivi-info button{font:inherit;font-weight:600;border:1px solid #1F3D66;background:#1F3D66;color:#fff;border-radius:8px;padding:6px 14px;cursor:pointer}' +
       '@media (max-width:600px){#suivi-notes{top:auto;right:auto;left:12px;bottom:calc(72px + env(safe-area-inset-bottom,0px));padding:7px 12px}}' +
-      '@media print{#suivi-notes,.suivi-voile,#suivi-info{display:none!important}}';
+      '#suivi-guide{position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9001;font:600 13px/1.3 Inter,system-ui,sans-serif;background:#1F3D66;color:#fff;border-radius:20px;padding:7px 8px 7px 14px;box-shadow:0 4px 16px rgba(0,0,0,.2);display:flex;align-items:center;gap:10px;white-space:nowrap;max-width:calc(100vw - 24px)}' +
+      '#suivi-guide button{font:inherit;background:#fff;color:#1F3D66;border:0;border-radius:14px;padding:5px 10px;cursor:pointer;white-space:nowrap}' +
+      '@media print{#suivi-notes,.suivi-voile,#suivi-info,#suivi-guide{display:none!important}}';
     document.head.appendChild(st);
   }
   function fenetre(html) {
@@ -314,10 +317,38 @@
     d.querySelector('button').onclick = function () { var L2 = lire(); L2.infoPg = 1; ecrire(L2); d.remove(); };
   }
 
+  /* ---------- Version 3.6 : guidage par le formateur ---------- */
+  // L'Atelier indique la position du formateur (titre de diapositive, onglet). Interrogé toutes les 15 s, toutes les 4 s pendant
+  // un guidage. La page suit d'office ; l'étudiant peut décrocher (« Naviguer seul ») ou se raccrocher. Rien de saisi n'est touché.
+  var GD = { actif: false, suit: true, p: '', ecoute: false, barre: null, debut: Date.now() };
+  function barreGuide() {
+    style();
+    if (!GD.actif) { if (GD.barre) { GD.barre.remove(); GD.barre = null; } return; }
+    if (!GD.barre) { GD.barre = document.createElement('div'); GD.barre.id = 'suivi-guide'; GD.barre.setAttribute('role', 'status'); document.body.appendChild(GD.barre); }
+    GD.barre.innerHTML = (GD.suit ? 'Le formateur vous guide' : 'Guidage en cours') + ' <button type="button">' + (GD.suit ? 'Naviguer seul' : 'Suivre le formateur') + '</button>';
+    GD.barre.querySelector('button').onclick = function () { GD.suit = !GD.suit; if (GD.suit && GD.p && window.KITDECK) window.KITDECK.aller(GD.p); barreGuide(); };
+  }
+  function suivreGuide() {
+    var app = C().app_id;
+    var encore = function () { if (Date.now() - GD.debut < 6 * 3600000) setTimeout(suivreGuide, GD.actif ? 4000 : 15000); };
+    if (document.visibilityState === 'hidden') return encore();
+    var K = window.KITDECK;
+    if (K && !GD.ecoute) { GD.ecoute = true; K.ecouter(function (e) { if (!e.auto && GD.actif && GD.suit) { GD.suit = false; barreGuide(); } }); }
+    lireGet('pilote=' + encodeURIComponent(app)).then(function (r) {
+      var p = r && r.ok ? String(r.p || '') : '';
+      if (p && !GD.actif) { GD.actif = true; GD.suit = true; }
+      if (!p && GD.actif) { GD.actif = false; GD.p = ''; }
+      if (p && GD.suit && p !== GD.p && K) K.aller(p);
+      if (p) GD.p = p;
+      barreGuide();
+    }).catch(function () {}).then(encore);
+  }
+
   function demarrer() {
     file();
     if (!E() || typeof f0 !== 'function') return;
     setInterval(function () { signal(false); }, 15000);
+    if (C().app_id && !C().dash && !C().code_enseignant) setTimeout(suivreGuide, 3000);
     setTimeout(function () { signal(false); }, 5000);
     window.addEventListener('pagehide', function () { signal(true); });
     var L = lire();

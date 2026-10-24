@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3.6).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3.7).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -18,6 +18,7 @@
  *  – version 3.4 : sur téléphone, le bouton « Mes notes » passe en bas à gauche (il ne cache plus le haut de la page).
  *  – version 3.5 : « C’est mon nom » (l’enseignant est prévenu) ; « Ce n’est pas moi » dans « Mes notes » ; durée de conservation annoncée.
  *  – version 3.6 : guidage par le formateur : quand il allume « Guider les étudiants », la page suit sa diapositive ; « Naviguer seul » pour décrocher.
+ *  – version 3.7 : appel : quand le formateur ouvre l’appel, l’étudiant identifié signale sa présence (« Je suis là »).
  * Les anciens liens personnels (?e=…) et ?p=… restent reconnus. Si ce script ne se charge pas, le cours fonctionne comme avant.
  */
 (function () {
@@ -108,7 +109,9 @@
       '@media (max-width:600px){#suivi-notes{top:auto;right:auto;left:12px;bottom:calc(72px + env(safe-area-inset-bottom,0px));padding:7px 12px}}' +
       '#suivi-guide{position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9001;font:600 13px/1.3 Inter,system-ui,sans-serif;background:#1F3D66;color:#fff;border-radius:20px;padding:7px 8px 7px 14px;box-shadow:0 4px 16px rgba(0,0,0,.2);display:flex;align-items:center;gap:10px;white-space:nowrap;max-width:calc(100vw - 24px)}' +
       '#suivi-guide button{font:inherit;background:#fff;color:#1F3D66;border:0;border-radius:14px;padding:5px 10px;cursor:pointer;white-space:nowrap}' +
-      '@media print{#suivi-notes,.suivi-voile,#suivi-info,#suivi-guide{display:none!important}}';
+      '#suivi-appel{position:fixed;left:50%;top:56px;transform:translateX(-50%);z-index:9001;font:600 14px/1.35 Inter,system-ui,sans-serif;background:#1D6F69;color:#fff;border-radius:14px;padding:10px 10px 10px 16px;box-shadow:0 6px 20px rgba(0,0,0,.22);display:flex;align-items:center;gap:12px;max-width:calc(100vw - 24px)}' +
+      '#suivi-appel button{font:inherit;background:#fff;color:#1D6F69;border:0;border-radius:10px;padding:7px 12px;cursor:pointer;white-space:nowrap}' +
+      '@media print{#suivi-notes,.suivi-voile,#suivi-info,#suivi-guide,#suivi-appel{display:none!important}}';
     document.head.appendChild(st);
   }
   function fenetre(html) {
@@ -328,6 +331,34 @@
     GD.barre.innerHTML = (GD.suit ? 'Le formateur vous guide' : 'Guidage en cours') + ' <button type="button">' + (GD.suit ? 'Naviguer seul' : 'Suivre le formateur') + '</button>';
     GD.barre.querySelector('button').onclick = function () { GD.suit = !GD.suit; if (GD.suit && GD.p && window.KITDECK) window.KITDECK.aller(GD.p); barreGuide(); };
   }
+  // Version 3.7 : appel ouvert par le formateur.
+  var AP = { carte: null };
+  function carteAppel(a) {
+    var L = lire(), cleA = a ? a.jour + '|' + a.demi : '';
+    if (!a || (a.promo && L.p && a.promo !== L.p) || L.pres === cleA) { if (AP.carte && !AP.garder) { AP.carte.remove(); AP.carte = null; } return; }
+    if (AP.carte) return;
+    style();
+    var d = document.createElement('div'); d.id = 'suivi-appel'; d.setAttribute('role', 'status'); AP.carte = d;
+    var msgA = function (t) { d.innerHTML = '<span>' + t + '</span>'; };
+    if (!L.c) {
+      d.innerHTML = '<span>Appel en cours. Choisissez votre nom pour signaler votre présence.</span> <button type="button">Qui êtes-vous ?</button>';
+      d.querySelector('button').onclick = function () { if (LISTE) accueil(); else lireGet('liste=1&app=' + encodeURIComponent(C().app_id || '')).then(function (r) { LISTE = (r && r.etudiants) || []; accueil(); }); };
+    } else {
+      d.innerHTML = '<span>Appel en cours</span> <button type="button">Je suis là</button>';
+      d.querySelector('button').onclick = function () {
+        msgA('Un instant…');
+        poster({ action: 'present', app: C().app_id, code: L.c }).then(function (r) {
+          if (r && r.ok) {
+            var M = lire(); M.pres = cleA; ecrire(M); AP.garder = true;
+            var h = r.le ? new Date(r.le) : new Date();
+            msgA('Présence enregistrée à ' + h.getHours() + '\u00a0h\u00a0' + ('0' + h.getMinutes()).slice(-2) + '. Merci\u00a0!');
+            setTimeout(function () { if (AP.carte === d) { d.remove(); AP.carte = null; AP.garder = false; } }, 5000);
+          } else msgA(r && r.err === 'pas d’appel' ? 'L’appel est clos. Signalez-vous à votre formateur.' : 'Impossible pour l’instant. Signalez-vous à votre formateur.');
+        }).catch(function () { msgA('Impossible pour l’instant. Signalez-vous à votre formateur.'); });
+      };
+    }
+    document.body.appendChild(d);
+  }
   function suivreGuide() {
     var app = C().app_id;
     var encore = function () { if (Date.now() - GD.debut < 6 * 3600000) setTimeout(suivreGuide, GD.actif ? 4000 : 15000); };
@@ -341,6 +372,7 @@
       if (p && GD.suit && p !== GD.p && K) K.aller(p);
       if (p) GD.p = p;
       barreGuide();
+      carteAppel(r && r.ok ? r.appel : null);
     }).catch(function () {}).then(encore);
   }
 

@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3.7).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3.8).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -19,6 +19,7 @@
  *  – version 3.5 : « C’est mon nom » (l’enseignant est prévenu) ; « Ce n’est pas moi » dans « Mes notes » ; durée de conservation annoncée.
  *  – version 3.6 : guidage par le formateur : quand il allume « Guider les étudiants », la page suit sa diapositive ; « Naviguer seul » pour décrocher.
  *  – version 3.7 : appel : quand le formateur ouvre l’appel, l’étudiant identifié signale sa présence (« Je suis là »).
+ *  – version 3.8 : fenêtres au bandeau de l’Atelier du formateur (bleu clair et dessin) sur les pages à la charte Poppins ; les autres chartes ne changent pas.
  * Les anciens liens personnels (?e=…) et ?p=… restent reconnus. Si ce script ne se charge pas, le cours fonctionne comme avant.
  */
 (function () {
@@ -107,6 +108,10 @@
       '#suivi-info{position:fixed;left:16px;right:16px;bottom:96px;z-index:9000;max-width:380px;background:#fff;color:#1B2740;border:1px solid #D8DCE6;border-radius:12px;padding:12px 14px;font:14px/1.45 Inter,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.18)}' +
       '#suivi-info p{margin:0 0 8px}#suivi-info button{font:inherit;font-weight:600;border:1px solid #1F3D66;background:#1F3D66;color:#fff;border-radius:8px;padding:6px 14px;cursor:pointer}' +
       '@media (max-width:600px){#suivi-notes{top:auto;right:auto;left:12px;bottom:calc(72px + env(safe-area-inset-bottom,0px));padding:7px 12px}}' +
+      // 3.8 : bandeau de l’Atelier du formateur pour les pages à la charte Poppins
+      '.suivi-fen.atelier{font-family:Poppins,Inter,system-ui,sans-serif;padding-top:0;overflow:hidden}' +
+      '.suivi-fen.atelier>h2:first-child{margin:0 -24px 12px;padding:24px 150px 20px 24px;background:#C9E2F7 url(\"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27330%27 height=%27150%27 viewBox=%270 0 330 150%27%3E%3Cpath d=%27M20 150V82a62 62 0 0 1 124 0v68z%27 fill=%27%231F3D66%27/%3E%3Cpath d=%27M228 96l84-6 18 60H222z%27 fill=%27%235BC2B4%27/%3E%3Ccircle cx=%27178%27 cy=%2762%27 r=%2758%27 fill=%27%23fff%27/%3E%3Crect x=%27144%27 y=%2754%27 width=%2768%27 height=%2716%27 rx=%278%27 fill=%27%23A8425A%27/%3E%3C/svg%3E\") no-repeat right 14px bottom/auto 62px;color:#1F3D66;font-weight:600;min-height:40px}' +
+      '@media (max-width:420px){.suivi-fen.atelier>h2:first-child{padding-right:24px;background-image:none}}' +
       '#suivi-guide{position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9001;font:600 13px/1.3 Inter,system-ui,sans-serif;background:#1F3D66;color:#fff;border-radius:20px;padding:7px 8px 7px 14px;box-shadow:0 4px 16px rgba(0,0,0,.2);display:flex;align-items:center;gap:10px;white-space:nowrap;max-width:calc(100vw - 24px)}' +
       '#suivi-guide button{font:inherit;background:#fff;color:#1F3D66;border:0;border-radius:14px;padding:5px 10px;cursor:pointer;white-space:nowrap}' +
       '#suivi-appel{position:fixed;left:50%;top:56px;transform:translateX(-50%);z-index:9001;font:600 14px/1.35 Inter,system-ui,sans-serif;background:#1D6F69;color:#fff;border-radius:14px;padding:10px 10px 10px 16px;box-shadow:0 6px 20px rgba(0,0,0,.22);display:flex;align-items:center;gap:12px;max-width:calc(100vw - 24px)}' +
@@ -118,7 +123,8 @@
     style();
     var v = document.querySelector('.suivi-voile');
     if (!v) { v = document.createElement('div'); v.className = 'suivi-voile'; document.body.appendChild(v); }
-    v.innerHTML = '<div class="suivi-fen" role="dialog" aria-modal="true">' + html + '</div>';
+    var atl = false; try { atl = /Poppins/.test(getComputedStyle(document.documentElement).getPropertyValue('--font')); } catch (e) {}
+    v.innerHTML = '<div class="suivi-fen' + (atl ? ' atelier' : '') + '" role="dialog" aria-modal="true">' + html + '</div>';
     return v;
   }
   // Version 3.1 : une seule fenêtre à la fois à l'ouverture de la page.

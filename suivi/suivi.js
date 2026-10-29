@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3.8).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3.9).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -19,6 +19,7 @@
  *  – version 3.5 : « C’est mon nom » (l’enseignant est prévenu) ; « Ce n’est pas moi » dans « Mes notes » ; durée de conservation annoncée.
  *  – version 3.6 : guidage par le formateur : quand il allume « Guider les étudiants », la page suit sa diapositive ; « Naviguer seul » pour décrocher.
  *  – version 3.7 : appel : quand le formateur ouvre l’appel, l’étudiant identifié signale sa présence (« Je suis là »).
+ *  – version 3.9 : lien « Vos données » (page d’information RGPD) dans « Qui êtes-vous ? », « Mes notes » et le message sur l’avancement.
  *  – version 3.8 : fenêtres au bandeau de l’Atelier du formateur (bleu clair et dessin) sur les pages à la charte Poppins ; les autres chartes ne changent pas.
  * Les anciens liens personnels (?e=…) et ?p=… restent reconnus. Si ce script ne se charge pas, le cours fonctionne comme avant.
  */
@@ -29,6 +30,8 @@
   var C = function () { return window.COURS || {}; };
   var cle = function () { return 'suivi-lien-' + (C().app_id || C().cle || location.pathname); };
   var f0 = window.fetch;
+  var LIEN_DONNEES = 'https://pierrickbriand.github.io/outils-ia-pedagogie/atelier/confidentialite.html';
+  var lienDonnees = function () { return ' <a href="' + LIEN_DONNEES + '" target="_blank" rel="noopener">Vos données</a>'; };
 
   function lire() {
     var o = {};
@@ -158,7 +161,7 @@
   function accueil() {
     var nw = document.getElementById('news'); if (nw) nw.remove(); // un nouvel étudiant n'a pas besoin des nouveautés
     var opts = LISTE.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.label) + (x.pris ? ' (déjà choisi)' : '') + '</option>'; }).join('');
-    var v = fenetre('<h2>Qui êtes-vous ?</h2><p class="p">Choisissez votre nom une seule fois. Il identifie votre travail auprès de votre enseignant, qui voit aussi votre avancement dans le cours (séance, diapositive, temps passé), jamais le contenu de vos réponses. Ces informations sont effacées à la fin de l’année scolaire.</p>' +
+    var v = fenetre('<h2>Qui êtes-vous ?</h2><p class="p">Choisissez votre nom une seule fois. Il identifie votre travail auprès de votre enseignant, qui voit aussi votre avancement dans le cours (séance, diapositive, temps passé), jamais le contenu de vos réponses. Ces informations sont effacées à la fin de l’année scolaire.' + lienDonnees() + '</p>' +
       '<label for="s-nom">Votre nom</label><select id="s-nom"><option value="">choisir…</option>' + opts + '</select>' +
       '<label for="s-mail">Votre e-mail (conseillé)</label><input id="s-mail" type="email" autocomplete="email" placeholder="prenom.nom@exemple.fr">' +
       '<p class="p">Il sert uniquement à vous envoyer votre code personnel et vos notes. Il est effacé en fin d’année. Sans e-mail, vous ne pourrez pas récupérer un code perdu.</p>' +
@@ -266,7 +269,7 @@
           return '<div class="n"><div>' + esc(n.livrable) + '</div><div class="v">' + nombre(n.note) + ' / ' + nombre(n.sur) + '</div>' +
             (n.commentaire ? '<div style="white-space:pre-wrap;margin-top:4px">' + esc(String(n.commentaire).replace(/^'/, '')) + '</div>' : '') + '</div>';
         }).join('') : '<p>Aucune note publiée pour l’instant. Elles apparaîtront ici dès que votre enseignant les aura publiées.</p>') +
-        '<p class="p">Connecté en tant que ' + esc(String(L.label || r.prenom || '').replace(/\.$/, '')) + '. <button class="l" type="button" data-a="pasmoi">Ce n’est pas moi</button></p><div class="m" aria-live="polite"></div><button class="b s" type="button">Fermer</button>');
+        '<p class="p">Connecté en tant que ' + esc(String(L.label || r.prenom || '').replace(/\.$/, '')) + '. <button class="l" type="button" data-a="pasmoi">Ce n’est pas moi</button> ·' + lienDonnees() + '</p><div class="m" aria-live="polite"></div><button class="b s" type="button">Fermer</button>');
       v.querySelector('.b').onclick = fermer;
       // Version 3.5 : mauvais nom choisi (ou ordinateur partagé) : le nom est libéré s'il a été choisi depuis peu, sinon l'enseignant est prévenu.
       v.querySelector('[data-a="pasmoi"]').onclick = function () {
@@ -321,7 +324,7 @@
     var L = lire(); if (!(L.c || L.e) || L.infoPg || document.getElementById('suivi-info')) return;
     style();
     var d = document.createElement('div'); d.id = 'suivi-info'; d.setAttribute('role', 'status');
-    d.innerHTML = '<p>Votre enseignant voit votre avancement dans ce cours\u00a0: la séance, la diapositive où vous êtes et le temps passé. Jamais le contenu de vos réponses.</p><button type="button">Compris</button>';
+    d.innerHTML = '<p>Votre enseignant voit votre avancement dans ce cours\u00a0: la séance, la diapositive où vous êtes et le temps passé. Jamais le contenu de vos réponses.' + lienDonnees() + '</p><button type="button">Compris</button>';
     document.body.appendChild(d);
     d.querySelector('button').onclick = function () { var L2 = lire(); L2.infoPg = 1; ecrire(L2); d.remove(); };
   }

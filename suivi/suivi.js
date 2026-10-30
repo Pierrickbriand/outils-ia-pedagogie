@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 3.9).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.0).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -19,6 +19,7 @@
  *  – version 3.5 : « C’est mon nom » (l’enseignant est prévenu) ; « Ce n’est pas moi » dans « Mes notes » ; durée de conservation annoncée.
  *  – version 3.6 : guidage par le formateur : quand il allume « Guider les étudiants », la page suit sa diapositive ; « Naviguer seul » pour décrocher.
  *  – version 3.7 : appel : quand le formateur ouvre l’appel, l’étudiant identifié signale sa présence (« Je suis là »).
+ *  – version 4.0 : bouton « Comment je serai évalué » (critères et barème des travaux notés, pour tous) ; « Mes notes » montre les points critère par critère.
  *  – version 3.9 : lien « Vos données » (page d’information RGPD) dans « Qui êtes-vous ? », « Mes notes » et le message sur l’avancement.
  *  – version 3.8 : fenêtres au bandeau de l’Atelier du formateur (bleu clair et dessin) sur les pages à la charte Poppins ; les autres chartes ne changent pas.
  * Les anciens liens personnels (?e=…) et ?p=… restent reconnus. Si ce script ne se charge pas, le cours fonctionne comme avant.
@@ -96,7 +97,11 @@
     if (styleFait) return; styleFait = true;
     var st = document.createElement('style');
     st.textContent =
-      '#suivi-notes{position:fixed;right:16px;top:12px;z-index:9000;font:600 13px/1.2 Inter,system-ui,sans-serif;background:var(--accent,#1F3D66);color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:20px;padding:8px 14px;box-shadow:0 4px 16px rgba(0,0,0,.18);cursor:pointer}' +
+      '#suivi-btns{position:fixed;right:16px;top:12px;z-index:9000;display:flex;gap:8px;align-items:center}' +
+      '#suivi-eval{font:600 13px/1.2 Inter,system-ui,sans-serif;background:#fff;color:var(--accent,#1F3D66);border:1px solid var(--accent,#1F3D66);border-radius:20px;padding:8px 14px;box-shadow:0 4px 16px rgba(0,0,0,.12);cursor:pointer}' +
+      '.suivi-fen .crit{width:100%;border-collapse:collapse;margin:6px 0 4px;font-size:14px}.suivi-fen .crit td{border-top:1px solid #E3E6EE;padding:6px 4px;vertical-align:top}.suivi-fen .crit td.pt{text-align:right;white-space:nowrap;font-weight:600}.suivi-fen .crit small{display:block;color:#56627A;font-size:12px}' +
+      '.suivi-fen h3{margin:16px 0 2px;font-size:16px}' +
+      '#suivi-notes{font:600 13px/1.2 Inter,system-ui,sans-serif;background:var(--accent,#1F3D66);color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:20px;padding:8px 14px;box-shadow:0 4px 16px rgba(0,0,0,.18);cursor:pointer}' +
       '#suivi-notes b{display:inline-block;margin-left:6px;background:#fff;color:var(--accent,#1F3D66);border-radius:10px;padding:1px 7px;font-size:12px}' +
       '#suivi-notes.neuf{background:#A8425A}' +
       '.suivi-voile{position:fixed;inset:0;background:rgba(20,30,50,.55);z-index:9500;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}' +
@@ -110,7 +115,7 @@
       '.suivi-fen .m{min-height:1.2em;color:#A8425A;font-size:13px;margin-top:10px}.suivi-fen .n{border-top:1px solid #D8DCE6;padding:12px 0}.suivi-fen .v{font-size:18px;font-weight:700}' +
       '#suivi-info{position:fixed;left:16px;right:16px;bottom:96px;z-index:9000;max-width:380px;background:#fff;color:#1B2740;border:1px solid #D8DCE6;border-radius:12px;padding:12px 14px;font:14px/1.45 Inter,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.18)}' +
       '#suivi-info p{margin:0 0 8px}#suivi-info button{font:inherit;font-weight:600;border:1px solid #1F3D66;background:#1F3D66;color:#fff;border-radius:8px;padding:6px 14px;cursor:pointer}' +
-      '@media (max-width:600px){#suivi-notes{top:auto;right:auto;left:12px;bottom:calc(72px + env(safe-area-inset-bottom,0px));padding:7px 12px}}' +
+      '@media (max-width:600px){#suivi-btns{top:auto;right:auto;left:12px;bottom:calc(72px + env(safe-area-inset-bottom,0px));flex-direction:column;align-items:flex-start}#suivi-notes,#suivi-eval{padding:7px 12px}}' +
       // 3.8 : bandeau de l’Atelier du formateur pour les pages à la charte Poppins
       '.suivi-fen.atelier{font-family:Poppins,Inter,system-ui,sans-serif;padding-top:0;overflow:hidden}' +
       '.suivi-fen.atelier>h2:first-child{margin:0 -24px 12px;padding:24px 150px 20px 24px;background:#C9E2F7 url(\"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27330%27 height=%27150%27 viewBox=%270 0 330 150%27%3E%3Cpath d=%27M20 150V82a62 62 0 0 1 124 0v68z%27 fill=%27%231F3D66%27/%3E%3Cpath d=%27M228 96l84-6 18 60H222z%27 fill=%27%235BC2B4%27/%3E%3Ccircle cx=%27178%27 cy=%2762%27 r=%2758%27 fill=%27%23fff%27/%3E%3Crect x=%27144%27 y=%2754%27 width=%2768%27 height=%2716%27 rx=%278%27 fill=%27%23A8425A%27/%3E%3C/svg%3E\") no-repeat right 14px bottom/auto 62px;color:#1F3D66;font-weight:600;min-height:40px}' +
@@ -119,7 +124,7 @@
       '#suivi-guide button{font:inherit;background:#fff;color:#1F3D66;border:0;border-radius:14px;padding:5px 10px;cursor:pointer;white-space:nowrap}' +
       '#suivi-appel{position:fixed;left:50%;top:56px;transform:translateX(-50%);z-index:9001;font:600 14px/1.35 Inter,system-ui,sans-serif;background:#1D6F69;color:#fff;border-radius:14px;padding:10px 10px 10px 16px;box-shadow:0 6px 20px rgba(0,0,0,.22);display:flex;align-items:center;gap:12px;max-width:calc(100vw - 24px)}' +
       '#suivi-appel button{font:inherit;background:#fff;color:#1D6F69;border:0;border-radius:10px;padding:7px 12px;cursor:pointer;white-space:nowrap}' +
-      '@media print{#suivi-notes,.suivi-voile,#suivi-info,#suivi-guide,#suivi-appel{display:none!important}}';
+      '@media print{#suivi-btns,#suivi-notes,.suivi-voile,#suivi-info,#suivi-guide,#suivi-appel{display:none!important}}';
     document.head.appendChild(st);
   }
   function fenetre(html) {
@@ -251,6 +256,30 @@
     if (L.label && m0 && !m0.value) m0.value = L.label;
   }
 
+  /* ---------- 4.0 : zone des boutons et « Comment je serai évalué » ---------- */
+  function zoneBoutons() {
+    style();
+    var z = document.getElementById('suivi-btns');
+    if (!z) { z = document.createElement('div'); z.id = 'suivi-btns'; document.body.appendChild(z); }
+    return z;
+  }
+  function dateFr(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || '')); return m ? m[3] + '/' + m[2] + '/' + m[1] : ''; }
+  function evaluation(r) {
+    var L = (r && r.livrables) || []; if (!L.length || document.getElementById('suivi-eval')) return;
+    var b = document.createElement('button'); b.id = 'suivi-eval'; b.type = 'button'; b.textContent = 'Comment je serai évalué';
+    b.onclick = function () {
+      var v = fenetre('<h2>Comment je serai évalué</h2><p class="p">Les travaux notés de ce cours, avec leurs critères et leur barème.</p>' + L.map(function (l) {
+        var info = [l.travail === 'groupe' ? 'travail en groupe' : 'travail individuel', l.echeance ? 'à rendre le ' + dateFr(l.echeance) : '', 'noté sur ' + nombre(l.sur)].filter(String).join(' · ');
+        return '<h3>' + esc(l.intitule) + '</h3><p class="p" style="margin:0">' + esc(info) + '</p>' +
+          (l.criteres.length ? '<table class="crit">' + l.criteres.map(function (c) { return '<tr><td>' + esc(c.critere) + (c.description ? '<small>' + esc(c.description) + '</small>' : '') + '</td><td class="pt">' + nombre(c.max) + ' pt' + (c.max > 1 ? 's' : '') + '</td></tr>'; }).join('') + '</table>' :
+            '<p style="margin:6px 0">Évaluation globale, notée sur ' + nombre(l.sur) + '.</p>');
+      }).join('') + '<button class="b s" type="button">Fermer</button>');
+      v.querySelector('.b').onclick = fermer;
+      v.onclick = function (e) { if (e.target === v) fermer(); };
+    };
+    var z = zoneBoutons(); z.insertBefore(b, z.firstChild);
+  }
+
   /* ---------- « Mes notes » ---------- */
   function bouton(r, L) {
     style();
@@ -267,6 +296,7 @@
       var v = fenetre('<h2>' + (r.prenom ? esc(r.prenom) + ', vos notes' : 'Vos notes') + '</h2>' +
         (notes.length ? notes.map(function (n) {
           return '<div class="n"><div>' + esc(n.livrable) + '</div><div class="v">' + nombre(n.note) + ' / ' + nombre(n.sur) + '</div>' +
+            (n.detail && n.detail.length ? '<table class="crit">' + n.detail.map(function (d) { return '<tr><td>' + esc(d.critere) + '</td><td class="pt">' + (d.points === null ? '–' : (d.max === null && d.points > 0 ? '+' : '') + nombre(d.points)) + (d.max === null ? '' : ' / ' + nombre(d.max)) + '</td></tr>'; }).join('') + '</table>' : '') +
             (n.commentaire ? '<div style="white-space:pre-wrap;margin-top:4px">' + esc(String(n.commentaire).replace(/^'/, '')) + '</div>' : '') + '</div>';
         }).join('') : '<p>Aucune note publiée pour l’instant. Elles apparaîtront ici dès que votre enseignant les aura publiées.</p>') +
         '<p class="p">Connecté en tant que ' + esc(String(L.label || r.prenom || '').replace(/\.$/, '')) + '. <button class="l" type="button" data-a="pasmoi">Ce n’est pas moi</button> ·' + lienDonnees() + '</p><div class="m" aria-live="polite"></div><button class="b s" type="button">Fermer</button>');
@@ -283,7 +313,7 @@
       };
       v.onclick = function (e) { if (e.target === v) fermer(); };
     };
-    document.body.appendChild(b);
+    zoneBoutons().appendChild(b);
   }
 
   /* ---------- Version 3 : progression ---------- */
@@ -399,6 +429,7 @@
     if (secret) {
       lireGet('retour=' + encodeURIComponent(secret) + '&app=' + encodeURIComponent(C().app_id || '')).then(function (r) { if (r && r.ok) bouton(r, L); }).catch(function () {});
     }
+    if (C().app_id) lireGet('grilles=1&app=' + encodeURIComponent(C().app_id)).then(function (r) { if (r && r.ok) evaluation(r); }).catch(function () {}); // 4.0
     var besoinListe = !secret || document.getElementById('bt-m0');
     if (!besoinListe) return;
     lireGet('liste=1&app=' + encodeURIComponent(C().app_id || '')).then(function (r) {

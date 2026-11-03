@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.0).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.1).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -19,6 +19,7 @@
  *  – version 3.5 : « C’est mon nom » (l’enseignant est prévenu) ; « Ce n’est pas moi » dans « Mes notes » ; durée de conservation annoncée.
  *  – version 3.6 : guidage par le formateur : quand il allume « Guider les étudiants », la page suit sa diapositive ; « Naviguer seul » pour décrocher.
  *  – version 3.7 : appel : quand le formateur ouvre l’appel, l’étudiant identifié signale sa présence (« Je suis là »).
+ *  – version 4.1 : « Comment je serai évalué » rejoint les boutons du menu « Parcours » (Module, Journal, Sauvegarde) quand la page est fabriquée avec le moteur v82 ou plus ; les pages plus anciennes gardent le bouton en haut à droite.
  *  – version 4.0 : bouton « Comment je serai évalué » (critères et barème des travaux notés, pour tous) ; « Mes notes » montre les points critère par critère.
  *  – version 3.9 : lien « Vos données » (page d’information RGPD) dans « Qui êtes-vous ? », « Mes notes » et le message sur l’avancement.
  *  – version 3.8 : fenêtres au bandeau de l’Atelier du formateur (bleu clair et dessin) sur les pages à la charte Poppins ; les autres chartes ne changent pas.
@@ -265,9 +266,9 @@
   }
   function dateFr(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || '')); return m ? m[3] + '/' + m[2] + '/' + m[1] : ''; }
   function evaluation(r) {
-    var L = (r && r.livrables) || []; if (!L.length || document.getElementById('suivi-eval')) return;
-    var b = document.createElement('button'); b.id = 'suivi-eval'; b.type = 'button'; b.textContent = 'Comment je serai évalué';
-    b.onclick = function () {
+    var L = (r && r.livrables) || []; if (!L.length || document.getElementById('suivi-eval') || EVAL_LU) return;
+    EVAL_LU = true;
+    var ouvrir = function () {
       var v = fenetre('<h2>Comment je serai évalué</h2><p class="p">Les travaux notés de ce cours, avec leurs critères et leur barème.</p>' + L.map(function (l) {
         var info = [l.travail === 'groupe' ? 'travail en groupe' : 'travail individuel', l.echeance ? 'à rendre le ' + dateFr(l.echeance) : '', 'noté sur ' + nombre(l.sur)].filter(String).join(' · ');
         return '<h3>' + esc(l.intitule) + '</h3><p class="p" style="margin:0">' + esc(info) + '</p>' +
@@ -277,8 +278,18 @@
       v.querySelector('.b').onclick = fermer;
       v.onclick = function (e) { if (e.target === v) fermer(); };
     };
+    /* 4.1 : moteur v82 et plus : le bouton « #sfEval » du menu Parcours (caché tant que cette classe n'est pas posée). */
+    if (window.KIT_SFEVAL || document.getElementById('sfEval')) {
+      style();
+      document.documentElement.classList.add('suivi-eval-on');
+      document.addEventListener('click', function (e) { var t = e.target && e.target.closest && e.target.closest('#sfEval'); if (t) { e.preventDefault(); ouvrir(); } });
+      return;
+    }
+    var b = document.createElement('button'); b.id = 'suivi-eval'; b.type = 'button'; b.textContent = 'Comment je serai évalué';
+    b.onclick = ouvrir;
     var z = zoneBoutons(); z.insertBefore(b, z.firstChild);
   }
+  var EVAL_LU = false;
 
   /* ---------- « Mes notes » ---------- */
   function bouton(r, L) {

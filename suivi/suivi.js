@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.1).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.2).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -19,6 +19,7 @@
  *  – version 3.5 : « C’est mon nom » (l’enseignant est prévenu) ; « Ce n’est pas moi » dans « Mes notes » ; durée de conservation annoncée.
  *  – version 3.6 : guidage par le formateur : quand il allume « Guider les étudiants », la page suit sa diapositive ; « Naviguer seul » pour décrocher.
  *  – version 3.7 : appel : quand le formateur ouvre l’appel, l’étudiant identifié signale sa présence (« Je suis là »).
+ *  – version 4.2 : copie de sauvegarde. Pour un étudiant identifié, la page envoie à l'Atelier une copie de son travail (réponses, journal, groupe) : 30 secondes au plus entre deux envois, seulement si le contenu a changé. Sur un autre appareil ou un navigateur vide, l'étudiant peut reprendre sa copie (jamais d'écrasement sans son accord). Information unique pour tous les étudiants déjà identifiés.
  *  – version 4.1 : « Comment je serai évalué » rejoint les boutons du menu « Parcours » (Module, Journal, Sauvegarde) quand la page est fabriquée avec le moteur v82 ou plus ; les pages plus anciennes gardent le bouton en haut à droite.
  *  – version 4.0 : bouton « Comment je serai évalué » (critères et barème des travaux notés, pour tous) ; « Mes notes » montre les points critère par critère.
  *  – version 3.9 : lien « Vos données » (page d’information RGPD) dans « Qui êtes-vous ? », « Mes notes » et le message sur l’avancement.
@@ -167,7 +168,7 @@
   function accueil() {
     var nw = document.getElementById('news'); if (nw) nw.remove(); // un nouvel étudiant n'a pas besoin des nouveautés
     var opts = LISTE.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.label) + (x.pris ? ' (déjà choisi)' : '') + '</option>'; }).join('');
-    var v = fenetre('<h2>Qui êtes-vous ?</h2><p class="p">Choisissez votre nom une seule fois. Il identifie votre travail auprès de votre enseignant, qui voit aussi votre avancement dans le cours (séance, diapositive, temps passé), jamais le contenu de vos réponses. Ces informations sont effacées à la fin de l’année scolaire.' + lienDonnees() + '</p>' +
+    var v = fenetre('<h2>Qui êtes-vous ?</h2><p class="p">Choisissez votre nom une seule fois. Il identifie votre travail auprès de votre enseignant, qui voit aussi votre avancement dans le cours (séance, diapositive, temps passé). Une copie de votre travail est gardée dans l’Atelier de votre enseignant pour vous le rendre si vous changez d’appareil. Ces informations sont effacées à la fin de l’année scolaire.' + lienDonnees() + '</p>' +
       '<label for="s-nom">Votre nom</label><select id="s-nom"><option value="">choisir…</option>' + opts + '</select>' +
       '<label for="s-mail">Votre e-mail (conseillé)</label><input id="s-mail" type="email" autocomplete="email" placeholder="prenom.nom@exemple.fr">' +
       '<p class="p">Il sert uniquement à vous envoyer votre code personnel et vos notes. Il est effacé en fin d’année. Sans e-mail, vous ne pourrez pas récupérer un code perdu.</p>' +
@@ -200,7 +201,7 @@
     };
   }
   function montrerCode(r, avecMail) {
-    var L = lire(); L.c = r.code; L.label = r.label; if (r.promo) L.p = r.promo; L.infoPg = 1; delete L.absent; ecrire(L);
+    var L = lire(); L.c = r.code; L.label = r.label; if (r.promo) L.p = r.promo; L.infoPg = 1; L.infoCp = 1; delete L.absent; ecrire(L);
     var v = fenetre('<h2>Bienvenue, ' + esc(String(r.label).split(' ')[0]) + '</h2><p>Votre code personnel :</p><div class="code">' + esc(r.code) + '</div>' +
       '<p class="p">' + (avecMail ? 'Il vient de vous être envoyé par e-mail. ' : 'Notez-le : il vous sera demandé sur un autre appareil. ') + 'Ce navigateur s’en souviendra. Il protège vos notes : ne le partagez pas.</p>' +
       '<button class="b" type="button">Continuer</button>');
@@ -362,12 +363,12 @@
     } catch (x) { /* le suivi ne doit jamais gêner le cours */ }
   }
   function infoProgression() {
-    var L = lire(); if (!(L.c || L.e) || L.infoPg || document.getElementById('suivi-info')) return;
+    var L = lire(); if (!(L.c || L.e) || L.infoCp || document.getElementById('suivi-info')) return;
     style();
     var d = document.createElement('div'); d.id = 'suivi-info'; d.setAttribute('role', 'status');
-    d.innerHTML = '<p>Votre enseignant voit votre avancement dans ce cours\u00a0: la séance, la diapositive où vous êtes et le temps passé. Jamais le contenu de vos réponses.' + lienDonnees() + '</p><button type="button">Compris</button>';
+    d.innerHTML = '<p>Votre enseignant voit votre avancement dans ce cours\u00a0: la séance, la diapositive où vous êtes et le temps passé.</p><p>Une copie de votre travail (réponses, journal, groupe) est aussi gardée dans l’Atelier de votre enseignant : elle sert à vous le rendre si vous changez d’appareil ou perdez votre travail, pas à vous évaluer.' + lienDonnees() + '</p><button type="button">Compris</button>';
     document.body.appendChild(d);
-    d.querySelector('button').onclick = function () { var L2 = lire(); L2.infoPg = 1; ecrire(L2); d.remove(); };
+    d.querySelector('button').onclick = function () { var L2 = lire(); L2.infoPg = 1; L2.infoCp = 1; ecrire(L2); d.remove(); };
   }
 
   /* ---------- Version 3.6 : guidage par le formateur ---------- */
@@ -426,15 +427,81 @@
     }).catch(function () {}).then(encore);
   }
 
+  /* ---------- Version 4.2 : copie de sauvegarde ---------- */
+  // Ce qui est copié : les réponses, le journal, le groupe et la position (quatre clés du navigateur propres au cours).
+  // Jamais plus d'un envoi toutes les 30 s, seulement si le contenu a changé. La copie n'écrase jamais le travail présent sur l'appareil
+  // sans l'accord de l'étudiant ; et tant que la copie de l'Atelier n'a pas été consultée, aucun envoi ne part (un appareil vide ne remplace pas une bonne copie).
+  var CP = { dernier: 0, sig: '', pret: false, cours: false };
+  var CP_CLES = ['-s1-atelier-v1', '-journal-v1', '-groupe-v1', '-s1-pos-v1'];
+  function instantane() {
+    var pre = C().cle; if (!pre) return null;
+    var d = {}, n = 0;
+    CP_CLES.forEach(function (k) { try { var v = localStorage.getItem(pre + k); if (v != null && v !== '' && v !== '{}') { d[pre + k] = v; n += v.length; } } catch (e) {} });
+    return n ? { d: d, n: n } : null;
+  }
+  function empreinte(d) { var t = JSON.stringify(d), h = 5381; for (var i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return t.length + ':' + h; }
+  function copier(fin) {
+    try {
+      var L = lire(), c = C();
+      if (!CP.pret || !L.c || !E() || !c.app_id || !c.cle || c.dash || c.code_enseignant) return;
+      var sn = instantane(); if (!sn || sn.n > 900000) return;
+      var sig = empreinte(sn.d), now = Date.now();
+      if (sig === CP.sig) return;
+      if (!fin && now - CP.dernier < 30000) return;
+      var corps = JSON.stringify({ action: 'copie', app: c.app_id, code: L.c, cle: c.cle, d: sn.d });
+      CP.dernier = now;
+      f0.call(window, E(), { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: corps, keepalive: corps.length < 60000 })
+        .then(function (r) { return r.json(); })
+        .then(function (r) { if (r && r.ok && !r.attente) CP.sig = sig; else if (r && r.retry) CP.dernier = now - 20000; })
+        .catch(function () {});
+    } catch (x) { /* la copie ne doit jamais gêner le cours */ }
+  }
+  function quand(iso) {
+    var d = new Date(iso); if (isNaN(d)) return '';
+    var j = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'][d.getDay()];
+    return j + ' ' + d.getDate() + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + ' à ' + d.getHours() + ' h ' + ('0' + d.getMinutes()).slice(-2);
+  }
+  function proposerReprise(r, local) {
+    var v = fenetre('<h2>Retrouver votre travail ?</h2><p>Une copie de votre travail du <b>' + esc(quand(r.date)) + '</b> est conservée dans l’Atelier de votre enseignant.</p>' +
+      '<p class="p">' + (local ? 'Sur cet appareil, il y a très peu de travail enregistré. Si vous reprenez la copie, ce qui est enregistré ici sera remplacé.' : 'Cet appareil ne contient encore aucun travail pour ce cours.') + '</p>' +
+      '<button class="b" type="button" data-a="oui">Reprendre mon travail</button><button class="b s" type="button" data-a="non">Non, repartir de zéro</button><div class="m" aria-live="polite"></div>');
+    v.onclick = function (e) {
+      var a = e.target.getAttribute && e.target.getAttribute('data-a'); if (!a) return;
+      if (a === 'non') { var N = lire(); N.copieNon = r.date; ecrire(N); fermer(); CP.pret = true; return; }
+      try {
+        if (local) { var pre = C().cle; CP_CLES.forEach(function (k) { localStorage.removeItem(pre + k); }); }
+        for (var k in r.d) if (k.indexOf(C().cle + '-') === 0) localStorage.setItem(k, r.d[k]);
+        var O = lire(); O.copieRepris = r.date; ecrire(O);
+        CP.sig = empreinte(r.d); location.reload();
+      } catch (x) { msg('Impossible de reprendre la copie sur cet appareil. Prévenez votre enseignant.'); }
+    };
+  }
+  function verifierCopie(L) {
+    var c = C();
+    if (!L.c || !c.cle || c.dash || c.code_enseignant) { CP.pret = true; return; }
+    poster({ action: 'copie_lire', app: c.app_id, code: L.c, cle: c.cle }).then(function (r) {
+      CP.pret = true;
+      if (!r || !r.ok || !r.d) return;
+      var local = instantane(), srv = 0; for (var k in r.d) srv += String(r.d[k]).length;
+      var M = lire();
+      if (M.copieNon === r.date || M.copieRepris === r.date) { CP.sig = local ? empreinte(local.d) : ''; return; }
+      if (!local || local.n < 0.25 * srv) { CP.pret = false; proposerReprise(r, !!local); } // l'envoi attend la décision de l'étudiant
+      else if (empreinte(local.d) === empreinte(r.d)) CP.sig = empreinte(r.d);
+    }).catch(function () { CP.pret = true; });
+  }
+
   function demarrer() {
     file();
     if (!E() || typeof f0 !== 'function') return;
     setInterval(function () { signal(false); }, 15000);
     if (C().app_id && !C().dash && !C().code_enseignant) setTimeout(suivreGuide, 3000);
     setTimeout(function () { signal(false); }, 5000);
-    window.addEventListener('pagehide', function () { signal(true); });
+    window.addEventListener('pagehide', function () { signal(true); copier(true); });
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') copier(true); });
+    setInterval(function () { copier(false); }, 10000);
     var L = lire();
-    if ((L.c || L.e) && !L.infoPg) setTimeout(infoProgression, 2500);
+    verifierCopie(L);
+    if ((L.c || L.e) && !L.infoCp) setTimeout(infoProgression, 2500);
     if (L.cNeuf && L.cNeuf !== L.c) { verifierCode(L.cNeuf, false); }
     var secret = L.c || L.e;
     if (secret) {

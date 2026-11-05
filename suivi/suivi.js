@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.3).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.3.1).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -19,6 +19,7 @@
  *  – version 3.5 : « C’est mon nom » (l’enseignant est prévenu) ; « Ce n’est pas moi » dans « Mes notes » ; durée de conservation annoncée.
  *  – version 3.6 : guidage par le formateur : quand il allume « Guider les étudiants », la page suit sa diapositive ; « Naviguer seul » pour décrocher.
  *  – version 3.7 : appel : quand le formateur ouvre l’appel, l’étudiant identifié signale sa présence (« Je suis là »).
+ *  – version 4.3.1 : en mode « Tous ensemble », la page interroge l'Atelier toutes les 2,5 s (4 s en guidage libre, 15 s sans guidage).
  *  – version 4.3 : guidage « Tous ensemble » (le formateur le déclenche ; la page suit son écran sans pouvoir s'en écarter) et invitation « Le rejoindre » pour un étudiant qui navigue seul quand le formateur change d'écran.
  *  – version 4.2.1 : guidage. Un étudiant dont la page s'ouvre (ou démarre) alors que le formateur guide déjà est placé sur son écran ; avant, il restait sur la couverture jusqu'au prochain changement d'écran du formateur.
  *  – version 4.2 : copie de sauvegarde. Pour un étudiant identifié, la page envoie à l'Atelier une copie de son travail (réponses, journal, groupe) : 30 secondes au plus entre deux envois, seulement si le contenu a changé. Sur un autre appareil ou un navigateur vide, l'étudiant peut reprendre sa copie (jamais d'écrasement sans son accord). Information unique pour tous les étudiants déjà identifiés.
@@ -415,7 +416,7 @@
   }
   function suivreGuide() {
     var app = C().app_id;
-    var encore = function () { if (Date.now() - GD.debut < 6 * 3600000) setTimeout(suivreGuide, GD.actif ? 4000 : 15000); };
+    var encore = function () { if (Date.now() - GD.debut < 6 * 3600000) setTimeout(suivreGuide, GD.verrou ? 2500 : (GD.actif ? 4000 : 15000)); };
     if (document.visibilityState === 'hidden') return encore();
     var K = window.KITDECK;
     if (K && !GD.ecoute) { GD.ecoute = true; K.ecouter(function (e) {

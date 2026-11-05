@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.2).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.2.1).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -19,6 +19,7 @@
  *  – version 3.5 : « C’est mon nom » (l’enseignant est prévenu) ; « Ce n’est pas moi » dans « Mes notes » ; durée de conservation annoncée.
  *  – version 3.6 : guidage par le formateur : quand il allume « Guider les étudiants », la page suit sa diapositive ; « Naviguer seul » pour décrocher.
  *  – version 3.7 : appel : quand le formateur ouvre l’appel, l’étudiant identifié signale sa présence (« Je suis là »).
+ *  – version 4.2.1 : guidage. Un étudiant dont la page s'ouvre (ou démarre) alors que le formateur guide déjà est placé sur son écran ; avant, il restait sur la couverture jusqu'au prochain changement d'écran du formateur.
  *  – version 4.2 : copie de sauvegarde. Pour un étudiant identifié, la page envoie à l'Atelier une copie de son travail (réponses, journal, groupe) : 30 secondes au plus entre deux envois, seulement si le contenu a changé. Sur un autre appareil ou un navigateur vide, l'étudiant peut reprendre sa copie (jamais d'écrasement sans son accord). Information unique pour tous les étudiants déjà identifiés.
  *  – version 4.1 : « Comment je serai évalué » rejoint les boutons du menu « Parcours » (Module, Journal, Sauvegarde) quand la page est fabriquée avec le moteur v82 ou plus ; les pages plus anciennes gardent le bouton en haut à droite.
  *  – version 4.0 : bouton « Comment je serai évalué » (critères et barème des travaux notés, pour tous) ; « Mes notes » montre les points critère par critère.
@@ -374,13 +375,13 @@
   /* ---------- Version 3.6 : guidage par le formateur ---------- */
   // L'Atelier indique la position du formateur (titre de diapositive, onglet). Interrogé toutes les 15 s, toutes les 4 s pendant
   // un guidage. La page suit d'office ; l'étudiant peut décrocher (« Naviguer seul ») ou se raccrocher. Rien de saisi n'est touché.
-  var GD = { actif: false, suit: true, p: '', ecoute: false, barre: null, debut: Date.now() };
+  var GD = { actif: false, suit: true, p: '', fait: '', ecoute: false, barre: null, debut: Date.now() };
   function barreGuide() {
     style();
     if (!GD.actif) { if (GD.barre) { GD.barre.remove(); GD.barre = null; } return; }
     if (!GD.barre) { GD.barre = document.createElement('div'); GD.barre.id = 'suivi-guide'; GD.barre.setAttribute('role', 'status'); document.body.appendChild(GD.barre); }
     GD.barre.innerHTML = (GD.suit ? 'Le formateur vous guide' : 'Guidage en cours') + ' <button type="button">' + (GD.suit ? 'Naviguer seul' : 'Suivre le formateur') + '</button>';
-    GD.barre.querySelector('button').onclick = function () { GD.suit = !GD.suit; if (GD.suit && GD.p && window.KITDECK) window.KITDECK.aller(GD.p); barreGuide(); };
+    GD.barre.querySelector('button').onclick = function () { GD.suit = !GD.suit; if (GD.suit && GD.p && window.KITDECK && window.KITDECK.aller(GD.p)) GD.fait = GD.p; barreGuide(); };
   }
   // Version 3.7 : appel ouvert par le formateur.
   var AP = { carte: null };
@@ -419,8 +420,9 @@
     lireGet('pilote=' + encodeURIComponent(app)).then(function (r) {
       var p = r && r.ok ? String(r.p || '') : '';
       if (p && !GD.actif) { GD.actif = true; GD.suit = true; }
-      if (!p && GD.actif) { GD.actif = false; GD.p = ''; }
-      if (p && GD.suit && p !== GD.p && K) K.aller(p);
+      if (!p && GD.actif) { GD.actif = false; GD.p = ''; GD.fait = ''; }
+      // 4.2.1 : on retient la position réellement appliquée (et non la dernière reçue), pour rejoindre un guidage déjà en cours
+      if (p && GD.suit && K && p !== GD.fait && K.aller(p)) GD.fait = p;
       if (p) GD.p = p;
       barreGuide();
       carteAppel(r && r.ok ? r.appel : null);

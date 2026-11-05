@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.2.1).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.3).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -19,6 +19,7 @@
  *  – version 3.5 : « C’est mon nom » (l’enseignant est prévenu) ; « Ce n’est pas moi » dans « Mes notes » ; durée de conservation annoncée.
  *  – version 3.6 : guidage par le formateur : quand il allume « Guider les étudiants », la page suit sa diapositive ; « Naviguer seul » pour décrocher.
  *  – version 3.7 : appel : quand le formateur ouvre l’appel, l’étudiant identifié signale sa présence (« Je suis là »).
+ *  – version 4.3 : guidage « Tous ensemble » (le formateur le déclenche ; la page suit son écran sans pouvoir s'en écarter) et invitation « Le rejoindre » pour un étudiant qui navigue seul quand le formateur change d'écran.
  *  – version 4.2.1 : guidage. Un étudiant dont la page s'ouvre (ou démarre) alors que le formateur guide déjà est placé sur son écran ; avant, il restait sur la couverture jusqu'au prochain changement d'écran du formateur.
  *  – version 4.2 : copie de sauvegarde. Pour un étudiant identifié, la page envoie à l'Atelier une copie de son travail (réponses, journal, groupe) : 30 secondes au plus entre deux envois, seulement si le contenu a changé. Sur un autre appareil ou un navigateur vide, l'étudiant peut reprendre sa copie (jamais d'écrasement sans son accord). Information unique pour tous les étudiants déjà identifiés.
  *  – version 4.1 : « Comment je serai évalué » rejoint les boutons du menu « Parcours » (Module, Journal, Sauvegarde) quand la page est fabriquée avec le moteur v82 ou plus ; les pages plus anciennes gardent le bouton en haut à droite.
@@ -375,13 +376,14 @@
   /* ---------- Version 3.6 : guidage par le formateur ---------- */
   // L'Atelier indique la position du formateur (titre de diapositive, onglet). Interrogé toutes les 15 s, toutes les 4 s pendant
   // un guidage. La page suit d'office ; l'étudiant peut décrocher (« Naviguer seul ») ou se raccrocher. Rien de saisi n'est touché.
-  var GD = { actif: false, suit: true, p: '', fait: '', ecoute: false, barre: null, debut: Date.now() };
+  var GD = { actif: false, suit: true, verrou: false, invit: false, p: '', fait: '', ecoute: false, barre: null, debut: Date.now() };
   function barreGuide() {
     style();
     if (!GD.actif) { if (GD.barre) { GD.barre.remove(); GD.barre = null; } return; }
     if (!GD.barre) { GD.barre = document.createElement('div'); GD.barre.id = 'suivi-guide'; GD.barre.setAttribute('role', 'status'); document.body.appendChild(GD.barre); }
-    GD.barre.innerHTML = (GD.suit ? 'Le formateur vous guide' : 'Guidage en cours') + ' <button type="button">' + (GD.suit ? 'Naviguer seul' : 'Suivre le formateur') + '</button>';
-    GD.barre.querySelector('button').onclick = function () { GD.suit = !GD.suit; if (GD.suit && GD.p && window.KITDECK && window.KITDECK.aller(GD.p)) GD.fait = GD.p; barreGuide(); };
+    if (GD.verrou) { GD.barre.innerHTML = 'Le formateur présente : tout le monde suit son écran'; return; }
+    GD.barre.innerHTML = (GD.suit ? 'Le formateur vous guide' : (GD.invit ? 'Le formateur est passé à un autre écran' : 'Guidage en cours')) + ' <button type="button">' + (GD.suit ? 'Naviguer seul' : (GD.invit ? 'Le rejoindre' : 'Suivre le formateur')) + '</button>';
+    GD.barre.querySelector('button').onclick = function () { GD.suit = !GD.suit; GD.invit = false; if (GD.suit && GD.p && window.KITDECK && window.KITDECK.aller(GD.p)) GD.fait = GD.p; barreGuide(); };
   }
   // Version 3.7 : appel ouvert par le formateur.
   var AP = { carte: null };
@@ -416,13 +418,21 @@
     var encore = function () { if (Date.now() - GD.debut < 6 * 3600000) setTimeout(suivreGuide, GD.actif ? 4000 : 15000); };
     if (document.visibilityState === 'hidden') return encore();
     var K = window.KITDECK;
-    if (K && !GD.ecoute) { GD.ecoute = true; K.ecouter(function (e) { if (!e.auto && GD.actif && GD.suit) { GD.suit = false; barreGuide(); } }); }
+    if (K && !GD.ecoute) { GD.ecoute = true; K.ecouter(function (e) {
+      if (e.auto || !GD.actif) return;
+      if (GD.verrou) { if (GD.p) setTimeout(function () { K.aller(GD.p); }, 0); return; } // « Tous ensemble » : retour immédiat sur l'écran du formateur
+      if (GD.suit) { GD.suit = false; GD.invit = false; barreGuide(); }
+    }); }
     lireGet('pilote=' + encodeURIComponent(app)).then(function (r) {
       var p = r && r.ok ? String(r.p || '') : '';
       if (p && !GD.actif) { GD.actif = true; GD.suit = true; }
-      if (!p && GD.actif) { GD.actif = false; GD.p = ''; GD.fait = ''; }
+      if (!p && GD.actif) { GD.actif = false; GD.p = ''; GD.fait = ''; GD.verrou = false; GD.invit = false; }
+      var v = !!(p && r && r.v);
+      if (v && !GD.verrou) { GD.suit = true; GD.invit = false; GD.fait = ''; } // le verrou s'impose, même à un étudiant qui naviguait seul
+      GD.verrou = v;
+      if (p && !GD.suit && GD.p && p !== GD.p) GD.invit = true; // invitation à rejoindre : le formateur a changé d'écran
       // 4.2.1 : on retient la position réellement appliquée (et non la dernière reçue), pour rejoindre un guidage déjà en cours
-      if (p && GD.suit && K && p !== GD.fait && K.aller(p)) GD.fait = p;
+      if (p && GD.suit && K && (p !== GD.fait || (GD.verrou && K.position && K.position() !== p)) && K.aller(p)) GD.fait = p; // verrouillé : on ramène aussi un étudiant qui a changé d'onglet
       if (p) GD.p = p;
       barreGuide();
       carteAppel(r && r.ok ? r.appel : null);

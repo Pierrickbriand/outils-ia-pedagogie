@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.3.1).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.4.0).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -19,6 +19,10 @@
  *  – version 3.5 : « C’est mon nom » (l’enseignant est prévenu) ; « Ce n’est pas moi » dans « Mes notes » ; durée de conservation annoncée.
  *  – version 3.6 : guidage par le formateur : quand il allume « Guider les étudiants », la page suit sa diapositive ; « Naviguer seul » pour décrocher.
  *  – version 3.7 : appel : quand le formateur ouvre l’appel, l’étudiant identifié signale sa présence (« Je suis là »).
+ *  – version 4.4 : « Mon nom n’est pas dans la liste » ne ferme plus la fenêtre pour toujours : l’étudiant donne son nom, l’enseignant est prévenu,
+ *    et la fenêtre revient à chaque ouverture tant qu’aucun nom n’est choisi. Mode test du formateur (?test=formateur : rien n’est enregistré,
+ *    valable pour l’onglet). Interface pour le moteur : window.SUIVI (état, heure de la dernière copie réussie, rouvrir la fenêtre, « Ce n’est pas moi »)
+ *    et l’évènement « suivi:etat » à chaque changement.
  *  – version 4.3.1 : en mode « Tous ensemble », la page interroge l'Atelier toutes les 2,5 s (4 s en guidage libre, 15 s sans guidage).
  *  – version 4.3 : guidage « Tous ensemble » (le formateur le déclenche ; la page suit son écran sans pouvoir s'en écarter) et invitation « Le rejoindre » pour un étudiant qui navigue seul quand le formateur change d'écran.
  *  – version 4.2.1 : guidage. Un étudiant dont la page s'ouvre (ou démarre) alors que le formateur guide déjà est placé sur son écran ; avant, il restait sur la couverture jusqu'au prochain changement d'écran du formateur.
@@ -34,6 +38,9 @@
   var q = {};
   try { new URLSearchParams(location.search).forEach(function (v, k) { q[k] = v; }); } catch (e) {}
   var C = function () { return window.COURS || {}; };
+  // 4.4 : mode test du formateur. Valable pour l'onglet ouvert ; aucune identité lue ni écrite, aucun envoi.
+  var TEST = false;
+  try { if (q.test === 'formateur') sessionStorage.setItem('suivi-test', '1'); TEST = sessionStorage.getItem('suivi-test') === '1'; } catch (e) { TEST = q.test === 'formateur'; }
   var cle = function () { return 'suivi-lien-' + (C().app_id || C().cle || location.pathname); };
   var f0 = window.fetch;
   var LIEN_DONNEES = 'https://pierrickbriand.github.io/outils-ia-pedagogie/atelier/confidentialite.html';
@@ -41,13 +48,14 @@
 
   function lire() {
     var o = {};
+    if (TEST) return o;
     try { o = JSON.parse(localStorage.getItem(cle()) || '{}') || {}; } catch (e) { o = {}; }
     if (q.e && /^[a-z0-9]{6,20}$/i.test(q.e)) o.e = q.e;
     if (q.p) o.p = String(q.p).slice(0, 40);
     if (q.c && /^[a-z0-9]{6,12}$/i.test(q.c)) o.cNeuf = String(q.c).toUpperCase();
     return o;
   }
-  function ecrire(o) { try { localStorage.setItem(cle(), JSON.stringify(o)); } catch (e) {} }
+  function ecrire(o) { if (TEST) return; try { localStorage.setItem(cle(), JSON.stringify(o)); } catch (e) {} }
   function E() { return C().envoi_url || ''; }
   function poster(corps) {
     return f0.call(window, E(), { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(corps), redirect: 'follow' })
@@ -81,6 +89,7 @@
       } catch (e) { /* en cas de doute, l'envoi part tel quel */ }
       // Version 3.3 : quand l'Atelier répond « occupé » (toute la classe envoie en même temps), on réessaie tout seul, 4 fois au plus.
       var envoi = E() && typeof url === 'string' && url.indexOf(E()) === 0 && opt && String(opt.method).toUpperCase() === 'POST';
+      if (envoi && TEST) { try { return Promise.resolve(new Response(JSON.stringify({ ok: false, test: true, err: 'mode test : rien n’est enregistré' }), { headers: { 'Content-Type': 'application/json' } })); } catch (x) { return Promise.reject(new Error('mode test')); } }
       if (!envoi) return f0.call(window, url, opt);
       var essai = function (n) {
         return f0.call(window, url, opt).then(function (r) {
@@ -129,7 +138,7 @@
       '#suivi-guide button{font:inherit;background:#fff;color:#1F3D66;border:0;border-radius:14px;padding:5px 10px;cursor:pointer;white-space:nowrap}' +
       '#suivi-appel{position:fixed;left:50%;top:56px;transform:translateX(-50%);z-index:9001;font:600 14px/1.35 Inter,system-ui,sans-serif;background:#1D6F69;color:#fff;border-radius:14px;padding:10px 10px 10px 16px;box-shadow:0 6px 20px rgba(0,0,0,.22);display:flex;align-items:center;gap:12px;max-width:calc(100vw - 24px)}' +
       '#suivi-appel button{font:inherit;background:#fff;color:#1D6F69;border:0;border-radius:10px;padding:7px 12px;cursor:pointer;white-space:nowrap}' +
-      '@media print{#suivi-btns,#suivi-notes,.suivi-voile,#suivi-info,#suivi-guide,#suivi-appel{display:none!important}}';
+      '@media print{#suivi-btns,#suivi-notes,.suivi-voile,#suivi-info,#suivi-guide,#suivi-appel,#suivi-test{display:none!important}}';
     document.head.appendChild(st);
   }
   function fenetre(html) {
@@ -179,7 +188,7 @@
       '<br><button class="l" type="button" data-a="code">J’ai déjà un code</button><button class="l" type="button" data-a="absent">Mon nom n’est pas dans la liste</button><div class="m" aria-live="polite"></div>');
     v.onclick = function (e) {
       var a = e.target.getAttribute && e.target.getAttribute('data-a'); if (!a) return;
-      if (a === 'absent') { var L = lire(); L.absent = Date.now(); ecrire(L); fermer(); return; }
+      if (a === 'absent') return absent(); // 4.4 : ne contourne plus la fenêtre
       if (a === 'code') return saisirCode('');
       if (a === 'corr') { v.querySelector('#s-mail').value = e.target.getAttribute('data-v'); v._mailVu = ''; return msg('Adresse corrigée. Cliquez sur « C’est moi ».'); }
       var id = v.querySelector('#s-nom').value, mail = v.querySelector('#s-mail').value.trim();
@@ -201,6 +210,29 @@
         if (r && r.err === 'pris') return saisirCode(id);
         msg(r && r.err === 'e-mail invalide' ? 'Cette adresse e-mail ne semble pas valide.' : 'Impossible pour l’instant. Vérifiez votre connexion et réessayez.');
       }).catch(function () { e.target.disabled = false; msg('Impossible pour l’instant. Vérifiez votre connexion et réessayez.'); });
+    };
+  }
+  // 4.4 : nom absent de la liste. L'étudiant donne son nom, l'enseignant est prévenu ; la fenêtre reviendra à la prochaine ouverture.
+  var ABSENT_VU = false;
+  function absent() {
+    var v = fenetre('<h2>Votre nom n’est pas dans la liste</h2><p class="p">Indiquez votre nom\u00a0: votre enseignant sera prévenu et vous ajoutera. Vous choisirez ensuite votre nom à la prochaine ouverture du cours.</p>' +
+      '<label for="s-anom">Nom</label><input id="s-anom" autocomplete="family-name" maxlength="60">' +
+      '<label for="s-apre">Prénom</label><input id="s-apre" autocomplete="given-name" maxlength="60">' +
+      '<button class="b" type="button" data-a="prevenir">Prévenir mon enseignant</button><button class="b s" type="button" data-a="retour">Retour à la liste</button><div class="m" aria-live="polite"></div>');
+    var fin = function (t) {
+      var L = lire(); L.absent = Date.now(); ecrire(L); ABSENT_VU = true; publier();
+      v.querySelector('.suivi-fen').innerHTML = '<h2>C’est noté</h2><p>' + t + '</p><p class="p">En attendant, vous pouvez travailler, mais votre travail reste seulement sur cet appareil\u00a0: il n’est pas encore sauvegardé chez votre enseignant.</p><button class="b" type="button" data-a="fin">Continuer</button>';
+    };
+    v.onclick = function (e) {
+      var a = e.target.getAttribute && e.target.getAttribute('data-a'); if (!a) return;
+      if (a === 'retour') return accueil();
+      if (a === 'fin') return fermer();
+      var nom = v.querySelector('#s-anom').value.trim(), pre = v.querySelector('#s-apre').value.trim();
+      if (nom.length < 2 || pre.length < 2) return msg('Indiquez votre nom et votre prénom.');
+      e.target.disabled = true; msg('Un instant…');
+      poster({ action: 'absent', app: C().app_id, nom: nom, prenom: pre }).then(function (r) {
+        fin(r && r.ok ? 'Votre enseignant est prévenu.' : 'Le message n’a pas pu partir. Prévenez directement votre enseignant.');
+      }).catch(function () { fin('Le message n’a pas pu partir. Prévenez directement votre enseignant.'); });
     };
   }
   function montrerCode(r, avecMail) {
@@ -317,18 +349,23 @@
         '<p class="p">Connecté en tant que ' + esc(String(L.label || r.prenom || '').replace(/\.$/, '')) + '. <button class="l" type="button" data-a="pasmoi">Ce n’est pas moi</button> ·' + lienDonnees() + '</p><div class="m" aria-live="polite"></div><button class="b s" type="button">Fermer</button>');
       v.querySelector('.b').onclick = fermer;
       // Version 3.5 : mauvais nom choisi (ou ordinateur partagé) : le nom est libéré s'il a été choisi depuis peu, sinon l'enseignant est prévenu.
-      v.querySelector('[data-a="pasmoi"]').onclick = function () {
-        if (!window.confirm('Vous déconnecter de ce nom\u00a0? Si vous l’avez choisi par erreur ces derniers jours, il sera libéré pour son vrai titulaire.')) return;
-        var code = lire().c;
-        var sortir = function (t) { var M3 = lire(); delete M3.c; delete M3.label; delete M3.e; delete M3.vu; ecrire(M3); msg(t); setTimeout(function () { location.reload(); }, 2500); };
-        if (!code) return sortir('Vous êtes déconnecté.');
-        poster({ action: 'liberer', app: C().app_id, code: code }).then(function (r) {
-          sortir(r && r.ok && r.libere ? 'Nom libéré. Choisissez maintenant votre vrai nom.' : r && r.ok ? 'Vous êtes déconnecté. Votre enseignant est prévenu et vérifiera.' : 'Vous êtes déconnecté. Prévenez votre enseignant si vous aviez choisi un mauvais nom.');
-        }).catch(function () { sortir('Vous êtes déconnecté. Prévenez votre enseignant si vous aviez choisi un mauvais nom.'); });
-      };
+      v.querySelector('[data-a="pasmoi"]').onclick = function () { pasMoi(msg); };
       v.onclick = function (e) { if (e.target === v) fermer(); };
     };
     zoneBoutons().appendChild(b);
+  }
+
+  // Version 3.5 (fonction commune en 4.4) : mauvais nom choisi, ou ordinateur partagé. Le nom est libéré s'il a été choisi depuis peu, sinon l'enseignant est prévenu.
+  function pasMoi(dire) {
+    if (TEST) return;
+    if (!window.confirm('Vous déconnecter de ce nom\u00a0? Si vous l’avez choisi par erreur ces derniers jours, il sera libéré pour son vrai titulaire.')) return;
+    dire = dire || function (t) { var m = fenetre('<h2>Déconnexion</h2><p>' + esc(t) + '</p>'); return m; };
+    var code = lire().c;
+    var sortir = function (t) { var M3 = lire(); delete M3.c; delete M3.label; delete M3.e; delete M3.vu; delete M3.copieOk; ecrire(M3); dire(t); setTimeout(function () { location.reload(); }, 2500); };
+    if (!code) return sortir('Vous êtes déconnecté.');
+    poster({ action: 'liberer', app: C().app_id, code: code }).then(function (r) {
+      sortir(r && r.ok && r.libere ? 'Nom libéré. Choisissez maintenant votre vrai nom.' : r && r.ok ? 'Vous êtes déconnecté. Votre enseignant est prévenu et vérifiera.' : 'Vous êtes déconnecté. Prévenez votre enseignant si vous aviez choisi un mauvais nom.');
+    }).catch(function () { sortir('Vous êtes déconnecté. Prévenez votre enseignant si vous aviez choisi un mauvais nom.'); });
   }
 
   /* ---------- Version 3 : progression ---------- */
@@ -348,7 +385,7 @@
   function signal(fin) {
     try {
       var L = lire(), c = C();
-      if ((!L.c && !L.e) || !E() || !c.app_id || c.dash || c.code_enseignant) return;
+      if (TEST || (!L.c && !L.e) || !E() || !c.app_id || c.dash || c.code_enseignant) return;
       var e = etatPage(); if (!e) return;
       var cache = document.visibilityState === 'hidden', sig = JSON.stringify(e) + cache, now = Date.now();
       if (cache && !fin) { if (!PG.hd) PG.hd = now; if (now - PG.hd > 20 * 60000) return; } else PG.hd = 0; // onglet caché plus de 20 min : silence
@@ -456,7 +493,7 @@
   function copier(fin) {
     try {
       var L = lire(), c = C();
-      if (!CP.pret || !L.c || !E() || !c.app_id || !c.cle || c.dash || c.code_enseignant) return;
+      if (TEST || !CP.pret || !L.c || !E() || !c.app_id || !c.cle || c.dash || c.code_enseignant) return;
       var sn = instantane(); if (!sn || sn.n > 900000) return;
       var sig = empreinte(sn.d), now = Date.now();
       if (sig === CP.sig) return;
@@ -465,8 +502,11 @@
       CP.dernier = now;
       f0.call(window, E(), { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: corps, keepalive: corps.length < 60000 })
         .then(function (r) { return r.json(); })
-        .then(function (r) { if (r && r.ok && !r.attente) CP.sig = sig; else if (r && r.retry) CP.dernier = now - 20000; })
-        .catch(function () {});
+        .then(function (r) {
+          if (r && r.ok && !r.attente) { CP.sig = sig; CP.ok = Date.now(); ATL.ok = true; var M = lire(); M.copieOk = CP.ok; ecrire(M); publier(); } // 4.4 : heure de la dernière copie réussie
+          else if (r && r.retry) CP.dernier = now - 20000;
+        })
+        .catch(function () { ATL.ok = false; publier(); });
     } catch (x) { /* la copie ne doit jamais gêner le cours */ }
   }
   function quand(iso) {
@@ -493,18 +533,49 @@
     var c = C();
     if (!L.c || !c.cle || c.dash || c.code_enseignant) { CP.pret = true; return; }
     poster({ action: 'copie_lire', app: c.app_id, code: L.c, cle: c.cle }).then(function (r) {
-      CP.pret = true;
-      if (!r || !r.ok || !r.d) return;
+      CP.pret = true; ATL.ok = !!(r && (r.ok || r.retry));
+      if (!r || !r.ok || !r.d) return publier();
       var local = instantane(), srv = 0; for (var k in r.d) srv += String(r.d[k]).length;
       var M = lire();
       if (M.copieNon === r.date || M.copieRepris === r.date) { CP.sig = local ? empreinte(local.d) : ''; return; }
       if (!local || local.n < 0.25 * srv) { CP.pret = false; proposerReprise(r, !!local); } // l'envoi attend la décision de l'étudiant
-      else if (empreinte(local.d) === empreinte(r.d)) CP.sig = empreinte(r.d);
-    }).catch(function () { CP.pret = true; });
+      else if (empreinte(local.d) === empreinte(r.d)) { CP.sig = empreinte(r.d); var dr = new Date(r.date).getTime(); if (dr && !CP.ok) CP.ok = dr; }
+      publier();
+    }).catch(function () { CP.pret = true; ATL.ok = false; publier(); });
+  }
+
+  /* ---------- 4.4 : interface pour le moteur du cours ----------
+     window.SUIVI.etat() : { version, test, identifie, label, prenom, absent, atelier (true, false ou null si pas encore su),
+       copie: { active, derniere (horodatage ms ou null), aJour } }.
+     window.SUIVI.ouvrir() rouvre « Qui êtes-vous ? » ; window.SUIVI.pasMoi() déconnecte (« Ce n’est pas moi »).
+     L'évènement « suivi:etat » (detail = état) part à chaque changement. */
+  var ATL = { ok: null };
+  function etat() {
+    var L = lire(), c = C(), sn = null; try { sn = instantane(); } catch (e) {}
+    var ident = !!(L.c || L.e), lab = String(L.label || '').replace(/\.$/, '');
+    return {
+      version: '4.4.0', test: TEST, identifie: ident, label: lab, prenom: lab ? lab.split(' ')[0] : '', absent: !ident && !!L.absent, atelier: ATL.ok,
+      copie: { active: !!(c.cle && c.app_id && !c.dash && !c.code_enseignant && L.c && !TEST), derniere: CP.ok || L.copieOk || null, aJour: !sn || (!!CP.sig && CP.sig === empreinte(sn.d)) }
+    };
+  }
+  function publier() { try { document.dispatchEvent(new CustomEvent('suivi:etat', { detail: etat() })); } catch (e) {} }
+  function ouvrirQui() {
+    if (TEST) return;
+    if (LISTE && LISTE.length) return accueil();
+    lireGet('liste=1&app=' + encodeURIComponent(C().app_id || '')).then(function (r) { ATL.ok = !!(r && r.ok); LISTE = (r && r.ok && r.etudiants) || []; publier(); if (LISTE.length) accueil(); }).catch(function () { ATL.ok = false; publier(); });
+  }
+  window.SUIVI = { version: '4.4.0', etat: etat, ouvrir: ouvrirQui, pasMoi: function () { pasMoi(null); } };
+  function bandeauTest() {
+    if (!TEST || window.KIT_TEMOIN || document.getElementById('suivi-test')) return; // le moteur 104 affiche son propre bandeau
+    var d = document.createElement('div'); d.id = 'suivi-test'; d.setAttribute('role', 'status');
+    d.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:9600;background:#A8425A;color:#fff;font:600 14px/1.4 Inter,system-ui,sans-serif;text-align:center;padding:8px 12px';
+    d.textContent = 'Mode test\u00a0: rien n’est enregistré (valable pour cet onglet seulement)';
+    document.body.appendChild(d);
   }
 
   function demarrer() {
     file();
+    if (TEST) { setTimeout(bandeauTest, 300); publier(); if (E() && C().app_id && !C().dash && !C().code_enseignant) setTimeout(suivreGuide, 3000); return; } // 4.4 : le formateur voit la page, sans identité ni envoi
     if (!E() || typeof f0 !== 'function') return;
     setInterval(function () { signal(false); }, 15000);
     if (C().app_id && !C().dash && !C().code_enseignant) setTimeout(suivreGuide, 3000);
@@ -518,16 +589,18 @@
     if (L.cNeuf && L.cNeuf !== L.c) { verifierCode(L.cNeuf, false); }
     var secret = L.c || L.e;
     if (secret) {
-      lireGet('retour=' + encodeURIComponent(secret) + '&app=' + encodeURIComponent(C().app_id || '')).then(function (r) { if (r && r.ok) bouton(r, L); }).catch(function () {});
+      lireGet('retour=' + encodeURIComponent(secret) + '&app=' + encodeURIComponent(C().app_id || '')).then(function (r) { ATL.ok = !!(r && (r.ok || r.retry)); publier(); if (r && r.ok) bouton(r, L); }).catch(function () { ATL.ok = false; publier(); });
     }
     if (C().app_id) lireGet('grilles=1&app=' + encodeURIComponent(C().app_id)).then(function (r) { if (r && r.ok) evaluation(r); }).catch(function () {}); // 4.0
+    publier();
     var besoinListe = !secret || document.getElementById('bt-m0');
     if (!besoinListe) return;
     lireGet('liste=1&app=' + encodeURIComponent(C().app_id || '')).then(function (r) {
-      LISTE = (r && r.ok && r.etudiants) || [];
+      ATL.ok = !!(r && r.ok); LISTE = (r && r.ok && r.etudiants) || [];
       suggestions(); setTimeout(suggestions, 1500);
-      if (!secret && LISTE.length && !L.absent) accueil();
-    }).catch(function () {});
+      publier();
+      if (!secret && LISTE.length && !ABSENT_VU) accueil(); // 4.4 : la fenêtre revient à chaque ouverture tant qu'aucun nom n'est choisi
+    }).catch(function () { ATL.ok = false; publier(); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', demarrer); else demarrer();
 })();

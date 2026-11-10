@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.4.0).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.5.0).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -19,6 +19,10 @@
  *  – version 3.5 : « C’est mon nom » (l’enseignant est prévenu) ; « Ce n’est pas moi » dans « Mes notes » ; durée de conservation annoncée.
  *  – version 3.6 : guidage par le formateur : quand il allume « Guider les étudiants », la page suit sa diapositive ; « Naviguer seul » pour décrocher.
  *  – version 3.7 : appel : quand le formateur ouvre l’appel, l’étudiant identifié signale sa présence (« Je suis là »).
+ *  – version 4.5 : changement d’appareil. Sur un appareil vide, la copie de l’Atelier est reprise toute seule (sans fenêtre) : le moteur ne
+ *    montre plus l’écran du groupe. Un appareil qui a déjà du travail garde la fenêtre « Retrouver votre travail ? ». L’Atelier renvoie un
+ *    numéro de copie (rev) à chaque copie : window.SUIVI.etat().copie.rev le donne au moteur, qui le renvoie dans chaque envoi (champ base).
+ *    window.SUIVI.copie() donne la copie reçue après identification. À l’écran du code, « Copier » et « Télécharger » (le jour de sa création).
  *  – version 4.4 : « Mon nom n’est pas dans la liste » ne ferme plus la fenêtre pour toujours : l’étudiant donne son nom, l’enseignant est prévenu,
  *    et la fenêtre revient à chaque ouverture tant qu’aucun nom n’est choisi. Mode test du formateur (?test=formateur : rien n’est enregistré,
  *    valable pour l’onglet). Interface pour le moteur : window.SUIVI (état, heure de la dernière copie réussie, rouvrir la fenêtre, « Ce n’est pas moi »)
@@ -239,8 +243,36 @@
     var L = lire(); L.c = r.code; L.label = r.label; if (r.promo) L.p = r.promo; L.infoPg = 1; L.infoCp = 1; delete L.absent; ecrire(L);
     var v = fenetre('<h2>Bienvenue, ' + esc(String(r.label).split(' ')[0]) + '</h2><p>Votre code personnel :</p><div class="code">' + esc(r.code) + '</div>' +
       '<p class="p">' + (avecMail ? 'Il vient de vous être envoyé par e-mail. ' : 'Notez-le : il vous sera demandé sur un autre appareil. ') + 'Ce navigateur s’en souviendra. Il protège vos notes : ne le partagez pas.</p>' +
+      '<div class="actions" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center"><button class="l" type="button" data-a="copier">Copier</button><button class="l" type="button" data-a="telecharger">Télécharger</button></div>' +
+      '<div class="m" aria-live="polite"></div>' +
       '<button class="b" type="button">Continuer</button>');
     v.querySelector('.b').onclick = function () { location.reload(); };
+    v.onclick = function (e) { // remplace le gestionnaire de la fenêtre « Qui êtes-vous ? » (même élément)
+      var a = e.target.getAttribute && e.target.getAttribute('data-a'); if (!a) return;
+      if (a === 'copier') return copierCode(r.code, v);
+      if (a === 'telecharger') return telechargerCode(r, v);
+    };
+  }
+  // 4.5 : « Copier » et « Télécharger » sur l'écran du code, le jour où il est créé
+  function dire(v, t) { var m = v.querySelector('.m'); if (m) m.textContent = t; }
+  function copierCode(code, v) {
+    var secours = function () {
+      var t = document.createElement('textarea'); t.value = code; t.setAttribute('readonly', ''); t.style.position = 'fixed'; t.style.opacity = '0';
+      document.body.appendChild(t); t.select(); var fait = false; try { fait = document.execCommand('copy'); } catch (x) {} t.remove();
+      dire(v, fait ? 'Code copié.' : 'Copie impossible : sélectionnez le code et copiez-le.');
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(function () { dire(v, 'Code copié.'); }, secours);
+    else secours();
+  }
+  function telechargerCode(r, v) {
+    var c = C(), nom = c.etiquette || c.titre || c.app_id || 'ce cours';
+    var txt = 'Code personnel pour « ' + nom + ' »\n\n' + r.code + '\n\nGardez-le : il vous permet de reprendre votre travail sur un autre appareil.\n';
+    try {
+      var u = URL.createObjectURL(new Blob([txt], { type: 'text/plain;charset=utf-8' })), a = document.createElement('a');
+      a.href = u; a.download = 'mon-code-' + (c.app_id || 'cours') + '.txt'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(u); }, 4000);
+      dire(v, 'Le fichier est téléchargé.');
+    } catch (x) { dire(v, 'Téléchargement impossible : notez le code.'); }
   }
   function saisirCode(id) {
     var v = fenetre('<h2>Votre code personnel</h2>' + (id ? '<p class="p">Ce nom a déjà été choisi. Si c’est bien le vôtre, saisissez votre code.</p>' : '<p class="p">Saisissez le code reçu à votre première connexion.</p>') +
@@ -481,7 +513,10 @@
   // Ce qui est copié : les réponses, le journal, le groupe et la position (quatre clés du navigateur propres au cours).
   // Jamais plus d'un envoi toutes les 30 s, seulement si le contenu a changé. La copie n'écrase jamais le travail présent sur l'appareil
   // sans l'accord de l'étudiant ; et tant que la copie de l'Atelier n'a pas été consultée, aucun envoi ne part (un appareil vide ne remplace pas une bonne copie).
-  var CP = { dernier: 0, sig: '', pret: false, cours: false };
+  var CP = { dernier: 0, sig: '', pret: false, cours: false, verifiee: false, rev: null, copie: null };
+  // 4.5 : numéro de copie (rev) donné par l'Atelier ; gardé dans suivi-lien pour l'ouverture suivante.
+  function gardeRev(v) { if (v == null || v === '') return; CP.rev = v; var M = lire(); M.rev = v; ecrire(M); }
+  function revCourante() { if (CP.rev != null) return CP.rev; var v = lire().rev; return v == null ? null : v; }
   var CP_CLES = ['-s1-atelier-v1', '-journal-v1', '-groupe-v1', '-s1-pos-v1'];
   function instantane() {
     var pre = C().cle; if (!pre) return null;
@@ -503,7 +538,7 @@
       f0.call(window, E(), { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: corps, keepalive: corps.length < 60000 })
         .then(function (r) { return r.json(); })
         .then(function (r) {
-          if (r && r.ok && !r.attente) { CP.sig = sig; CP.ok = Date.now(); ATL.ok = true; var M = lire(); M.copieOk = CP.ok; ecrire(M); publier(); } // 4.4 : heure de la dernière copie réussie
+          if (r && r.ok && !r.attente) { CP.sig = sig; CP.ok = Date.now(); ATL.ok = true; var M = lire(); M.copieOk = CP.ok; ecrire(M); gardeRev(r.rev); publier(); } // 4.4 : heure de la dernière copie réussie ; 4.5 : rev
           else if (r && r.retry) CP.dernier = now - 20000;
         })
         .catch(function () { ATL.ok = false; publier(); });
@@ -520,7 +555,7 @@
       '<button class="b" type="button" data-a="oui">Reprendre mon travail</button><button class="b s" type="button" data-a="non">Non, repartir de zéro</button><div class="m" aria-live="polite"></div>');
     v.onclick = function (e) {
       var a = e.target.getAttribute && e.target.getAttribute('data-a'); if (!a) return;
-      if (a === 'non') { var N = lire(); N.copieNon = r.date; ecrire(N); fermer(); CP.pret = true; return; }
+      if (a === 'non') { var N = lire(); N.copieNon = r.date; ecrire(N); fermer(); CP.pret = true; CP.verifiee = true; publier(); return; }
       try {
         if (local) { var pre = C().cle; CP_CLES.forEach(function (k) { localStorage.removeItem(pre + k); }); }
         for (var k in r.d) if (k.indexOf(C().cle + '-') === 0) localStorage.setItem(k, r.d[k]);
@@ -529,19 +564,33 @@
       } catch (x) { msg('Impossible de reprendre la copie sur cet appareil. Prévenez votre enseignant.'); }
     };
   }
+  // 4.5 : écrit les quatre clés du cours de la copie puis recharge la page, sauf si le moteur sait s'en passer (KIT_REPRISE).
+  function reprendre(r, local, sansRecharger) {
+    var pre = C().cle;
+    if (local) CP_CLES.forEach(function (k) { localStorage.removeItem(pre + k); });
+    for (var k in r.d) if (k.indexOf(pre + '-') === 0) localStorage.setItem(k, r.d[k]);
+    var O = lire(); O.copieRepris = r.date; ecrire(O);
+    CP.sig = empreinte(r.d); CP.pret = true; CP.verifiee = true;
+    publier();
+    if (!sansRecharger || !window.KIT_REPRISE) location.reload();
+  }
   function verifierCopie(L) {
     var c = C();
-    if (!L.c || !c.cle || c.dash || c.code_enseignant) { CP.pret = true; return; }
+    if (!L.c || !c.cle || c.dash || c.code_enseignant) { CP.pret = true; CP.verifiee = true; return; }
     poster({ action: 'copie_lire', app: c.app_id, code: L.c, cle: c.cle }).then(function (r) {
       CP.pret = true; ATL.ok = !!(r && (r.ok || r.retry));
-      if (!r || !r.ok || !r.d) return publier();
+      if (r && r.ok) gardeRev(r.rev);
+      if (!r || !r.ok || !r.d) { CP.verifiee = true; return publier(); }
+      CP.copie = { date: r.date, rev: r.rev == null ? null : r.rev, d: r.d };
       var local = instantane(), srv = 0; for (var k in r.d) srv += String(r.d[k]).length;
       var M = lire();
-      if (M.copieNon === r.date || M.copieRepris === r.date) { CP.sig = local ? empreinte(local.d) : ''; return; }
-      if (!local || local.n < 0.25 * srv) { CP.pret = false; proposerReprise(r, !!local); } // l'envoi attend la décision de l'étudiant
+      if (M.copieNon === r.date || M.copieRepris === r.date) { CP.sig = local ? empreinte(local.d) : ''; CP.verifiee = true; return publier(); }
+      if (!local) return reprendre(r, false, true); // 4.5 : appareil vide : rien à écraser, la copie revient sans fenêtre
+      if (local.n < 0.25 * srv) { CP.pret = false; CP.verifiee = true; proposerReprise(r, true); } // l'envoi attend la décision de l'étudiant
       else if (empreinte(local.d) === empreinte(r.d)) { CP.sig = empreinte(r.d); var dr = new Date(r.date).getTime(); if (dr && !CP.ok) CP.ok = dr; }
+      CP.verifiee = true;
       publier();
-    }).catch(function () { CP.pret = true; ATL.ok = false; publier(); });
+    }).catch(function () { CP.pret = true; CP.verifiee = true; ATL.ok = false; publier(); });
   }
 
   /* ---------- 4.4 : interface pour le moteur du cours ----------
@@ -554,8 +603,8 @@
     var L = lire(), c = C(), sn = null; try { sn = instantane(); } catch (e) {}
     var ident = !!(L.c || L.e), lab = String(L.label || '').replace(/\.$/, '');
     return {
-      version: '4.4.0', test: TEST, identifie: ident, label: lab, prenom: lab ? lab.split(' ')[0] : '', absent: !ident && !!L.absent, atelier: ATL.ok,
-      copie: { active: !!(c.cle && c.app_id && !c.dash && !c.code_enseignant && L.c && !TEST), derniere: CP.ok || L.copieOk || null, aJour: !sn || (!!CP.sig && CP.sig === empreinte(sn.d)) }
+      version: '4.5.0', test: TEST, identifie: ident, label: lab, prenom: lab ? lab.split(' ')[0] : '', absent: !ident && !!L.absent, atelier: ATL.ok,
+      copie: { active: !!(c.cle && c.app_id && !c.dash && !c.code_enseignant && L.c && !TEST), derniere: CP.ok || L.copieOk || null, aJour: !sn || (!!CP.sig && CP.sig === empreinte(sn.d)), verifiee: !!CP.verifiee, rev: revCourante() }
     };
   }
   function publier() { try { document.dispatchEvent(new CustomEvent('suivi:etat', { detail: etat() })); } catch (e) {} }
@@ -564,7 +613,8 @@
     if (LISTE && LISTE.length) return accueil();
     lireGet('liste=1&app=' + encodeURIComponent(C().app_id || '')).then(function (r) { ATL.ok = !!(r && r.ok); LISTE = (r && r.ok && r.etudiants) || []; publier(); if (LISTE.length) accueil(); }).catch(function () { ATL.ok = false; publier(); });
   }
-  window.SUIVI = { version: '4.4.0', etat: etat, ouvrir: ouvrirQui, pasMoi: function () { pasMoi(null); } };
+  // 4.5 : copie() donne la copie reçue de l'Atelier après identification (date, rev, d = clés du cours), ou null.
+  window.SUIVI = { version: '4.5.0', etat: etat, ouvrir: ouvrirQui, pasMoi: function () { pasMoi(null); }, copie: function () { return CP.copie ? { date: CP.copie.date, rev: CP.copie.rev, d: CP.copie.d } : null; } };
   function bandeauTest() {
     if (!TEST || window.KIT_TEMOIN || document.getElementById('suivi-test')) return; // le moteur 104 affiche son propre bandeau
     var d = document.createElement('div'); d.id = 'suivi-test'; d.setAttribute('role', 'status');

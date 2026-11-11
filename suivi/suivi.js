@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.5.0).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.5.1).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -35,6 +35,7 @@
  *  – version 4.0 : bouton « Comment je serai évalué » (critères et barème des travaux notés, pour tous) ; « Mes notes » montre les points critère par critère.
  *  – version 3.9 : lien « Vos données » (page d’information RGPD) dans « Qui êtes-vous ? », « Mes notes » et le message sur l’avancement.
  *  – version 3.8 : fenêtres au bandeau de l’Atelier du formateur (bleu clair et dessin) sur les pages à la charte Poppins ; les autres chartes ne changent pas.
+ *  – 4.5.1 : le code d'un lien ?c=… est retiré de la barre d'adresse dès que l'Atelier a répondu (code reconnu ou non).
  * Les anciens liens personnels (?e=…) et ?p=… restent reconnus. Si ce script ne se charge pas, le cours fonctionne comme avant.
  */
 (function () {
@@ -305,9 +306,18 @@
       verifierCode(code, true);
     };
   }
+  // 4.5.1 : adresse de la page sans le paramètre c (null si absent)
+  function adresseSansC() {
+    try { var u = new URL(location.href); if (!u.searchParams.has('c')) return null; u.searchParams.delete('c'); return u.pathname + u.search + u.hash; } catch (e) { return null; }
+  }
+  function retirerC() {
+    var a = adresseSansC(); delete q.c;
+    if (a) { try { history.replaceState(history.state, '', a); } catch (e) {} }
+  }
   function verifierCode(code, interactif) {
     return poster({ action: 'code', app: C().app_id, code: code }).then(function (r) {
-      if (r && r.ok) { var L = lire(); L.c = code; L.label = r.label; if (r.promo) L.p = r.promo; delete L.cNeuf; delete L.absent; ecrire(L); location.reload(); return; }
+      if (r && r.ok) { var L = lire(); L.c = code; L.label = r.label; if (r.promo) L.p = r.promo; delete L.cNeuf; delete L.absent; ecrire(L); var a = adresseSansC(); if (a) location.replace(a); else location.reload(); return; }
+      if (!interactif && r) retirerC();
       if (interactif) msg(r && r.err === 'patienter' ? 'Trop d’essais en peu de temps. Réessayez dans une demi-heure.' : 'Ce code n’est pas reconnu pour ce cours.');
     }).catch(function () { if (interactif) msg('Impossible pour l’instant. Vérifiez votre connexion.'); });
   }
@@ -636,7 +646,7 @@
     var L = lire();
     verifierCopie(L);
     if ((L.c || L.e) && !L.infoCp) setTimeout(infoProgression, 2500);
-    if (L.cNeuf && L.cNeuf !== L.c) { verifierCode(L.cNeuf, false); }
+    if (L.cNeuf && L.cNeuf !== L.c) { verifierCode(L.cNeuf, false); } else if (L.cNeuf) { retirerC(); }
     var secret = L.c || L.e;
     if (secret) {
       lireGet('retour=' + encodeURIComponent(secret) + '&app=' + encodeURIComponent(C().app_id || '')).then(function (r) { ATL.ok = !!(r && (r.ok || r.retry)); publier(); if (r && r.ok) bouton(r, L); }).catch(function () { ATL.ok = false; publier(); });

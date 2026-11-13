@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.5.1).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.5.2).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -35,6 +35,7 @@
  *  – version 4.0 : bouton « Comment je serai évalué » (critères et barème des travaux notés, pour tous) ; « Mes notes » montre les points critère par critère.
  *  – version 3.9 : lien « Vos données » (page d’information RGPD) dans « Qui êtes-vous ? », « Mes notes » et le message sur l’avancement.
  *  – version 3.8 : fenêtres au bandeau de l’Atelier du formateur (bleu clair et dessin) sur les pages à la charte Poppins ; les autres chartes ne changent pas.
+ *  – 4.5.2 : si l'Atelier répond « lien inconnu » (nom libéré, code supprimé), l'appareil se déconnecte seul, le travail reste sur l'appareil et la fenêtre « Qui êtes-vous ? » s'ouvre. Plus de faux « Atelier injoignable » dans ce cas.
  *  – 4.5.1 : le code d'un lien ?c=… est retiré de la barre d'adresse dès que l'Atelier a répondu (code reconnu ou non).
  * Les anciens liens personnels (?e=…) et ?p=… restent reconnus. Si ce script ne se charge pas, le cours fonctionne comme avant.
  */
@@ -313,6 +314,19 @@
   function retirerC() {
     var a = adresseSansC(); delete q.c;
     if (a) { try { history.replaceState(history.state, '', a); } catch (e) {} }
+  }
+  // 4.5.2 : l'Atelier a répondu « lien inconnu » : le nom a été libéré (« Ce n'est pas moi » fait depuis un autre appareil, ou par le formateur) ou le code n'existe plus.
+  // L'appareil oublie son identité (jamais le travail du cours, stocké sous d'autres clés), puis propose de choisir à nouveau le nom.
+  // Réservé à cette réponse définitive : ni « patienter » (verrou après trop d'essais), ni panne réseau, ni réponse vide ne déconnectent.
+  var REFUS = false;
+  function identiteRefusee() {
+    if (REFUS || TEST) return; REFUS = true;
+    var M = lire(); delete M.c; delete M.e; delete M.cNeuf; delete M.label; delete M.vu; delete M.copieOk; ecrire(M);
+    delete q.e; retirerC();
+    CP.pret = true; CP.verifiee = true; ATL.ok = true; publier();
+    var v = fenetre('<h2>Choisissez de nouveau votre nom</h2><p class="p">Votre nom a été libéré, ou votre code n’est plus reconnu pour ce cours. Votre travail reste enregistré sur cet appareil.</p>' +
+      '<button class="b" type="button" data-a="nom">Choisir mon nom</button>');
+    v.onclick = function (e) { if (e.target.getAttribute && e.target.getAttribute('data-a') === 'nom') { fermer(); ouvrirQui(); } };
   }
   function verifierCode(code, interactif) {
     return poster({ action: 'code', app: C().app_id, code: code }).then(function (r) {
@@ -649,7 +663,7 @@
     if (L.cNeuf && L.cNeuf !== L.c) { verifierCode(L.cNeuf, false); } else if (L.cNeuf) { retirerC(); }
     var secret = L.c || L.e;
     if (secret) {
-      lireGet('retour=' + encodeURIComponent(secret) + '&app=' + encodeURIComponent(C().app_id || '')).then(function (r) { ATL.ok = !!(r && (r.ok || r.retry)); publier(); if (r && r.ok) bouton(r, L); }).catch(function () { ATL.ok = false; publier(); });
+      lireGet('retour=' + encodeURIComponent(secret) + '&app=' + encodeURIComponent(C().app_id || '')).then(function (r) { if (r && r.ok === false && r.err === 'lien inconnu') return identiteRefusee(); ATL.ok = !!(r && (r.ok || r.retry)); publier(); if (r && r.ok) bouton(r, L); }).catch(function () { ATL.ok = false; publier(); });
     }
     if (C().app_id) lireGet('grilles=1&app=' + encodeURIComponent(C().app_id)).then(function (r) { if (r && r.ok) evaluation(r); }).catch(function () {}); // 4.0
     publier();

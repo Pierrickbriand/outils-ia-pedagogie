@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.5.2).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.5.3).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -36,6 +36,7 @@
  *  – version 3.9 : lien « Vos données » (page d’information RGPD) dans « Qui êtes-vous ? », « Mes notes » et le message sur l’avancement.
  *  – version 3.8 : fenêtres au bandeau de l’Atelier du formateur (bleu clair et dessin) sur les pages à la charte Poppins ; les autres chartes ne changent pas.
  *  – 4.5.2 : si l'Atelier répond « lien inconnu » (nom libéré, code supprimé), l'appareil se déconnecte seul, le travail reste sur l'appareil et la fenêtre « Qui êtes-vous ? » s'ouvre. Plus de faux « Atelier injoignable » dans ce cas.
+ *  – 4.5.3 : habillage des fenêtres du suivi aux couleurs du site (verre, bouton arrondi, entrée en douceur, sans mouvement si l'appareil le demande). Aucun changement de fonctionnement.
  *  – 4.5.1 : le code d'un lien ?c=… est retiré de la barre d'adresse dès que l'Atelier a répondu (code reconnu ou non).
  * Les anciens liens personnels (?e=…) et ?p=… restent reconnus. Si ce script ne se charge pas, le cours fonctionne comme avant.
  */
@@ -144,6 +145,16 @@
       '#suivi-guide button{font:inherit;background:#fff;color:#1F3D66;border:0;border-radius:14px;padding:5px 10px;cursor:pointer;white-space:nowrap}' +
       '#suivi-appel{position:fixed;left:50%;top:56px;transform:translateX(-50%);z-index:9001;font:600 14px/1.35 Inter,system-ui,sans-serif;background:#1D6F69;color:#fff;border-radius:14px;padding:10px 10px 10px 16px;box-shadow:0 6px 20px rgba(0,0,0,.22);display:flex;align-items:center;gap:12px;max-width:calc(100vw - 24px)}' +
       '#suivi-appel button{font:inherit;background:#fff;color:#1D6F69;border:0;border-radius:10px;padding:7px 12px;cursor:pointer;white-space:nowrap}' +
+      '.suivi-voile{-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);background:rgba(20,33,59,.5);animation:suivi-fond .35s ease-out}' +
+      '.suivi-fen{position:relative;background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-radius:24px;box-shadow:0 8px 32px rgba(31,61,102,.18),inset 0 1px 0 rgba(255,255,255,.95);font-family:Poppins,Inter,system-ui,sans-serif;animation:suivi-entre .45s cubic-bezier(.2,.8,.2,1)}' +
+      '.suivi-fen::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;background:linear-gradient(135deg,#fff 0%,rgba(255,255,255,.3) 45%,rgba(255,255,255,0) 80%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude}' +
+      '.suivi-fen select,.suivi-fen input{border-radius:12px}' +
+      '.suivi-fen a{color:#1D6F69}' +
+      '.suivi-fen .b{border-radius:999px;padding:12px 24px;transition:transform .15s ease-out,filter .15s ease-out}' +
+      '.suivi-fen .b:active{transform:scale(.96);filter:brightness(.92);transition:none}' +
+      '.suivi-fen .b.s{background:#EEEAFB;border-color:#EEEAFB;color:#2E2A6B}' +
+      '@keyframes suivi-fond{from{opacity:0}to{opacity:1}}@keyframes suivi-entre{from{opacity:0;transform:translateY(24px) scale(.98)}to{opacity:1;transform:none}}' +
+      '@media (prefers-reduced-motion:reduce){.suivi-voile,.suivi-fen{animation:none}.suivi-fen .b{transition:none}}' +
       '@media print{#suivi-btns,#suivi-notes,.suivi-voile,#suivi-info,#suivi-guide,#suivi-appel,#suivi-test{display:none!important}}';
     document.head.appendChild(st);
   }

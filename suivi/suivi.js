@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.5.3).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.5.4).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -35,6 +35,7 @@
  *  – version 4.0 : bouton « Comment je serai évalué » (critères et barème des travaux notés, pour tous) ; « Mes notes » montre les points critère par critère.
  *  – version 3.9 : lien « Vos données » (page d’information RGPD) dans « Qui êtes-vous ? », « Mes notes » et le message sur l’avancement.
  *  – version 3.8 : fenêtres au bandeau de l’Atelier du formateur (bleu clair et dessin) sur les pages à la charte Poppins ; les autres chartes ne changent pas.
+ *  – 4.5.4 : textes plus courts dans « Qui êtes-vous ? » (introduction et e-mail) ; après « Prévenir mon enseignant », le message ne promet plus que l'étudiant peut travailler (certains cours exigent un nom de la liste). Aucun changement de fonctionnement.
  *  – 4.5.2 : si l'Atelier répond « lien inconnu » (nom libéré, code supprimé), l'appareil se déconnecte seul, le travail reste sur l'appareil et la fenêtre « Qui êtes-vous ? » s'ouvre. Plus de faux « Atelier injoignable » dans ce cas.
  *  – 4.5.3 : habillage des fenêtres du suivi aux couleurs du site (verre, bouton arrondi, entrée en douceur, sans mouvement si l'appareil le demande). Aucun changement de fonctionnement.
  *  – 4.5.1 : le code d'un lien ?c=… est retiré de la barre d'adresse dès que l'Atelier a répondu (code reconnu ou non).
@@ -197,10 +198,10 @@
   function accueil() {
     var nw = document.getElementById('news'); if (nw) nw.remove(); // un nouvel étudiant n'a pas besoin des nouveautés
     var opts = LISTE.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.label) + (x.pris ? ' (déjà choisi)' : '') + '</option>'; }).join('');
-    var v = fenetre('<h2>Qui êtes-vous ?</h2><p class="p">Choisissez votre nom une seule fois. Il identifie votre travail auprès de votre enseignant, qui voit aussi votre avancement dans le cours (séance, diapositive, temps passé). Une copie de votre travail est gardée dans l’Atelier de votre enseignant pour vous le rendre si vous changez d’appareil. Ces informations sont effacées à la fin de l’année scolaire.' + lienDonnees() + '</p>' +
+    var v = fenetre('<h2>Qui êtes-vous ?</h2><p class="p">Choisissez votre nom une seule fois. Votre enseignant voit votre avancement et vos travaux, gardés dans son Atelier jusqu’à la fin de l’année scolaire.' + lienDonnees() + '</p>' +
       '<label for="s-nom">Votre nom</label><select id="s-nom"><option value="">choisir…</option>' + opts + '</select>' +
       '<label for="s-mail">Votre e-mail (conseillé)</label><input id="s-mail" type="email" autocomplete="email" placeholder="prenom.nom@exemple.fr">' +
-      '<p class="p">Il sert uniquement à vous envoyer votre code personnel et vos notes. Il est effacé en fin d’année. Sans e-mail, vous ne pourrez pas récupérer un code perdu.</p>' +
+      '<p class="p">Il sert uniquement à vous envoyer votre code personnel et vos notes, et à retrouver un code perdu. Sans e-mail, un code perdu ne peut pas être récupéré.</p>' +
       '<button class="b" type="button" data-a="moi">C’est moi</button>' +
       '<br><button class="l" type="button" data-a="code">J’ai déjà un code</button><button class="l" type="button" data-a="absent">Mon nom n’est pas dans la liste</button><div class="m" aria-live="polite"></div>');
     v.onclick = function (e) {
@@ -238,7 +239,7 @@
       '<button class="b" type="button" data-a="prevenir">Prévenir mon enseignant</button><button class="b s" type="button" data-a="retour">Retour à la liste</button><div class="m" aria-live="polite"></div>');
     var fin = function (t) {
       var L = lire(); L.absent = Date.now(); ecrire(L); ABSENT_VU = true; publier();
-      v.querySelector('.suivi-fen').innerHTML = '<h2>C’est noté</h2><p>' + t + '</p><p class="p">En attendant, vous pouvez travailler, mais votre travail reste seulement sur cet appareil\u00a0: il n’est pas encore sauvegardé chez votre enseignant.</p><button class="b" type="button" data-a="fin">Continuer</button>';
+      v.querySelector('.suivi-fen').innerHTML = '<h2>C’est noté</h2><p>' + t + '</p><p class="p">Quand il vous aura ajouté, rechargez cette page et choisissez votre nom. Selon le cours, vous ne pourrez commencer qu’à ce moment-là.</p><button class="b" type="button" data-a="fin">Continuer</button>';
     };
     v.onclick = function (e) {
       var a = e.target.getAttribute && e.target.getAttribute('data-a'); if (!a) return;

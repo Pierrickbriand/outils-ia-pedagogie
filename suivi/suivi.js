@@ -36,7 +36,7 @@
  *  – version 3.9 : lien « Vos données » (page d’information RGPD) dans « Qui êtes-vous ? », « Mes notes » et le message sur l’avancement.
  *  – version 3.8 : fenêtres au bandeau de l’Atelier du formateur (bleu clair et dessin) sur les pages à la charte Poppins ; les autres chartes ne changent pas.
  *  – 4.5.4 : textes plus courts dans « Qui êtes-vous ? » (introduction et e-mail) ; après « Prévenir mon enseignant », le message ne promet plus que l'étudiant peut travailler (certains cours exigent un nom de la liste). Aucun changement de fonctionnement.
- *  – 4.6.0 : cours à compte par e-mail. Si la page « Mon compte » du site a gardé le code personnel de l'étudiant dans ce navigateur, il est reconnu sans fenêtre « Qui êtes-vous ? » (un seul essai par cours et par navigateur). Sans compte dans le navigateur, rien ne change.
+ *  – 4.6.0 : cours à compte par e-mail. Si la page « Mon compte » du site a gardé le code personnel de l'étudiant dans ce navigateur, il est reconnu sans fenêtre « Qui êtes-vous ? » (un seul essai par cours et par navigateur). Sans compte dans le navigateur, rien ne change. Le lien « Vos données » ouvre maintenant la page des mentions du site (pierrickbriand.fr).
  *  – 4.5.2 : si l'Atelier répond « lien inconnu » (nom libéré, code supprimé), l'appareil se déconnecte seul, le travail reste sur l'appareil et la fenêtre « Qui êtes-vous ? » s'ouvre. Plus de faux « Atelier injoignable » dans ce cas.
  *  – 4.5.3 : habillage des fenêtres du suivi aux couleurs du site (verre, bouton arrondi, entrée en douceur, sans mouvement si l'appareil le demande). Aucun changement de fonctionnement.
  *  – 4.5.1 : le code d'un lien ?c=… est retiré de la barre d'adresse dès que l'Atelier a répondu (code reconnu ou non).
@@ -52,7 +52,7 @@
   try { if (q.test === 'formateur') sessionStorage.setItem('suivi-test', '1'); TEST = sessionStorage.getItem('suivi-test') === '1'; } catch (e) { TEST = q.test === 'formateur'; }
   var cle = function () { return 'suivi-lien-' + (C().app_id || C().cle || location.pathname); };
   var f0 = window.fetch;
-  var LIEN_DONNEES = 'https://pierrickbriand.github.io/outils-ia-pedagogie/atelier/confidentialite.html';
+  var LIEN_DONNEES = 'https://pierrickbriand.fr/mentions.html#donnees';
   var lienDonnees = function () { return ' <a href="' + LIEN_DONNEES + '" target="_blank" rel="noopener">Vos données</a>'; };
 
   function lire() {

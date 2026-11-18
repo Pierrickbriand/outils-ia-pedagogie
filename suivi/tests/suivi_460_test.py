@@ -58,6 +58,8 @@ async def main():
         ok(L.get('c') == 'KM4P7XQ2' and L.get('label') == 'Pierrick B.', 'code et nom gardés pour ce cours')
         ok(codes == ['KM4P7XQ2'], 'un seul essai envoyé à l\'Atelier')
         ok(await pg.evaluate("()=>{var a=document.getElementById('suivi-cours');return !!a&&a.getAttribute('href')==='/compte'&&a.textContent==='Mes cours'}"), '4.6.1 : lien « Mes cours » vers /compte')
+        ok(await pg.evaluate("()=>{var z=document.getElementById('suivi-btns'),n=document.getElementById('suivi-nom');return !!z&&z.classList.contains('carte')&&!!n&&n.textContent==='Pierrick B'&&!!z.querySelector('#suivi-cours')&&!!z.querySelector('#suivi-notes')}"), '4.6.2 : une carte avec le prénom, « Mes cours » et « Mes notes »')
+        if os.environ.get('CAPTURE'): await pg.screenshot(path=os.environ['CAPTURE'])
         ok(not errs, 'aucune erreur de page : ' + str(errs))
         await ctx.close()
 

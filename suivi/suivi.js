@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.6.1).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.6.2).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -36,6 +36,7 @@
  *  – version 3.9 : lien « Vos données » (page d’information RGPD) dans « Qui êtes-vous ? », « Mes notes » et le message sur l’avancement.
  *  – version 3.8 : fenêtres au bandeau de l’Atelier du formateur (bleu clair et dessin) sur les pages à la charte Poppins ; les autres chartes ne changent pas.
  *  – 4.5.4 : textes plus courts dans « Qui êtes-vous ? » (introduction et e-mail) ; après « Prévenir mon enseignant », le message ne promet plus que l'étudiant peut travailler (certains cours exigent un nom de la liste). Aucun changement de fonctionnement.
+ *  – 4.6.2 : les boutons du haut de page (« Mes cours », « Mes notes », « Comment je serai évalué ») sont réunis dans une seule carte, avec le prénom de l'étudiant connecté.
  *  – 4.6.1 : cours à compte par e-mail : un lien « Mes cours » (vers /compte) à côté de « Mes notes », pour revenir à la liste de ses cours.
  *  – 4.6.0 : cours à compte par e-mail. Si la page « Mon compte » du site a gardé le code personnel de l'étudiant dans ce navigateur, il est reconnu sans fenêtre « Qui êtes-vous ? » (un seul essai par cours et par navigateur). Sans compte dans le navigateur, rien ne change. Le lien « Vos données » ouvre maintenant la page des mentions du site (pierrickbriand.fr).
  *  – 4.5.2 : si l'Atelier répond « lien inconnu » (nom libéré, code supprimé), l'appareil se déconnecte seul, le travail reste sur l'appareil et la fenêtre « Qui êtes-vous ? » s'ouvre. Plus de faux « Atelier injoignable » dans ce cas.
@@ -125,6 +126,9 @@
       '#suivi-eval{font:600 13px/1.2 Inter,system-ui,sans-serif;background:#fff;color:var(--accent,#1F3D66);border:1px solid var(--accent,#1F3D66);border-radius:20px;padding:8px 14px;box-shadow:0 4px 16px rgba(0,0,0,.12);cursor:pointer}' +
       '.suivi-fen .crit{width:100%;border-collapse:collapse;margin:6px 0 4px;font-size:14px}.suivi-fen .crit td{border-top:1px solid #E3E6EE;padding:6px 4px;vertical-align:top}.suivi-fen .crit td.pt{text-align:right;white-space:nowrap;font-weight:600}.suivi-fen .crit small{display:block;color:#56627A;font-size:12px}' +
       '.suivi-fen h3{margin:16px 0 2px;font-size:16px}' +
+      '#suivi-btns.carte{flex-wrap:wrap;justify-content:flex-end;max-width:min(380px,calc(100vw - 32px));padding:10px 12px;border-radius:20px;background:rgba(255,255,255,.88);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.9);box-shadow:0 8px 28px rgba(31,61,102,.2)}' +
+      '#suivi-btns.carte button,#suivi-btns.carte a{box-shadow:none}' +
+      '#suivi-nom{flex:1 0 100%;font:600 12px/1.2 Inter,system-ui,sans-serif;color:var(--accent,#1F3D66);padding:0 4px 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
       '#suivi-cours{font:600 13px/1.2 Inter,system-ui,sans-serif;background:#fff;color:var(--accent,#1F3D66);border:1px solid var(--accent,#1F3D66);border-radius:20px;padding:8px 14px;box-shadow:0 4px 16px rgba(0,0,0,.12);text-decoration:none}' +
       '#suivi-notes{font:600 13px/1.2 Inter,system-ui,sans-serif;background:var(--accent,#1F3D66);color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:20px;padding:8px 14px;box-shadow:0 4px 16px rgba(0,0,0,.18);cursor:pointer}' +
       '#suivi-notes b{display:inline-block;margin-left:6px;background:#fff;color:var(--accent,#1F3D66);border-radius:10px;padding:1px 7px;font-size:12px}' +
@@ -140,7 +144,7 @@
       '.suivi-fen .m{min-height:1.2em;color:#A8425A;font-size:13px;margin-top:10px}.suivi-fen .n{border-top:1px solid #D8DCE6;padding:12px 0}.suivi-fen .v{font-size:18px;font-weight:700}' +
       '#suivi-info{position:fixed;left:16px;right:16px;bottom:96px;z-index:9000;max-width:380px;background:#fff;color:#1B2740;border:1px solid #D8DCE6;border-radius:12px;padding:12px 14px;font:14px/1.45 Inter,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.18)}' +
       '#suivi-info p{margin:0 0 8px}#suivi-info button{font:inherit;font-weight:600;border:1px solid #1F3D66;background:#1F3D66;color:#fff;border-radius:8px;padding:6px 14px;cursor:pointer}' +
-      '@media (max-width:600px){#suivi-btns{top:auto;right:auto;left:12px;bottom:calc(72px + env(safe-area-inset-bottom,0px));flex-direction:column;align-items:flex-start}#suivi-notes,#suivi-eval{padding:7px 12px}}' +
+      '@media (max-width:600px){#suivi-btns{top:auto;right:auto;left:12px;bottom:calc(72px + env(safe-area-inset-bottom,0px));flex-direction:column;align-items:flex-start}#suivi-btns.carte{flex-direction:row;justify-content:flex-start;max-width:calc(100vw - 24px)}#suivi-notes,#suivi-eval{padding:7px 12px}}' +
       // 3.8 : bandeau de l’Atelier du formateur pour les pages à la charte Poppins
       '.suivi-fen.atelier{font-family:Poppins,Inter,system-ui,sans-serif;padding-top:0;overflow:hidden}' +
       '.suivi-fen.atelier>h2:first-child{margin:0 -24px 12px;padding:24px 150px 20px 24px;background:#C9E2F7 url(\"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27330%27 height=%27150%27 viewBox=%270 0 330 150%27%3E%3Cpath d=%27M20 150V82a62 62 0 0 1 124 0v68z%27 fill=%27%231F3D66%27/%3E%3Cpath d=%27M228 96l84-6 18 60H222z%27 fill=%27%235BC2B4%27/%3E%3Ccircle cx=%27178%27 cy=%2762%27 r=%2758%27 fill=%27%23fff%27/%3E%3Crect x=%27144%27 y=%2754%27 width=%2768%27 height=%2716%27 rx=%278%27 fill=%27%23A8425A%27/%3E%3C/svg%3E\") no-repeat right 14px bottom/auto 62px;color:#1F3D66;font-weight:600;min-height:40px}' +
@@ -159,7 +163,7 @@
       '.suivi-fen .b.s{background:#EEEAFB;border-color:#EEEAFB;color:#2E2A6B}' +
       '@keyframes suivi-fond{from{opacity:0}to{opacity:1}}@keyframes suivi-entre{from{opacity:0;transform:translateY(24px) scale(.98)}to{opacity:1;transform:none}}' +
       '@media (prefers-reduced-motion:reduce){.suivi-voile,.suivi-fen{animation:none}.suivi-fen .b{transition:none}}' +
-      '@media print{#suivi-cours,#suivi-btns,#suivi-notes,.suivi-voile,#suivi-info,#suivi-guide,#suivi-appel,#suivi-test{display:none!important}}';
+      '@media print{#suivi-nom,#suivi-cours,#suivi-btns,#suivi-notes,.suivi-voile,#suivi-info,#suivi-guide,#suivi-appel,#suivi-test{display:none!important}}';
     document.head.appendChild(st);
   }
   function fenetre(html) {
@@ -423,7 +427,10 @@
       v.querySelector('[data-a="pasmoi"]').onclick = function () { pasMoi(msg); };
       v.onclick = function (e) { if (e.target === v) fermer(); };
     };
-    zoneBoutons().appendChild(b);
+    var z = zoneBoutons(); z.classList.add('carte'); // 4.6.2 : une seule carte, avec le prénom de l'étudiant
+    var nom = String(r.prenom || L.label || '').replace(/\.$/, '').trim();
+    if (nom && !document.getElementById('suivi-nom')) { var h = document.createElement('div'); h.id = 'suivi-nom'; h.textContent = nom; z.insertBefore(h, z.firstChild); }
+    z.appendChild(b);
   }
 
   // Version 3.5 (fonction commune en 4.4) : mauvais nom choisi, ou ordinateur partagé. Le nom est libéré s'il a été choisi depuis peu, sinon l'enseignant est prévenu.
@@ -683,7 +690,7 @@
   function lienCompte() {
     if (TEST || !codeCompte() || document.getElementById('suivi-cours')) return;
     var a = document.createElement('a'); a.id = 'suivi-cours'; a.href = '/compte'; a.textContent = 'Mes cours';
-    var z = zoneBoutons(); z.insertBefore(a, z.firstChild);
+    var z = zoneBoutons(); z.classList.add('carte'); z.insertBefore(a, z.firstChild);
   }
   function demarrer() {
     file();

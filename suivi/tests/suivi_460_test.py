@@ -35,7 +35,7 @@ async def ouvrir(b, compte, reconnu):
                 elif a == 'copie_lire': rep = {'ok': False, 'err': 'inconnu'}
                 else: rep = {'ok': True}
                 return await r.fulfill(status=200, content_type='application/json', body=json.dumps(rep))
-            if 'retour=' in u: return await r.fulfill(status=200, content_type='application/json', body=json.dumps({'ok': True, 'label': 'Pierrick B.'}))
+            if 'retour=' in u: return await r.fulfill(status=200, content_type='application/json', body=json.dumps({'ok': True, 'label': 'Pierrick B.', 'notes': [{'cours': APP, 'livrable': 'Dossier', 'note': 12, 'sur': 20, 'date': '2026-11-18'}]}))
             if 'liste=1' in u:
                 return await r.fulfill(status=200, content_type='application/json', body=json.dumps({'ok': True, 'etudiants': [{'id': 'a1', 'label': 'Alice T.', 'pris': False}]}))
             return await r.fulfill(status=200, content_type='application/json', body='{"ok":true}')
@@ -57,8 +57,9 @@ async def main():
         ok(not await fenetre_qui(pg), 'aucune fenêtre « Qui êtes-vous ? »')
         ok(L.get('c') == 'KM4P7XQ2' and L.get('label') == 'Pierrick B.', 'code et nom gardés pour ce cours')
         ok(codes == ['KM4P7XQ2'], 'un seul essai envoyé à l\'Atelier')
-        ok(await pg.evaluate("()=>{var a=document.getElementById('suivi-cours');return !!a&&a.getAttribute('href')==='/compte'&&a.textContent==='Mes cours'}"), '4.6.1 : lien « Mes cours » vers /compte')
-        ok(await pg.evaluate("()=>{var z=document.getElementById('suivi-btns'),n=document.getElementById('suivi-nom');return !!z&&z.classList.contains('carte')&&!!n&&n.textContent==='Pierrick B'&&!!z.querySelector('#suivi-cours')&&!!z.querySelector('#suivi-notes')}"), '4.6.2 : une carte avec le prénom, « Mes cours » et « Mes notes »')
+        ok(await pg.evaluate("()=>{var a=document.getElementById('suivi-cours');return !!a&&a.getAttribute('href')==='/compte'&&a.textContent.indexOf('Mes cours')>=0}"), '4.6.1 : lien « Mes cours » vers /compte')
+        ok(await pg.evaluate("()=>document.getElementById('suivi-cours').textContent.indexOf('← Mes cours')===0&&!document.getElementById('suivi-notes')&&!document.getElementById('suivi-nom')&&!document.getElementById('suivi-btns').classList.contains('carte')"), '4.6.3 : pastille seule, sans carte, sans « Mes notes »')
+        ok(await pg.evaluate("()=>!!document.querySelector('#suivi-cours i')"), '4.6.3 : point « nouvelle note » sur la pastille')
         if os.environ.get('CAPTURE'): await pg.screenshot(path=os.environ['CAPTURE'])
         ok(not errs, 'aucune erreur de page : ' + str(errs))
         await ctx.close()

@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.6.2).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.6.3).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -36,6 +36,7 @@
  *  – version 3.9 : lien « Vos données » (page d’information RGPD) dans « Qui êtes-vous ? », « Mes notes » et le message sur l’avancement.
  *  – version 3.8 : fenêtres au bandeau de l’Atelier du formateur (bleu clair et dessin) sur les pages à la charte Poppins ; les autres chartes ne changent pas.
  *  – 4.5.4 : textes plus courts dans « Qui êtes-vous ? » (introduction et e-mail) ; après « Prévenir mon enseignant », le message ne promet plus que l'étudiant peut travailler (certains cours exigent un nom de la liste). Aucun changement de fonctionnement.
+ *  – 4.6.3 : étudiant à compte par e-mail : une seule pastille « ← Mes cours » (avec un point quand une nouvelle note est publiée) ; « Mes notes » et le prénom ne sont plus dans le cours, les notes se lisent sur « Mon compte ». Les autres cours gardent la carte de 4.6.2.
  *  – 4.6.2 : les boutons du haut de page (« Mes cours », « Mes notes », « Comment je serai évalué ») sont réunis dans une seule carte, avec le prénom de l'étudiant connecté.
  *  – 4.6.1 : cours à compte par e-mail : un lien « Mes cours » (vers /compte) à côté de « Mes notes », pour revenir à la liste de ses cours.
  *  – 4.6.0 : cours à compte par e-mail. Si la page « Mon compte » du site a gardé le code personnel de l'étudiant dans ce navigateur, il est reconnu sans fenêtre « Qui êtes-vous ? » (un seul essai par cours et par navigateur). Sans compte dans le navigateur, rien ne change. Le lien « Vos données » ouvre maintenant la page des mentions du site (pierrickbriand.fr).
@@ -130,6 +131,7 @@
       '#suivi-btns.carte button,#suivi-btns.carte a{box-shadow:none}' +
       '#suivi-nom{flex:1 0 100%;font:600 12px/1.2 Inter,system-ui,sans-serif;color:var(--accent,#1F3D66);padding:0 4px 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
       '#suivi-cours{font:600 13px/1.2 Inter,system-ui,sans-serif;background:#fff;color:var(--accent,#1F3D66);border:1px solid var(--accent,#1F3D66);border-radius:20px;padding:8px 14px;box-shadow:0 4px 16px rgba(0,0,0,.12);text-decoration:none}' +
+      '#suivi-cours i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#A8425A;margin-left:7px;vertical-align:1px}' +
       '#suivi-notes{font:600 13px/1.2 Inter,system-ui,sans-serif;background:var(--accent,#1F3D66);color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:20px;padding:8px 14px;box-shadow:0 4px 16px rgba(0,0,0,.18);cursor:pointer}' +
       '#suivi-notes b{display:inline-block;margin-left:6px;background:#fff;color:var(--accent,#1F3D66);border-radius:10px;padding:1px 7px;font-size:12px}' +
       '#suivi-notes.neuf{background:#A8425A}' +
@@ -409,6 +411,11 @@
     var notes = (r.notes || []).filter(function (n) { return !app || n.cours === app; });
     var dernier = notes.map(function (n) { return String(n.date || ''); }).sort().pop() || '';
     var neuf = dernier && dernier > String(L.vu || '');
+    if (codeCompte()) { // 4.6.3 : compte par e-mail : les notes se lisent sur « Mon compte » ; ici, seulement un point sur la pastille s'il y a du nouveau
+      var pa = document.getElementById('suivi-cours');
+      if (pa && neuf) { pa.insertAdjacentHTML('beforeend', '<i title="Nouvelle note"></i>'); pa.title = 'Une nouvelle note est publiée : elle se lit sur Mon compte'; pa.addEventListener('click', function () { var M = lire(); M.vu = dernier; ecrire(M); }); }
+      return;
+    }
     var b = document.createElement('button');
     b.id = 'suivi-notes'; b.type = 'button'; if (neuf) b.className = 'neuf';
     b.innerHTML = (neuf ? 'Nouvelle note' : 'Mes notes') + (notes.length ? '<b>' + notes.length + '</b>' : '');
@@ -689,8 +696,8 @@
   // 4.6.1 : lien de retour vers « Mon compte » pour l'étudiant connecté par e-mail (même origine que le cours).
   function lienCompte() {
     if (TEST || !codeCompte() || document.getElementById('suivi-cours')) return;
-    var a = document.createElement('a'); a.id = 'suivi-cours'; a.href = '/compte'; a.textContent = 'Mes cours';
-    var z = zoneBoutons(); z.classList.add('carte'); z.insertBefore(a, z.firstChild);
+    var a = document.createElement('a'); a.id = 'suivi-cours'; a.href = '/compte'; a.textContent = '← Mes cours';
+    var z = zoneBoutons(); z.insertBefore(a, z.firstChild); // 4.6.3 : pastille seule, sans carte
   }
   function demarrer() {
     file();

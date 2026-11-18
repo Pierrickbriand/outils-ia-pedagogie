@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.5.4).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.6.0).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -36,6 +36,7 @@
  *  – version 3.9 : lien « Vos données » (page d’information RGPD) dans « Qui êtes-vous ? », « Mes notes » et le message sur l’avancement.
  *  – version 3.8 : fenêtres au bandeau de l’Atelier du formateur (bleu clair et dessin) sur les pages à la charte Poppins ; les autres chartes ne changent pas.
  *  – 4.5.4 : textes plus courts dans « Qui êtes-vous ? » (introduction et e-mail) ; après « Prévenir mon enseignant », le message ne promet plus que l'étudiant peut travailler (certains cours exigent un nom de la liste). Aucun changement de fonctionnement.
+ *  – 4.6.0 : cours à compte par e-mail. Si la page « Mon compte » du site a gardé le code personnel de l'étudiant dans ce navigateur, il est reconnu sans fenêtre « Qui êtes-vous ? » (un seul essai par cours et par navigateur). Sans compte dans le navigateur, rien ne change.
  *  – 4.5.2 : si l'Atelier répond « lien inconnu » (nom libéré, code supprimé), l'appareil se déconnecte seul, le travail reste sur l'appareil et la fenêtre « Qui êtes-vous ? » s'ouvre. Plus de faux « Atelier injoignable » dans ce cas.
  *  – 4.5.3 : habillage des fenêtres du suivi aux couleurs du site (verre, bouton arrondi, entrée en douceur, sans mouvement si l'appareil le demande). Aucun changement de fonctionnement.
  *  – 4.5.1 : le code d'un lien ?c=… est retiré de la barre d'adresse dès que l'Atelier a répondu (code reconnu ou non).
@@ -659,6 +660,23 @@
     document.body.appendChild(d);
   }
 
+  // 4.6.0 : cours à compte par e-mail. La page « Mon compte » du site (même origine que le cours) garde le code personnel de l'étudiant 30 jours,
+  // sous la clé « suivi-compte ». Ici, ce code sert une seule fois par cours et par navigateur ; s'il n'est pas reconnu, la fenêtre habituelle s'ouvre.
+  var AUTO = false;
+  function codeCompte() {
+    try { var o = JSON.parse(localStorage.getItem('suivi-compte') || 'null'); if (o && /^[A-Z0-9]{6,12}$/.test(String(o.c)) && Date.now() - (+o.t || 0) < 30 * 86400000) return String(o.c); } catch (e) {}
+    return '';
+  }
+  function autoCompte(L) {
+    if (TEST || L.c || L.e || L.cNeuf || L.autoEssai || !C().app_id) return false;
+    var cc = codeCompte(); if (!cc) return false;
+    L.autoEssai = 1; ecrire(L);
+    poster({ action: 'code', app: C().app_id, code: cc }).then(function (r) {
+      if (r && r.ok) { var M = lire(); M.c = cc; M.label = r.label; if (r.promo) M.p = r.promo; delete M.absent; ecrire(M); location.reload(); return; }
+      throw 0;
+    }).catch(function () { AUTO = false; if (LISTE && LISTE.length && !ABSENT_VU && !(lire().c || lire().e)) accueil(); });
+    return true;
+  }
   function demarrer() {
     file();
     if (TEST) { setTimeout(bandeauTest, 300); publier(); if (E() && C().app_id && !C().dash && !C().code_enseignant) setTimeout(suivreGuide, 3000); return; } // 4.4 : le formateur voit la page, sans identité ni envoi
@@ -670,6 +688,7 @@
     document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') copier(true); });
     setInterval(function () { copier(false); }, 10000);
     var L = lire();
+    AUTO = autoCompte(L);
     verifierCopie(L);
     if ((L.c || L.e) && !L.infoCp) setTimeout(infoProgression, 2500);
     if (L.cNeuf && L.cNeuf !== L.c) { verifierCode(L.cNeuf, false); } else if (L.cNeuf) { retirerC(); }
@@ -685,7 +704,7 @@
       ATL.ok = !!(r && r.ok); LISTE = (r && r.ok && r.etudiants) || [];
       suggestions(); setTimeout(suggestions, 1500);
       publier();
-      if (!secret && LISTE.length && !ABSENT_VU) accueil(); // 4.4 : la fenêtre revient à chaque ouverture tant qu'aucun nom n'est choisi
+      if (!secret && LISTE.length && !ABSENT_VU && !AUTO) accueil(); // 4.6 : pas pendant la reconnaissance par le compte ; 4.4 : la fenêtre revient à chaque ouverture tant qu'aucun nom n'est choisi
     }).catch(function () { ATL.ok = false; publier(); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', demarrer); else demarrer();

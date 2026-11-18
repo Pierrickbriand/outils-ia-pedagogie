@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.6.0).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.6.1).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -36,6 +36,7 @@
  *  – version 3.9 : lien « Vos données » (page d’information RGPD) dans « Qui êtes-vous ? », « Mes notes » et le message sur l’avancement.
  *  – version 3.8 : fenêtres au bandeau de l’Atelier du formateur (bleu clair et dessin) sur les pages à la charte Poppins ; les autres chartes ne changent pas.
  *  – 4.5.4 : textes plus courts dans « Qui êtes-vous ? » (introduction et e-mail) ; après « Prévenir mon enseignant », le message ne promet plus que l'étudiant peut travailler (certains cours exigent un nom de la liste). Aucun changement de fonctionnement.
+ *  – 4.6.1 : cours à compte par e-mail : un lien « Mes cours » (vers /compte) à côté de « Mes notes », pour revenir à la liste de ses cours.
  *  – 4.6.0 : cours à compte par e-mail. Si la page « Mon compte » du site a gardé le code personnel de l'étudiant dans ce navigateur, il est reconnu sans fenêtre « Qui êtes-vous ? » (un seul essai par cours et par navigateur). Sans compte dans le navigateur, rien ne change. Le lien « Vos données » ouvre maintenant la page des mentions du site (pierrickbriand.fr).
  *  – 4.5.2 : si l'Atelier répond « lien inconnu » (nom libéré, code supprimé), l'appareil se déconnecte seul, le travail reste sur l'appareil et la fenêtre « Qui êtes-vous ? » s'ouvre. Plus de faux « Atelier injoignable » dans ce cas.
  *  – 4.5.3 : habillage des fenêtres du suivi aux couleurs du site (verre, bouton arrondi, entrée en douceur, sans mouvement si l'appareil le demande). Aucun changement de fonctionnement.
@@ -124,6 +125,7 @@
       '#suivi-eval{font:600 13px/1.2 Inter,system-ui,sans-serif;background:#fff;color:var(--accent,#1F3D66);border:1px solid var(--accent,#1F3D66);border-radius:20px;padding:8px 14px;box-shadow:0 4px 16px rgba(0,0,0,.12);cursor:pointer}' +
       '.suivi-fen .crit{width:100%;border-collapse:collapse;margin:6px 0 4px;font-size:14px}.suivi-fen .crit td{border-top:1px solid #E3E6EE;padding:6px 4px;vertical-align:top}.suivi-fen .crit td.pt{text-align:right;white-space:nowrap;font-weight:600}.suivi-fen .crit small{display:block;color:#56627A;font-size:12px}' +
       '.suivi-fen h3{margin:16px 0 2px;font-size:16px}' +
+      '#suivi-cours{font:600 13px/1.2 Inter,system-ui,sans-serif;background:#fff;color:var(--accent,#1F3D66);border:1px solid var(--accent,#1F3D66);border-radius:20px;padding:8px 14px;box-shadow:0 4px 16px rgba(0,0,0,.12);text-decoration:none}' +
       '#suivi-notes{font:600 13px/1.2 Inter,system-ui,sans-serif;background:var(--accent,#1F3D66);color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:20px;padding:8px 14px;box-shadow:0 4px 16px rgba(0,0,0,.18);cursor:pointer}' +
       '#suivi-notes b{display:inline-block;margin-left:6px;background:#fff;color:var(--accent,#1F3D66);border-radius:10px;padding:1px 7px;font-size:12px}' +
       '#suivi-notes.neuf{background:#A8425A}' +
@@ -157,7 +159,7 @@
       '.suivi-fen .b.s{background:#EEEAFB;border-color:#EEEAFB;color:#2E2A6B}' +
       '@keyframes suivi-fond{from{opacity:0}to{opacity:1}}@keyframes suivi-entre{from{opacity:0;transform:translateY(24px) scale(.98)}to{opacity:1;transform:none}}' +
       '@media (prefers-reduced-motion:reduce){.suivi-voile,.suivi-fen{animation:none}.suivi-fen .b{transition:none}}' +
-      '@media print{#suivi-btns,#suivi-notes,.suivi-voile,#suivi-info,#suivi-guide,#suivi-appel,#suivi-test{display:none!important}}';
+      '@media print{#suivi-cours,#suivi-btns,#suivi-notes,.suivi-voile,#suivi-info,#suivi-guide,#suivi-appel,#suivi-test{display:none!important}}';
     document.head.appendChild(st);
   }
   function fenetre(html) {
@@ -677,6 +679,12 @@
     }).catch(function () { AUTO = false; if (LISTE && LISTE.length && !ABSENT_VU && !(lire().c || lire().e)) accueil(); });
     return true;
   }
+  // 4.6.1 : lien de retour vers « Mon compte » pour l'étudiant connecté par e-mail (même origine que le cours).
+  function lienCompte() {
+    if (TEST || !codeCompte() || document.getElementById('suivi-cours')) return;
+    var a = document.createElement('a'); a.id = 'suivi-cours'; a.href = '/compte'; a.textContent = 'Mes cours';
+    var z = zoneBoutons(); z.insertBefore(a, z.firstChild);
+  }
   function demarrer() {
     file();
     if (TEST) { setTimeout(bandeauTest, 300); publier(); if (E() && C().app_id && !C().dash && !C().code_enseignant) setTimeout(suivreGuide, 3000); return; } // 4.4 : le formateur voit la page, sans identité ni envoi
@@ -687,6 +695,7 @@
     window.addEventListener('pagehide', function () { signal(true); copier(true); });
     document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') copier(true); });
     setInterval(function () { copier(false); }, 10000);
+    lienCompte();
     var L = lire();
     AUTO = autoCompte(L);
     verifierCopie(L);

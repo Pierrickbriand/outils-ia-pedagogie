@@ -57,6 +57,7 @@ async def main():
         ok(not await fenetre_qui(pg), 'aucune fenêtre « Qui êtes-vous ? »')
         ok(L.get('c') == 'KM4P7XQ2' and L.get('label') == 'Pierrick B.', 'code et nom gardés pour ce cours')
         ok(codes == ['KM4P7XQ2'], 'un seul essai envoyé à l\'Atelier')
+        ok(await pg.evaluate("()=>{var a=document.getElementById('suivi-cours');return !!a&&a.getAttribute('href')==='/compte'&&a.textContent==='Mes cours'}"), '4.6.1 : lien « Mes cours » vers /compte')
         ok(not errs, 'aucune erreur de page : ' + str(errs))
         await ctx.close()
 
@@ -72,6 +73,7 @@ async def main():
         ctx, pg, errs, codes = await ouvrir(b, None, True)
         ok(await fenetre_qui(pg), 'la fenêtre s\'ouvre comme avant')
         ok(codes == [], 'aucun essai de code')
+        ok(await pg.evaluate("()=>!document.getElementById('suivi-cours')"), '4.6.1 : pas de lien « Mes cours » sans compte')
         await ctx.close()
 
         print('[compte périmé (plus de 30 jours) ou code mal formé : ignoré]')

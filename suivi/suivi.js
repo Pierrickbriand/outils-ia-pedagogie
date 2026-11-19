@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.6.3).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.6.4).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -36,6 +36,7 @@
  *  – version 3.9 : lien « Vos données » (page d’information RGPD) dans « Qui êtes-vous ? », « Mes notes » et le message sur l’avancement.
  *  – version 3.8 : fenêtres au bandeau de l’Atelier du formateur (bleu clair et dessin) sur les pages à la charte Poppins ; les autres chartes ne changent pas.
  *  – 4.5.4 : textes plus courts dans « Qui êtes-vous ? » (introduction et e-mail) ; après « Prévenir mon enseignant », le message ne promet plus que l'étudiant peut travailler (certains cours exigent un nom de la liste). Aucun changement de fonctionnement.
+ *  – 4.6.4 : sur téléphone (600 px et moins), les boutons du bas (« Mes notes », « ← Mes cours ») se posent juste au-dessus de la barre du bas du cours, à sa hauteur réelle (deux lignes comprises), au lieu d'un décalage fixe de 72 px qui la chevauchait ; sans barre (écran de départ), ils se posent près du bord.
  *  – 4.6.3 : étudiant à compte par e-mail : une seule pastille « ← Mes cours » (avec un point quand une nouvelle note est publiée) ; « Mes notes » et le prénom ne sont plus dans le cours, les notes se lisent sur « Mon compte ». Les autres cours gardent la carte de 4.6.2.
  *  – 4.6.2 : les boutons du haut de page (« Mes cours », « Mes notes », « Comment je serai évalué ») sont réunis dans une seule carte, avec le prénom de l'étudiant connecté.
  *  – 4.6.1 : cours à compte par e-mail : un lien « Mes cours » (vers /compte) à côté de « Mes notes », pour revenir à la liste de ses cours.
@@ -375,7 +376,29 @@
     style();
     var z = document.getElementById('suivi-btns');
     if (!z) { z = document.createElement('div'); z.id = 'suivi-btns'; document.body.appendChild(z); }
+    suivreBarre();
     return z;
+  }
+  // 4.6.4 : sur téléphone, les boutons se posent juste au-dessus de la barre du bas du cours (classe .nav), à sa hauteur réelle.
+  var BARRE_SUIVIE = false;
+  function suivreBarre() {
+    var z = document.getElementById('suivi-btns'); if (!z) return;
+    var mince = false;
+    try { mince = window.matchMedia('(max-width:600px)').matches; } catch (e) {}
+    if (!mince) { z.style.bottom = ''; }
+    else {
+      var n = document.querySelector('.nav'), r = null;
+      try { if (n && getComputedStyle(n).display !== 'none') r = n.getBoundingClientRect(); } catch (e) {}
+      z.style.bottom = (r && r.height > 0 && r.top < window.innerHeight)
+        ? Math.ceil(window.innerHeight - r.top + 8) + 'px' // le haut de la barre mesure déjà la zone de sécurité du bas
+        : 'calc(16px + env(safe-area-inset-bottom,0px))';
+    }
+    if (!BARRE_SUIVIE) {
+      BARRE_SUIVIE = true;
+      window.addEventListener('resize', suivreBarre);
+      window.addEventListener('orientationchange', suivreBarre);
+      setInterval(suivreBarre, 1000); // la barre apparaît après l'écran de départ et change de hauteur avec son texte
+    }
   }
   function dateFr(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || '')); return m ? m[3] + '/' + m[2] + '/' + m[1] : ''; }
   function evaluation(r) {

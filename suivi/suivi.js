@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.6.4).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.6.5).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -37,6 +37,7 @@
  *  – version 3.8 : fenêtres au bandeau de l’Atelier du formateur (bleu clair et dessin) sur les pages à la charte Poppins ; les autres chartes ne changent pas.
  *  – 4.5.4 : textes plus courts dans « Qui êtes-vous ? » (introduction et e-mail) ; après « Prévenir mon enseignant », le message ne promet plus que l'étudiant peut travailler (certains cours exigent un nom de la liste). Aucun changement de fonctionnement.
  *  – 4.6.4 : sur téléphone (600 px et moins), les boutons du bas (« Mes notes », « ← Mes cours ») se posent juste au-dessus de la barre du bas du cours, à sa hauteur réelle (deux lignes comprises), au lieu d'un décalage fixe de 72 px qui la chevauchait ; sans barre (écran de départ), ils se posent près du bord.
+ *  – 4.6.5 : l’appel se ferme seul (Atelier 5.246.0). Dans les deux dernières minutes, le bandeau d’appel de l’étudiant qui ne s’est pas encore signalé passe à l’orange avec un compte à rebours, recalé à chaque relecture sur le temps restant donné par l’Atelier (jamais sur l’horloge de l’appareil). Un étudiant déjà signalé ne voit rien.
  *  – 4.6.3 : étudiant à compte par e-mail : une seule pastille « ← Mes cours » (avec un point quand une nouvelle note est publiée) ; « Mes notes » et le prénom ne sont plus dans le cours, les notes se lisent sur « Mon compte ». Les autres cours gardent la carte de 4.6.2.
  *  – 4.6.2 : les boutons du haut de page (« Mes cours », « Mes notes », « Comment je serai évalué ») sont réunis dans une seule carte, avec le prénom de l'étudiant connecté.
  *  – 4.6.1 : cours à compte par e-mail : un lien « Mes cours » (vers /compte) à côté de « Mes notes », pour revenir à la liste de ses cours.
@@ -156,6 +157,7 @@
       '#suivi-guide button{font:inherit;background:#fff;color:#1F3D66;border:0;border-radius:14px;padding:5px 10px;cursor:pointer;white-space:nowrap}' +
       '#suivi-appel{position:fixed;left:50%;top:56px;transform:translateX(-50%);z-index:9001;font:600 14px/1.35 Inter,system-ui,sans-serif;background:#1D6F69;color:#fff;border-radius:14px;padding:10px 10px 10px 16px;box-shadow:0 6px 20px rgba(0,0,0,.22);display:flex;align-items:center;gap:12px;max-width:calc(100vw - 24px)}' +
       '#suivi-appel button{font:inherit;background:#fff;color:#1D6F69;border:0;border-radius:10px;padding:7px 12px;cursor:pointer;white-space:nowrap}' +
+      '#suivi-appel.alerte{background:#B45309}#suivi-appel.alerte button{color:#8A3A06}' +
       '.suivi-voile{-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);background:rgba(20,33,59,.5);animation:suivi-fond .35s ease-out}' +
       '.suivi-fen{position:relative;background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-radius:24px;box-shadow:0 8px 32px rgba(31,61,102,.18),inset 0 1px 0 rgba(255,255,255,.95);font-family:Poppins,Inter,system-ui,sans-serif;animation:suivi-entre .45s cubic-bezier(.2,.8,.2,1)}' +
       '.suivi-fen::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;background:linear-gradient(135deg,#fff 0%,rgba(255,255,255,.3) 45%,rgba(255,255,255,0) 80%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude}' +
@@ -536,7 +538,7 @@
   function carteAppel(a) {
     var L = lire(), cleA = a ? a.jour + '|' + a.demi : '';
     if (!a || (a.promo && L.p && a.promo !== L.p) || L.pres === cleA) { if (AP.carte && !AP.garder) { AP.carte.remove(); AP.carte = null; } return; }
-    if (AP.carte) return;
+    if (AP.carte) { alerteAppel(a); return; }
     style();
     var d = document.createElement('div'); d.id = 'suivi-appel'; d.setAttribute('role', 'status'); AP.carte = d;
     var msgA = function (t) { d.innerHTML = '<span>' + t + '</span>'; };
@@ -558,6 +560,24 @@
       };
     }
     document.body.appendChild(d);
+    alerteAppel(a);
+  }
+  // 4.6.5 : deux dernières minutes de l'appel. « reste » (secondes) et « alerte » (seuil) viennent de l'Atelier ; le décompte avance d'une seconde
+  // entre deux relectures et se recale à chacune. Il s'arrête dès que l'étudiant se signale ou que le bandeau disparaît.
+  function alerteAppel(a) {
+    var d = AP.carte;
+    if (!d || AP.garder || !a || a.reste == null || !a.alerte || +a.reste > +a.alerte || !d.querySelector('button')) return;
+    AP.fin = Date.now() + (+a.reste) * 1000;
+    if (AP.tic) return;
+    var sp = d.querySelector('span'), suite = sp && /Choisissez/.test(sp.textContent) ? ' Choisissez votre nom.' : ' Signalez votre présence.';
+    d.className = 'alerte';
+    var maj = function () {
+      var c = AP.carte, t = c && c.querySelector('span');
+      if (c !== d || AP.garder || !t || !c.querySelector('button')) { clearInterval(AP.tic); AP.tic = null; d.className = ''; return; }
+      var r = Math.max(0, Math.round((AP.fin - Date.now()) / 1000));
+      t.textContent = (r > 0 ? 'Attention, l’appel ferme dans ' + (r >= 60 ? Math.floor(r / 60) + '\u00a0min\u00a0' + ('0' + (r % 60)).slice(-2) : r + '\u00a0s') + '.' : 'L’appel ferme.') + suite;
+    };
+    AP.tic = setInterval(maj, 1000); maj();
   }
   function suivreGuide() {
     var app = C().app_id;

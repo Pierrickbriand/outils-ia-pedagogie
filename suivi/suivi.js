@@ -1,5 +1,5 @@
 /*
- * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.6.5).
+ * Suivi des cours – liaison entre une page de cours et l'application de suivi de Pierrick Briand (version 4.6.6).
  * À appeler en tête de page (avant le code du cours) :
  *   <script src="https://pierrickbriand.github.io/outils-ia-pedagogie/suivi/suivi.js"></script>
  * Ce que fait ce script, sans rien changer au cours lui-même :
@@ -37,6 +37,7 @@
  *  – version 3.8 : fenêtres au bandeau de l’Atelier du formateur (bleu clair et dessin) sur les pages à la charte Poppins ; les autres chartes ne changent pas.
  *  – 4.5.4 : textes plus courts dans « Qui êtes-vous ? » (introduction et e-mail) ; après « Prévenir mon enseignant », le message ne promet plus que l'étudiant peut travailler (certains cours exigent un nom de la liste). Aucun changement de fonctionnement.
  *  – 4.6.4 : sur téléphone (600 px et moins), les boutons du bas (« Mes notes », « ← Mes cours ») se posent juste au-dessus de la barre du bas du cours, à sa hauteur réelle (deux lignes comprises), au lieu d'un décalage fixe de 72 px qui la chevauchait ; sans barre (écran de départ), ils se posent près du bord.
+ *  – 4.6.6 : étudiant connecté par son compte : plus jamais la liste des noms à sa place. Le 25 novembre, l’Atelier était occupé par les inscriptions d’une classe entière : la reconnaissance, tentée une seule fois, échouait et « Qui êtes-vous ? » s’ouvrait. Elle réessaie maintenant seule, sans fenêtre. Dans un cours à compte par e-mail (drapeau « compte » de la liste, Atelier 5.257.0), un étudiant sans nom voit un renvoi vers « Mon compte », la liste restant en second choix.
  *  – 4.6.5 : l’appel se ferme seul (Atelier 5.246.0). Dans les deux dernières minutes, le bandeau d’appel de l’étudiant qui ne s’est pas encore signalé passe à l’orange avec un compte à rebours, recalé à chaque relecture sur le temps restant donné par l’Atelier (jamais sur l’horloge de l’appareil). Un étudiant déjà signalé ne voit rien.
  *  – 4.6.3 : étudiant à compte par e-mail : une seule pastille « ← Mes cours » (avec un point quand une nouvelle note est publiée) ; « Mes notes » et le prénom ne sont plus dans le cours, les notes se lisent sur « Mon compte ». Les autres cours gardent la carte de 4.6.2.
  *  – 4.6.2 : les boutons du haut de page (« Mes cours », « Mes notes », « Comment je serai évalué ») sont réunis dans une seule carte, avec le prénom de l'étudiant connecté.
@@ -207,6 +208,28 @@
 
   /* ---------- « Qui êtes-vous ? » ---------- */
   var LISTE = null;
+  var COMPTE = false; // 4.6.6 : vrai si le cours utilise le compte par adresse e-mail (réponse « liste » de l'Atelier 5.257.0)
+  function recue(r) { LISTE = (r && r.ok !== false && r.etudiants) || []; COMPTE = !!(r && r.compte); }
+  // 4.6.6 : un seul endroit décide de la fenêtre d'un étudiant sans nom. Cours à compte : renvoi vers « Mon compte » ; autres cours : la liste, comme avant.
+  function sansNom() {
+    var L = lire(); if (TEST || L.c || L.e) return;
+    if (COMPTE) return fenCompte();
+    if (LISTE && LISTE.length) accueil();
+  }
+  function fenCompte() {
+    if (AUTO) return; // reconnaissance en cours : aucune fenêtre
+    var connu = !!codeCompte(), adr = (/(^|\.)pierrickbriand\.fr$/.test(location.hostname) ? '' : 'https://pierrickbriand.fr') + '/compte';
+    var v = fenetre((connu
+      ? '<h2>Ce cours n’est pas encore dans votre compte</h2><p class="p">Retournez à «\u00a0Mes cours\u00a0», puis ajoutez ce cours avec le code de classe donné par votre formateur. Votre travail reste enregistré sur cet appareil.</p>'
+      : '<h2>Ouvrez votre compte</h2><p class="p">Ce cours s’ouvre depuis «\u00a0Mon compte\u00a0»\u00a0: saisissez votre adresse e-mail, puis le code reçu par e-mail. Votre travail reste enregistré sur cet appareil.</p>') +
+      '<button class="b" type="button" data-a="compte">' + (connu ? '← Mes cours' : 'Ouvrir Mon compte') + '</button>' +
+      (LISTE && LISTE.length ? '<br><button class="l" type="button" data-a="liste">Mon formateur m’a déjà inscrit\u00a0: choisir mon nom</button>' : ''));
+    v.onclick = function (e) {
+      var a = e.target.getAttribute && e.target.getAttribute('data-a');
+      if (a === 'compte') location.href = adr;
+      if (a === 'liste') accueil();
+    };
+  }
   function accueil() {
     var nw = document.getElementById('news'); if (nw) nw.remove(); // un nouvel étudiant n'a pas besoin des nouveautés
     var opts = LISTE.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.label) + (x.pris ? ' (déjà choisi)' : '') + '</option>'; }).join('');
@@ -544,7 +567,7 @@
     var msgA = function (t) { d.innerHTML = '<span>' + t + '</span>'; };
     if (!L.c) {
       d.innerHTML = '<span>Appel en cours. Choisissez votre nom pour signaler votre présence.</span> <button type="button">Qui êtes-vous ?</button>';
-      d.querySelector('button').onclick = function () { if (LISTE) accueil(); else lireGet('liste=1&app=' + encodeURIComponent(C().app_id || '')).then(function (r) { LISTE = (r && r.etudiants) || []; accueil(); }); };
+      d.querySelector('button').onclick = function () { if (LISTE) sansNom(); else lireGet('liste=1&app=' + encodeURIComponent(C().app_id || '')).then(function (r) { recue(r); sansNom(); }); };
     } else {
       d.innerHTML = '<span>Appel en cours</span> <button type="button">Je suis là</button>';
       d.querySelector('button').onclick = function () {
@@ -706,8 +729,8 @@
   function publier() { try { document.dispatchEvent(new CustomEvent('suivi:etat', { detail: etat() })); } catch (e) {} }
   function ouvrirQui() {
     if (TEST) return;
-    if (LISTE && LISTE.length) return accueil();
-    lireGet('liste=1&app=' + encodeURIComponent(C().app_id || '')).then(function (r) { ATL.ok = !!(r && r.ok); LISTE = (r && r.ok && r.etudiants) || []; publier(); if (LISTE.length) accueil(); }).catch(function () { ATL.ok = false; publier(); });
+    if (LISTE && (LISTE.length || COMPTE)) return sansNom();
+    lireGet('liste=1&app=' + encodeURIComponent(C().app_id || '')).then(function (r) { ATL.ok = !!(r && r.ok); recue(r); publier(); sansNom(); }).catch(function () { ATL.ok = false; publier(); });
   }
   // 4.5 : copie() donne la copie reçue de l'Atelier après identification (date, rev, d = clés du cours), ou null.
   window.SUIVI = { version: '4.5.0', etat: etat, ouvrir: ouvrirQui, pasMoi: function () { pasMoi(null); }, copie: function () { return CP.copie ? { date: CP.copie.date, rev: CP.copie.rev, d: CP.copie.d } : null; } };
@@ -726,14 +749,27 @@
     try { var o = JSON.parse(localStorage.getItem('suivi-compte') || 'null'); if (o && /^[A-Z0-9]{6,12}$/.test(String(o.c)) && Date.now() - (+o.t || 0) < 30 * 86400000) return String(o.c); } catch (e) {}
     return '';
   }
+  // 4.6.6 : « autoEssai » garde l'heure du dernier refus définitif (« code inconnu »). Un nouvel essai part si le compte a été rouvert depuis
+  // (cours ajouté sur « Mon compte ») ou après une heure. L'ancienne valeur 1 (4.6.0 à 4.6.5) compte comme périmée : les étudiants bloqués le 25 novembre sont reconnus.
+  function compteT() { try { return +(JSON.parse(localStorage.getItem('suivi-compte') || 'null') || {}).t || 0; } catch (e) { return 0; } }
   function autoCompte(L) {
-    if (TEST || L.c || L.e || L.cNeuf || L.autoEssai || !C().app_id) return false;
+    if (TEST || L.c || L.e || L.cNeuf || !C().app_id) return false;
     var cc = codeCompte(); if (!cc) return false;
-    L.autoEssai = 1; ecrire(L);
-    poster({ action: 'code', app: C().app_id, code: cc }).then(function (r) {
-      if (r && r.ok) { var M = lire(); M.c = cc; M.label = r.label; if (r.promo) M.p = r.promo; delete M.absent; ecrire(M); location.reload(); return; }
-      throw 0;
-    }).catch(function () { AUTO = false; if (LISTE && LISTE.length && !ABSENT_VU && !(lire().c || lire().e)) accueil(); });
+    var der = +L.autoEssai || 0;
+    if (der > 1 && Date.now() - der < 3600000 && compteT() <= der) return false;
+    var n = 0;
+    (function essai() {
+      poster({ action: 'code', app: C().app_id, code: cc }).then(function (r) {
+        if (r && r.ok) { var M = lire(); M.c = cc; M.label = r.label; if (r.promo) M.p = r.promo; delete M.absent; delete M.autoEssai; ecrire(M); location.reload(); return; }
+        if (r && r.err === 'code inconnu') { var M2 = lire(); M2.autoEssai = Date.now(); ecrire(M2); AUTO = false; sansNom(); return; } // refus définitif : ce compte n'est pas dans la liste du cours
+        throw 0; // « occupé », « patienter », réponse vide : l'Atelier n'a pas tranché
+      }).catch(function () {
+        // L'Atelier est occupé ou le réseau a coupé : on réessaie seul, sans fenêtre. Le travail de l'étudiant reste sur l'appareil.
+        n++; var L2 = lire(); if (L2.c || L2.e) return;
+        if (!COMPTE && LISTE && n >= 3) { AUTO = false; sansNom(); return; } // cours sans compte : la liste, comme avant
+        if (n < 20) setTimeout(essai, n < 6 ? 2000 * n : 20000); else AUTO = false;
+      });
+    })();
     return true;
   }
   // 4.6.1 : lien de retour vers « Mon compte » pour l'étudiant connecté par e-mail (même origine que le cours).
@@ -767,10 +803,10 @@
     var besoinListe = !secret || document.getElementById('bt-m0');
     if (!besoinListe) return;
     lireGet('liste=1&app=' + encodeURIComponent(C().app_id || '')).then(function (r) {
-      ATL.ok = !!(r && r.ok); LISTE = (r && r.ok && r.etudiants) || [];
+      ATL.ok = !!(r && r.ok); recue(r);
       suggestions(); setTimeout(suggestions, 1500);
       publier();
-      if (!secret && LISTE.length && !ABSENT_VU && !AUTO) accueil(); // 4.6 : pas pendant la reconnaissance par le compte ; 4.4 : la fenêtre revient à chaque ouverture tant qu'aucun nom n'est choisi
+      if (!secret && !ABSENT_VU && !AUTO) sansNom(); // 4.6.6 : cours à compte, renvoi vers « Mon compte » au lieu de la liste ; 4.6 : pas pendant la reconnaissance par le compte ; 4.4 : la fenêtre revient à chaque ouverture tant qu'aucun nom n'est choisi
     }).catch(function () { ATL.ok = false; publier(); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', demarrer); else demarrer();
